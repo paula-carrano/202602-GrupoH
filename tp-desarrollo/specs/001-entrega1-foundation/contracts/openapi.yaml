@@ -1,0 +1,414 @@
+openapi: 3.0.3
+info:
+  title: Plataforma de Mercado y Valoración de Jugadores de Fútbol (Tokens de Jugadores) - API
+  version: 1.0.0
+  description: API REST para la Entrega 1 (Foundation) que abarca autenticación (JWT/API Keys), gestión de usuarios y catálogo de jugadores.
+servers:
+  - url: http://localhost:8080
+    description: Servidor de desarrollo local
+
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Registro de nuevo usuario
+      description: Da de alta un nuevo usuario en el sistema con contraseña cifrada mediante BCrypt.
+      operationId: registerUser
+      tags:
+        - Autenticación
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequestDto'
+      responses:
+        '201':
+          description: Usuario registrado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponseDto'
+        '400':
+          description: Error de validación en los datos enviados.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Correo electrónico o nombre de usuario ya existente.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno no controlado del servidor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /api/v1/auth/login:
+    post:
+      summary: Inicio de sesión
+      description: Autentica credenciales y emite un token JWT de acceso.
+      operationId: loginUser
+      tags:
+        - Autenticación
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequestDto'
+      responses:
+        '200':
+          description: Inicio de sesión exitoso.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponseDto'
+        '400':
+          description: Campos faltantes o vacíos.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: Credenciales inválidas.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /api/v1/auth/api-keys:
+    post:
+      summary: Emisión de API Key
+      description: Genera una API Key para aplicaciones cliente o servicios M2M vinculada al usuario autenticado. La clave en texto plano se entrega una única vez.
+      operationId: createApiKey
+      tags:
+        - Autenticación
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequestDto'
+      responses:
+        '201':
+          description: API Key emitida exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyCreatedResponseDto'
+        '400':
+          description: Datos de solicitud inválidos.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: No autenticado o token JWT expirado/inválido.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /api/v1/players:
+    get:
+      summary: Listar catálogo de jugadores
+      description: Devuelve el listado completo de jugadores registrados en el catálogo de dominio.
+      operationId: getPlayers
+      tags:
+        - Jugadores
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Consulta exitosa.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PlayerResponseDto'
+        '401':
+          description: Autenticación requerida o credencial inválida.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+  /api/v1/players/{id}:
+    get:
+      summary: Consultar jugador por ID
+      description: Obtiene los detalles de un jugador específico mediante su identificador numérico.
+      operationId: getPlayerById
+      tags:
+        - Jugadores
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identificador numérico del jugador.
+          schema:
+            type: integer
+            format: int64
+            example: 1
+      responses:
+        '200':
+          description: Jugador encontrado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerResponseDto'
+        '400':
+          description: Identificador con formato inválido.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: No autenticado o credencial inválida.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: Jugador no encontrado.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno del servidor.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT provisto en el encabezado Authorization en formato "Bearer <token>".
+    apiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key provista en el encabezado HTTP X-API-Key.
+
+  schemas:
+    RegisterRequestDto:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 30
+          example: "usuario123"
+          description: "Nombre de usuario único para inicio de sesión."
+        email:
+          type: string
+          format: email
+          maxLength: 100
+          example: "usuario@ejemplo.com"
+          description: "Correo electrónico del usuario."
+        password:
+          type: string
+          minLength: 8
+          example: "Password123!"
+          description: "Contraseña con requisitos de seguridad (mínimo 8 caracteres, mayúscula, número, símbolo)."
+
+    UserResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        username:
+          type: string
+          example: "usuario123"
+        email:
+          type: string
+          example: "usuario@ejemplo.com"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-16T12:00:00Z"
+
+    LoginRequestDto:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "usuario123"
+        password:
+          type: string
+          example: "Password123!"
+
+    LoginResponseDto:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          description: "Token JWT firmado."
+        tokenType:
+          type: string
+          example: "Bearer"
+        expiresInSeconds:
+          type: integer
+          format: int64
+          example: 86400
+
+    CreateApiKeyRequestDto:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 50
+          example: "App Móvil de Producción"
+          description: "Nombre descriptivo de la clave."
+
+    ApiKeyCreatedResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        name:
+          type: string
+          example: "App Móvil de Producción"
+        rawKey:
+          type: string
+          example: "cbo_live_8f3d1b4a7e9c20f1a5b6c7d8e9f0a1b2"
+          description: "API Key en texto plano expuesta por única vez."
+        prefix:
+          type: string
+          example: "cbo_live_8f3d"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-09-16T12:00:00Z"
+
+    PlayerResponseDto:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        firstName:
+          type: string
+          example: "Lionel"
+        lastName:
+          type: string
+          example: "Messi"
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+          example: "1987-06-24"
+          description: "Fecha de nacimiento (puede ser null si no está disponible en la fuente de datos)."
+        nationality:
+          type: string
+          example: "Argentina"
+        position:
+          type: string
+          enum: [GOALKEEPER, DEFENDER, MIDFIELDER, FORWARD]
+          example: "FORWARD"
+        currentTeam:
+          type: string
+          example: "Inter Miami"
+        league:
+          type: string
+          example: "Major League Soccer"
+        active:
+          type: boolean
+          example: true
+
+    ViolationDto:
+      type: object
+      properties:
+        field:
+          type: string
+          example: "email"
+        message:
+          type: string
+          example: "El formato de correo electrónico no es válido"
+
+    ProblemDetail:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          example: "about:blank"
+        title:
+          type: string
+          example: "Error de validación"
+        status:
+          type: integer
+          example: 400
+        detail:
+          type: string
+          example: "Los datos provistos en la solicitud contienen errores."
+        instance:
+          type: string
+          example: "/api/v1/auth/register"
+        errorCode:
+          type: string
+          example: "VALIDATION_FAILED"
+          description: "Código de error estable y único para consumo programático por el frontend."
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-09-16T12:00:00Z"
+        correlationId:
+          type: string
+          example: "c73a038b-47b2-4d2c-8822-0d6741b312a7"
+        violations:
+          type: array
+          nullable: true
+          items:
+            $ref: '#/components/schemas/ViolationDto'

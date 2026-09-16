@@ -1,0 +1,38 @@
+spring:
+  application:
+    name: players-market
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/cbo_players_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  sql:
+    init:
+      mode: always
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:dGhpc19pc19hX3Zlcnlfc2VjdXJlX2tleV9mb3Jfand0X3NpZ25pbmdfMjU2X2JpdHNfc2VjcmV0}
+      expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+server:
+  port: 8080
+  error:
+    include-stacktrace: never
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha

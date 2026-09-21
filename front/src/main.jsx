@@ -1,22 +1,54 @@
-import React from "react";
+import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { Login, Register } from "./pages/AuthPages";
+import { Home } from "./pages/Home";
+import { ErrorPage } from "./pages/ErrorPage";
+import { clearSession, getSession } from "./services/session";
+import "bootstrap/dist/css/bootstrap.min.css";
 import "./style.css";
 
-function App() {
+const App = () => {
+    const [session, setSession] = useState(getSession);
+
+    const signOut = () => {
+        clearSession();
+        setSession(null);
+    }
+
     return (
-        <main className="page">
-            <section className="welcome">
-                <span className="eyebrow">Grupo H</span>
-                <h1>Mercado de Jugadores</h1>
-                <p>El frontend del proyecto está listo para empezar.</p>
-                <p>test</p>
-            </section>
-        </main>
+        <Routes>
+            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route
+                path="/login"
+                element={
+                    session ? (
+                        <Navigate to="/home" replace />
+                    ) : (
+                        <Login onLogin={setSession} />
+                    )
+                }
+            />
+            <Route
+                path="/register"
+                element={
+                    session ? <Navigate to="/home" replace /> : <Register />
+                }
+            />
+            <Route
+                path="/home"
+                element={<Home session={session} onLogout={signOut} preview={!session} />}
+            />
+            <Route path="/error" element={<ErrorPage />} />
+            <Route path="*" element={<ErrorPage notFound />} />
+        </Routes>
     );
 }
 
 createRoot(document.getElementById("root")).render(
     <React.StrictMode>
-        <App />
+        <BrowserRouter>
+            <App />
+        </BrowserRouter>
     </React.StrictMode>,
 );

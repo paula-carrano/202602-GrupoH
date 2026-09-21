@@ -31,7 +31,9 @@ npm install
 npm run dev
 ```
 
-La URL local aparece en la salida de Vite. Para comprobar la compilación, ejecutar `npm run build`. El frontend es una base inicial y todavía no consume la API.
+La URL local aparece en la salida de Vite. Para comprobar la compilación, ejecutar `npm run build`. En desarrollo, Vite redirige las solicitudes `/api` al backend en `http://localhost:8080`, por lo que ambos servicios deben estar activos para iniciar sesión y ver jugadores.
+
+Rutas disponibles: `/login`, `/register`, `/home` y `/error`. El registro usa usuario, email y contraseña; el inicio de sesión requiere **usuario** y contraseña. `/home` se puede abrir sin sesión para revisar el diseño con datos de muestra. Al iniciar sesión, obtiene el catálogo real desde la API. Para conectar un backend en otro servidor, definir `VITE_API_BASE_URL` con la URL completa que termine en `/api/v1` antes de compilar el frontend.
 
 ## Scraping
 

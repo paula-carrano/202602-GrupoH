@@ -8,10 +8,10 @@ import { clearSession, getSession } from "./services/session";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./style.css";
 
-function App() {
+const App = () => {
     const [session, setSession] = useState(getSession);
 
-    function signOut() {
+    const signOut = () => {
         clearSession();
         setSession(null);
     }

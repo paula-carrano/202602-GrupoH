@@ -1,6 +1,6 @@
 const KEY = 'football-market-session'
 
-export function getSession() {
+export const getSession = () => {
   try {
     const raw = localStorage.getItem(KEY) || sessionStorage.getItem(KEY)
     const session = raw ? JSON.parse(raw) : null
@@ -10,13 +10,13 @@ export function getSession() {
   return null
 }
 
-export function saveSession(session, remember) {
+export const saveSession = (session, remember) => {
   clearSession()
   const store = remember ? localStorage : sessionStorage
   store.setItem(KEY, JSON.stringify(session))
 }
 
-export function clearSession() {
+export const clearSession = () => {
   localStorage.removeItem(KEY)
   sessionStorage.removeItem(KEY)
 }

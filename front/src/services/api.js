@@ -5,7 +5,7 @@ export const api = axios.create({
   timeout: 12000,
 })
 
-export function getApiError(error) {
+export const getApiError = error => {
   const detail = error.response?.data?.detail
   if (detail) return detail
   if (error.code === 'ECONNABORTED') return 'La solicitud tardó demasiado. Intentá nuevamente.'

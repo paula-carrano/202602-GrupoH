@@ -84,11 +84,8 @@ specs/001-entrega1-foundation/
 ### Source Code (repository root)
 
 ```text
-tp-desarrollo/
-├── .github/
-│   └── workflows/
-│       └── ci.yml                     # Pipeline de CI (build, test, SonarCloud)
-├── pom.xml                            # Configuración Maven raíz
+back/
+├── pom.xml                            # Configuración Maven del backend
 ├── mvnw / mvnw.cmd                    # Maven Wrappers
 └── src/
     ├── main/

@@ -15,10 +15,10 @@ button, input { font: inherit; }
 .brand-panel__center span { font-size: 14px; }
 .brand-panel small { position: absolute; bottom: 22px; left: 22px; font-size: 11px; }
 .auth-form-panel { padding: 46px clamp(24px, 5vw, 62px) 28px; display: flex; flex-direction: column; justify-content: center; }
-.auth-heading { display: flex; gap: 15px; align-items: center; color: #082d58; }
+.auth-heading { display: flex; gap: 15px; align-items: center; justify-content: center; color: #082d58; }
 .auth-heading > svg { width: 29px; height: 29px; }
 .auth-heading h1 { font-size: 21px; font-weight: 750; margin: 0; }
-.auth-intro { font-size: 13px; margin: 18px 0 22px; }
+.auth-intro { font-size: 13px; margin: 18px 0 22px; text-align: center; }
 .field-group { margin-bottom: 12px; flex-wrap: nowrap; }
 .field-group .input-group-text { width: 44px; justify-content: center; color: #174879; background: #fff; border-color: #cbdbef; border-right: 0; }
 .field-group .form-control { min-width: 0; height: 44px; border-color: #cbdbef; border-left: 0; font-size: 13px; color: #12365d; box-shadow: none; }
@@ -34,7 +34,7 @@ button, input { font: inherit; }
 
 /* Dashboard */
 .dashboard-page { min-height: 100vh; padding: 28px; background: #f6faff; }
-.dashboard { max-width: 1510px; margin: 0 auto; border: 1px solid #d8e5f4; border-radius: 8px; overflow: hidden; background: #fff; }
+.dashboard { display: flex; flex-direction: column; min-height: calc(100vh - 56px); max-width: 1510px; margin: 0 auto; border: 1px solid #d8e5f4; border-radius: 8px; overflow: hidden; background: #fff; }
 .dashboard-header { min-height: 58px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 10px 22px; background: linear-gradient(90deg, #10355c, #071d38); color: #fff; }
 .dashboard-brand { display: flex; align-items: center; gap: 13px; color: #fff; text-decoration: none; white-space: nowrap; }
 .dashboard-brand > svg { width: 27px; height: 27px; }
@@ -44,14 +44,13 @@ button, input { font: inherit; }
 .dashboard-account button { display: flex; align-items: center; gap: 7px; border: 0; border-left: 1px solid #5a7290; margin-left: 9px; padding: 4px 0 4px 15px; background: none; color: #fff; }
 .dashboard-account button:hover { text-decoration: underline; }
 .dashboard-account > a { color: #fff; text-decoration: underline; }
-.dashboard-body { display: grid; grid-template-columns: 190px minmax(0, 1fr); min-height: 460px; }
+.dashboard-body { display: grid; flex: 1; grid-template-columns: 190px minmax(0, 1fr); min-height: 460px; }
 .dashboard-sidebar { padding: 18px 10px; background: linear-gradient(180deg, #092645, #102f50); display: flex; flex-direction: column; gap: 5px; }
-.dashboard-sidebar a, .sidebar-inactive { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 5px; color: #f4f8ff; text-decoration: none; font-size: 13px; white-space: nowrap; }
+.dashboard-sidebar a { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 5px; color: #f4f8ff; text-decoration: none; font-size: 13px; white-space: nowrap; }
 .dashboard-sidebar a:hover { background: #244f7c; }
 .dashboard-sidebar a.active { background: #0865e9; }
-.sidebar-inactive { opacity: .55; cursor: not-allowed; }
 .dashboard-sidebar svg { width: 18px; height: 18px; flex: none; }
-.catalog-panel { min-width: 0; padding: 24px; }
+.catalog-panel { display: flex; flex-direction: column; min-width: 0; padding: 24px; }
 .preview-note { margin-bottom: 18px; padding: 10px 14px; border: 1px solid #b8d8ff; border-radius: 5px; background: #edf5ff; color: #174879; font-size: 13px; }
 .catalog-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .catalog-top h1 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 19px; font-weight: 750; color: #0c305a; }
@@ -59,14 +58,15 @@ button, input { font: inherit; }
 .search-box { display: flex; align-items: center; gap: 8px; width: 255px; flex: none; padding: 9px 11px; border: 1px solid #cbdcf1; border-radius: 5px; color: #23609c; font-size: 13px; }
 .search-box input { width: 100%; min-width: 0; border: 0; outline: 0; color: #173e67; }
 .search-box input::placeholder { color: #6c85a3; }
+.table-responsive { max-height: max(300px, calc(100vh - 250px)); overflow: auto; }
 .players-table { width: 100%; margin: 0; border: 1px solid #cfe0f7; color: #143e69; font-size: 13px; }
 .players-table th, .players-table td { border-right: 1px solid #d4e2f5; padding: 14px 12px; white-space: nowrap; vertical-align: middle; }
-.players-table th { background: #edf5ff; color: #0c345f; font-weight: 500; }
+.players-table th { position: sticky; top: 0; z-index: 1; background: #edf5ff; color: #0c345f; font-weight: 500; }
 .players-table tbody td { border-top: 1px solid #d4e2f5; }
 .players-table th:last-child, .players-table td:last-child { border-right: 0; }
 .empty-results { margin: 0; padding: 25px; text-align: center; border: 1px solid #d4e2f5; border-top: 0; font-size: 14px; }
 .catalog-state { min-height: 270px; display: grid; place-content: center; justify-items: center; gap: 12px; color: #37618d; text-align: center; }
-.catalog-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 18px; font-size: 13px; }
+.catalog-footer { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: auto; padding-top: 18px; font-size: 13px; }
 .pagination-controls { display: flex; gap: 8px; }
 .pagination-controls .btn { display: flex; align-items: center; gap: 7px; font-size: 12px; }
 
@@ -98,9 +98,10 @@ button, input { font: inherit; }
   .dashboard-brand span { display: none; }
   .dashboard-body { grid-template-columns: 1fr; }
   .dashboard-sidebar { flex-direction: row; overflow-x: auto; padding: 7px; }
-  .dashboard-sidebar a, .sidebar-inactive { padding: 9px; }
+  .dashboard-sidebar a { padding: 9px; }
   .catalog-panel { padding: 18px 12px; }
   .catalog-top { align-items: stretch; flex-direction: column; }
   .search-box { width: 100%; }
+  .table-responsive { max-height: 60vh; }
   .catalog-footer { flex-wrap: wrap; }
 }

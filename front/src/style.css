@@ -43,6 +43,7 @@ button, input { font: inherit; }
 .dashboard-account { display: flex; align-items: center; gap: 10px; font-size: 13px; }
 .dashboard-account button { display: flex; align-items: center; gap: 7px; border: 0; border-left: 1px solid #5a7290; margin-left: 9px; padding: 4px 0 4px 15px; background: none; color: #fff; }
 .dashboard-account button:hover { text-decoration: underline; }
+.dashboard-account > a { color: #fff; text-decoration: underline; }
 .dashboard-body { display: grid; grid-template-columns: 190px minmax(0, 1fr); min-height: 460px; }
 .dashboard-sidebar { padding: 18px 10px; background: linear-gradient(180deg, #092645, #102f50); display: flex; flex-direction: column; gap: 5px; }
 .dashboard-sidebar a, .sidebar-inactive { display: flex; align-items: center; gap: 13px; padding: 12px 14px; border-radius: 5px; color: #f4f8ff; text-decoration: none; font-size: 13px; white-space: nowrap; }
@@ -51,6 +52,7 @@ button, input { font: inherit; }
 .sidebar-inactive { opacity: .55; cursor: not-allowed; }
 .dashboard-sidebar svg { width: 18px; height: 18px; flex: none; }
 .catalog-panel { min-width: 0; padding: 24px; }
+.preview-note { margin-bottom: 18px; padding: 10px 14px; border: 1px solid #b8d8ff; border-radius: 5px; background: #edf5ff; color: #174879; font-size: 13px; }
 .catalog-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .catalog-top h1 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 19px; font-weight: 750; color: #0c305a; }
 .catalog-icon { display: grid; place-items: center; width: 34px; height: 34px; flex: none; border-radius: 50%; background: #ebf3ff; color: #0c4789; }

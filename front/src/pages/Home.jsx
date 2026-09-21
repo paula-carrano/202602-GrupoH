@@ -4,6 +4,12 @@ import { FaArrowLeft, FaArrowRight, FaCircleExclamation, FaFileLines, FaFutbol, 
 import { api, getApiError } from '../services/api'
 
 const PAGE_SIZE = 7
+const PREVIEW_PLAYERS = [
+  { id: 1, firstName: 'Lionel', lastName: 'Messi', birthDate: '1987-06-24', nationality: 'Argentina', position: 'FORWARD', currentTeam: 'Inter Miami', league: 'MLS' },
+  { id: 2, firstName: 'Kylian', lastName: 'Mbappé', birthDate: '1998-12-20', nationality: 'Francia', position: 'FORWARD', currentTeam: 'Real Madrid', league: 'La Liga' },
+  { id: 3, firstName: 'Promesa', lastName: 'Académica', birthDate: null, nationality: 'Argentina', position: 'MIDFIELDER', currentTeam: 'Reserva CBO', league: 'Reserva' },
+  { id: 4, firstName: 'Emiliano', lastName: 'Martínez', birthDate: '1992-09-02', nationality: 'Argentina', position: 'GOALKEEPER', currentTeam: 'Aston Villa', league: 'Premier League' },
+]
 
 function ErrorDialog({ message, onClose }) {
   return <div className="error-overlay" role="presentation">
@@ -15,7 +21,7 @@ function ErrorDialog({ message, onClose }) {
   </div>
 }
 
-export function Home({ session, onLogout }) {
+export function Home({ session, onLogout, preview = false }) {
   const [players, setPlayers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -26,6 +32,12 @@ export function Home({ session, onLogout }) {
   const navigate = useNavigate()
 
   useEffect(() => {
+    if (preview) {
+      setPlayers(PREVIEW_PLAYERS)
+      setLoading(false)
+      setError('')
+      return
+    }
     const controller = new AbortController()
     setLoading(true)
     setError('')
@@ -44,7 +56,7 @@ export function Home({ session, onLogout }) {
         setLoading(false)
       })
     return () => controller.abort()
-  }, [session.token, retry])
+  }, [session?.token, retry, preview])
 
   const filtered = useMemo(() => players.filter(player => `${player.firstName} ${player.lastName}`.toLocaleLowerCase().includes(query.toLocaleLowerCase().trim())), [players, query])
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -54,7 +66,7 @@ export function Home({ session, onLogout }) {
     <div className="dashboard shadow-sm">
       <header className="dashboard-header">
         <Link className="dashboard-brand" to="/home"><FaFutbol aria-hidden="true" /><strong>FOOTBALL MARKET PLATFORM</strong><span>[v1.0 · Foundation]</span></Link>
-        <div className="dashboard-account"><FaUser aria-hidden="true" /><span>{session.username}</span><button type="button" onClick={onLogout}><FaRightFromBracket aria-hidden="true" /> Salir</button></div>
+        <div className="dashboard-account"><FaUser aria-hidden="true" /><span>{preview ? 'Vista previa' : session.username}</span>{preview ? <Link to="/login">Iniciar sesión</Link> : <button type="button" onClick={onLogout}><FaRightFromBracket aria-hidden="true" /> Salir</button>}</div>
       </header>
       <div className="dashboard-body">
         <nav className="dashboard-sidebar" aria-label="Navegación principal">
@@ -64,6 +76,7 @@ export function Home({ session, onLogout }) {
           <a href="http://localhost:8080/swagger-ui/index.html" target="_blank" rel="noreferrer"><FaFileLines aria-hidden="true" /> Swagger Docs</a>
         </nav>
         <section className="catalog-panel">
+          {preview && <div className="preview-note" role="status">Vista previa con datos de muestra. Iniciá sesión para consultar el catálogo real.</div>}
           <div className="catalog-top"><h1><span className="catalog-icon"><FaUserGroup aria-hidden="true" /></span> CATÁLOGO DE JUGADORES</h1><label className="search-box"><FaMagnifyingGlass aria-hidden="true" /><input aria-label="Buscar jugador por nombre" placeholder="Buscar por nombre…" value={query} onChange={e => { setQuery(e.target.value); setPage(1) }} /></label></div>
           {loading ? <div className="catalog-state" role="status">Cargando jugadores…</div> : error ? <div className="catalog-state"><p>{error}</p><button className="btn btn-primary" onClick={() => setRetry(value => value + 1)}>Reintentar</button></div> : <>
             <div className="table-responsive"><table className="table players-table"><thead><tr><th>ID</th><th>Nombre completo</th><th>Nacimiento</th><th>Nacionalidad</th><th>Posición</th><th>Club actual</th><th>Liga</th></tr></thead><tbody>{visible.map(player => <tr key={player.id}><td>{player.id}</td><td>{player.firstName} {player.lastName}</td><td>{player.birthDate || 'N/D'}</td><td>{player.nationality}</td><td>{player.position}</td><td>{player.currentTeam}</td><td>{player.league}</td></tr>)}</tbody></table>{filtered.length === 0 && <p className="empty-results">No se encontraron jugadores.</p>}</div>

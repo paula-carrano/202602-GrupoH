@@ -21,6 +21,31 @@ cd back
 
 En macOS o Linux, usar `./mvnw` en lugar de `.\mvnw.cmd`.
 
+### Ejecución con Docker Compose (Backend + PostgreSQL)
+
+Permite ejecutar el backend y la base de datos PostgreSQL en contenedores aislados sin requerir Java ni PostgreSQL en el host:
+
+1. **Configurar variables de entorno**:
+   ```bash
+   cp .env.example .env
+   ```
+   *(Asegurarse de definir `POSTGRES_PASSWORD` y `JWT_SECRET` en `.env`)*
+
+2. **Construir y levantar servicios**:
+   ```bash
+   docker compose up --build -d
+   ```
+
+3. **Verificar estado y healthcheck**:
+   ```bash
+   docker compose ps
+   curl http://localhost:8080/actuator/health
+   ```
+
+4. **Detener servicios**:
+   - Conservando la persistencia de datos: `docker compose down`
+   - Eliminando volúmenes: `docker compose down -v`
+
 ## Frontend
 
 Requisito: Node.js 20.19+ o 22.12+ y npm.

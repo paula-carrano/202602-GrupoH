@@ -34,4 +34,21 @@ describe('teamMatcher unit tests', () => {
     const url = findMatchUrlFromFixturesHtml(html, 'Real Madrid', 'Barcelona');
     expect(url).toBeNull();
   });
+
+  it('should find match URL in search results HTML', () => {
+    const { findMatchUrlFromSearchHtml } = require('../../src/services/whoscored/teamMatcher');
+    const searchHtml = `
+      <html>
+        <body>
+          <div class="search-result">
+            <a href="/Matches/1982341/Live/England-Premier-League-2026-2027-Arsenal-Chelsea">Arsenal vs Chelsea</a>
+            <a href="/Matches/1982342/Live/England-Premier-League-2026-2027-Liverpool-Everton">Liverpool vs Everton</a>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const url = findMatchUrlFromSearchHtml(searchHtml, 'Arsenal', 'Chelsea');
+    expect(url).toBe('/Matches/1982341/Live/England-Premier-League-2026-2027-Arsenal-Chelsea');
+  });
 });

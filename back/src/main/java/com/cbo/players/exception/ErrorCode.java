@@ -1,6 +1,10 @@
 package com.cbo.players.exception;
 
 public enum ErrorCode {
+    CATALOG_SYNC_NOT_FOUND,
+    CATALOG_SYNC_BUSY,
+    PLAYER_STATISTICS_NOT_FOUND,
+    WHOSCORED_ID_CONFLICT,
     USER_NOT_FOUND,
     INVALID_CREDENTIALS,
     EMAIL_ALREADY_EXISTS,

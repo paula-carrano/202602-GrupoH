@@ -17,9 +17,18 @@ spring:
     show-sql: false
   sql:
     init:
-      mode: always
+      mode: never
 
 app:
+  catalog-sync:
+    enabled: ${CATALOG_SYNC_ENABLED:false}
+    cron: ${CATALOG_SYNC_CRON:0 0 15 * * MON}
+    zone: ${CATALOG_SYNC_ZONE:America/Argentina/Buenos_Aires}
+  scraper:
+    base-url: ${SCRAPER_BASE_URL:http://localhost:3000}
+    api-key: ${SCRAPER_API_KEY:}
+    connect-timeout-ms: ${SCRAPER_CONNECT_TIMEOUT_MS:3000}
+    read-timeout-ms: ${SCRAPER_READ_TIMEOUT_MS:90000}
   security:
     jwt:
       secret: ${JWT_SECRET:dGhpc19pc19hX3Zlcnlfc2VjdXJlX2tleV9mb3Jfand0X3NpZ25pbmdfMjU2X2JpdHNfc2VjcmV0}

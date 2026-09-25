@@ -181,6 +181,70 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /competitions/{competitionCode}/teams:
+    get:
+      summary: Equipos de la temporada actual para importar el catálogo
+      parameters:
+        - in: path
+          name: competitionCode
+          required: true
+          schema:
+            type: string
+            enum: [PL, BL1, PD, SA, FL1]
+      responses:
+        '200':
+          description: Equipos (un array vacío es válido)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogTeam'
+        '400':
+          description: INVALID_REQUEST_PARAMS
+        '401':
+          description: UNAUTHORIZED
+        '429':
+          description: RATE_LIMIT_EXCEEDED
+        '502':
+          description: EXTERNAL_API_AUTH_ERROR o INVALID_EXTERNAL_RESPONSE
+
+  /teams/{teamId}/squad:
+    get:
+      summary: Plantel actual del equipo
+      parameters:
+        - in: path
+          name: teamId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Equipo y jugadores normalizados
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [team, players]
+                properties:
+                  team:
+                    $ref: '#/components/schemas/CatalogTeam'
+                  players:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SquadPlayer'
+        '400':
+          description: INVALID_REQUEST_PARAMS
+        '401':
+          description: UNAUTHORIZED
+        '404':
+          description: MATCH_NOT_FOUND (recurso del proveedor no encontrado)
+        '429':
+          description: RATE_LIMIT_EXCEEDED
+        '502':
+          description: EXTERNAL_API_AUTH_ERROR o INVALID_EXTERNAL_RESPONSE
+
   /lineups:
     get:
       summary: Obtener alineación de un partido vía WhoScored
@@ -360,6 +424,43 @@ components:
         score:
           $ref: '#/components/schemas/ScoreInfo'
 
+    CatalogTeam:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+          minLength: 1
+
+    SquadPlayer:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          minimum: 1
+        name:
+          type: string
+        firstName:
+          type: string
+          nullable: true
+        lastName:
+          type: string
+          nullable: true
+        birthDate:
+          type: string
+          format: date
+          nullable: true
+        nationality:
+          type: string
+          nullable: true
+        position:
+          type: string
+          nullable: true
+
     TeamRef:
       type: object
       required:
@@ -493,6 +594,7 @@ components:
             - SCRAPE_BLOCKED
             - RATE_LIMIT_EXCEEDED
             - EXTERNAL_API_AUTH_ERROR
+            - INVALID_EXTERNAL_RESPONSE
           example: "MATCH_NOT_FOUND"
         message:
           type: string

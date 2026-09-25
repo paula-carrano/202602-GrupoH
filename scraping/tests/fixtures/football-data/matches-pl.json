@@ -1,0 +1,79 @@
+{
+  "filters": {
+    "season": "2026"
+  },
+  "resultSet": {
+    "count": 2,
+    "first": "2026-09-01",
+    "last": "2026-09-30",
+    "played": 2
+  },
+  "competition": {
+    "id": 2021,
+    "name": "Premier League",
+    "code": "PL",
+    "type": "LEAGUE"
+  },
+  "matches": [
+    {
+      "id": 432501,
+      "utcDate": "2026-09-20T16:30:00Z",
+      "status": "FINISHED",
+      "matchday": 5,
+      "homeTeam": {
+        "id": 57,
+        "name": "Arsenal FC",
+        "shortName": "Arsenal",
+        "tla": "ARS"
+      },
+      "awayTeam": {
+        "id": 61,
+        "name": "Chelsea FC",
+        "shortName": "Chelsea",
+        "tla": "CHE"
+      },
+      "score": {
+        "winner": "HOME_TEAM",
+        "duration": "REGULAR",
+        "fullTime": {
+          "home": 2,
+          "away": 1
+        },
+        "halfTime": {
+          "home": 1,
+          "away": 0
+        }
+      }
+    },
+    {
+      "id": 432502,
+      "utcDate": "2026-09-27T14:00:00Z",
+      "status": "SCHEDULED",
+      "matchday": 6,
+      "homeTeam": {
+        "id": 64,
+        "name": "Liverpool FC",
+        "shortName": "Liverpool",
+        "tla": "LIV"
+      },
+      "awayTeam": {
+        "id": 65,
+        "name": "Manchester City FC",
+        "shortName": "Man City",
+        "tla": "MCI"
+      },
+      "score": {
+        "winner": null,
+        "duration": "REGULAR",
+        "fullTime": {
+          "home": null,
+          "away": null
+        },
+        "halfTime": {
+          "home": null,
+          "away": null
+        }
+      }
+    }
+  ]
+}

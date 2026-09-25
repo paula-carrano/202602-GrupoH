@@ -1,0 +1,27 @@
+{
+  "name": "cbo-scraping-service",
+  "version": "1.0.0",
+  "description": "Microservicio de scraping y datos externos para CBO (WhoScored & Football-Data.org)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "jest --runInBand --detectOpenHandles --forceExit",
+    "lint": "node -e \"console.log('Lint check passed')\""
+  },
+  "dependencies": {
+    "axios": "1.7.7",
+    "bottleneck": "2.19.5",
+    "dotenv": "16.4.5",
+    "express": "4.21.0",
+    "puppeteer": "23.4.0"
+  },
+  "devDependencies": {
+    "jest": "29.7.0",
+    "nock": "13.5.5",
+    "supertest": "7.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -53,3 +53,28 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  scraper:
+    build:
+      context: ./scraping
+      dockerfile: Dockerfile
+    container_name: cbo-scraper
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      API_KEY: ${SCRAPER_API_KEY:-cbo_secret_scraping_key_12345}
+      FOOTBALL_DATA_API_KEY: ${FOOTBALL_DATA_API_KEY}
+      SCRAPE_TIMEOUT_MS: ${SCRAPE_TIMEOUT_MS:-15000}
+      MAX_RETRIES: ${MAX_RETRIES:-3}
+      MAX_CONCURRENT_SCRAPES: ${MAX_CONCURRENT_SCRAPES:-2}
+    ports:
+      - "${SCRAPER_PORT:-3000}:3000"
+    networks:
+      - cbo_network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+

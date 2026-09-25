@@ -1,0 +1,35 @@
+{
+  "id": 432501,
+  "utcDate": "2026-09-20T16:30:00Z",
+  "status": "FINISHED",
+  "matchday": 5,
+  "competition": {
+    "id": 2021,
+    "name": "Premier League",
+    "code": "PL"
+  },
+  "homeTeam": {
+    "id": 57,
+    "name": "Arsenal FC",
+    "shortName": "Arsenal",
+    "tla": "ARS"
+  },
+  "awayTeam": {
+    "id": 61,
+    "name": "Chelsea FC",
+    "shortName": "Chelsea",
+    "tla": "CHE"
+  },
+  "score": {
+    "winner": "HOME_TEAM",
+    "duration": "REGULAR",
+    "fullTime": {
+      "home": 2,
+      "away": 1
+    },
+    "halfTime": {
+      "home": 1,
+      "away": 0
+    }
+  }
+}

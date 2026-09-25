@@ -6,7 +6,7 @@ Repositorio organizado por componentes:
 | --- | --- |
 | `back/` | API Spring Boot con Java y Maven |
 | `front/` | Aplicación React con Vite |
-| `scraping/` | Reservada para el futuro módulo de scraping |
+| `scraping/` | Microservicio de extracción de datos externos (WhoScored & Football-Data.org) en Node.js |
 | `specs/` | Especificaciones y documentación del proyecto |
 
 ## Backend
@@ -21,15 +21,15 @@ cd back
 
 En macOS o Linux, usar `./mvnw` en lugar de `.\mvnw.cmd`.
 
-### Ejecución con Docker Compose (Backend + PostgreSQL)
+### Ejecución con Docker Compose (Backend + PostgreSQL + Scraper)
 
-Permite ejecutar el backend y la base de datos PostgreSQL en contenedores aislados sin requerir Java ni PostgreSQL en el host:
+Permite ejecutar el backend, la base de datos PostgreSQL y el microservicio de scraping en contenedores aislados:
 
 1. **Configurar variables de entorno**:
    ```bash
    cp .env.example .env
    ```
-   *(Asegurarse de definir `POSTGRES_PASSWORD` y `JWT_SECRET` en `.env`)*
+   *(Asegurarse de definir `POSTGRES_PASSWORD`, `JWT_SECRET`, `SCRAPER_API_KEY` y opcionalmente `FOOTBALL_DATA_API_KEY` en `.env`)*
 
 2. **Construir y levantar servicios**:
    ```bash
@@ -40,6 +40,7 @@ Permite ejecutar el backend y la base de datos PostgreSQL en contenedores aislad
    ```bash
    docker compose ps
    curl http://localhost:8080/actuator/health
+   curl http://localhost:3000/health
    ```
 
 4. **Detener servicios**:
@@ -60,6 +61,18 @@ La URL local aparece en la salida de Vite. Para comprobar la compilación, ejecu
 
 Rutas disponibles: `/login`, `/register`, `/home` y `/error`. El registro usa usuario, email y contraseña; el inicio de sesión requiere **usuario** y contraseña. `/home` se puede abrir sin sesión para revisar el diseño con datos de muestra. Al iniciar sesión, obtiene el catálogo real desde la API. Para conectar un backend en otro servidor, definir `VITE_API_BASE_URL` con la URL completa que termine en `/api/v1` antes de compilar el frontend.
 
-## Scraping
+## Microservicio de Scraping y Datos Externos (`/scraping`)
 
-`scraping/` está vacía por ahora. El archivo `.gitkeep` permite conservar la carpeta en Git.
+Microservicio en Node.js 20 responsable de obtener estadísticas cuantitativas de jugadores y alineaciones desde WhoScored (vía Puppeteer con Chromium headless), e integrar fixtures y resultados de Football-Data.org (API REST v4).
+
+### Ejecución Local
+
+```bash
+cd scraping
+npm install
+npm test
+npm start
+```
+
+Documentación completa y guía de integración en [specs/002-scrapper/quickstart.md](specs/002-scrapper/quickstart.md).
+

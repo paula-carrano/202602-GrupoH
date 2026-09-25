@@ -1,0 +1,506 @@
+openapi: 3.0.3
+info:
+  title: Microservicio de Datos Externos (WhoScored & Football-Data.org)
+  description: Microservicio interno en Node.js que extrae estadísticas crudas de WhoScored vía web scraping y consume la API oficial de Football-Data.org para partidos y resultados, proveyendo fallback de alineaciones. Consumido exclusivamente por el backend mediante Adapter.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Entorno local
+  - url: http://scraper:3000
+    description: Red interna Docker (cbo_network)
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /health:
+    get:
+      summary: Verificación de salud del servicio (Health check)
+      description: Endpoint público para verificación de estado del contenedor y orquestadores (Docker healthcheck). Excluido de autenticación X-API-Key.
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: Servicio operativo y saludable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /players/{whoscoredId}/stats:
+    get:
+      summary: Obtener estadísticas crudas de rendimiento de un jugador
+      description: Extrae mediante web scraping dinámico en WhoScored las 10 métricas estadísticas fundamentales para la valoración del jugador.
+      operationId: getPlayerStats
+      parameters:
+        - name: whoscoredId
+          in: path
+          required: true
+          description: Identificador del jugador en WhoScored
+          schema:
+            type: string
+            example: "29400"
+      responses:
+        '200':
+          description: Estadísticas extraídas exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerStats'
+        '401':
+          description: Autenticación rechazada (X-API-Key inválida o ausente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Jugador no encontrado en WhoScored (PLAYER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bloqueo anti-scraping o CAPTCHA en WhoScored (SCRAPE_BLOCKED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Timeout al intentar obtener las estadísticas tras reintentos (SCRAPE_TIMEOUT)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /competitions/{competitionCode}/matches:
+    get:
+      summary: Listar partidos y resultados de una competición
+      description: Consulta Football-Data.org para obtener el calendario y resultados de partidos de una de las 5 ligas soportadas.
+      operationId: getCompetitionMatches
+      parameters:
+        - name: competitionCode
+          in: path
+          required: true
+          description: Código de la competición (PL, BL1, PD, SA, FL1)
+          schema:
+            type: string
+            enum: [PL, BL1, PD, SA, FL1]
+            example: "PL"
+        - name: dateFrom
+          in: query
+          required: false
+          description: Fecha inicial de búsqueda en formato ISO (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: "2026-09-01"
+        - name: dateTo
+          in: query
+          required: false
+          description: Fecha final de búsqueda en formato ISO (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: "2026-09-30"
+      responses:
+        '200':
+          description: Lista de partidos obtenida y normalizada exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MatchFixture'
+        '400':
+          description: Parámetros de consulta o código de competición inválidos (INVALID_REQUEST_PARAMS)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Autenticación rechazada internamente (UNAUTHORIZED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Límite de tasa excedido en Football-Data.org (RATE_LIMIT_EXCEEDED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Error de autenticación del proveedor Football-Data.org (EXTERNAL_API_AUTH_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /matches/{matchId}:
+    get:
+      summary: Obtener detalle puntual de un partido
+      description: Consulta Football-Data.org para obtener el resultado y estado puntual de un partido (sin alineaciones en plan gratuito).
+      operationId: getMatchDetail
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          description: Identificador único del partido en Football-Data.org
+          schema:
+            type: integer
+            example: 438120
+      responses:
+        '200':
+          description: Detalle del partido obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchFixture'
+        '401':
+          description: Autenticación rechazada internamente (UNAUTHORIZED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Partido no encontrado en Football-Data.org (MATCH_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Límite de tasa excedido en Football-Data.org (RATE_LIMIT_EXCEEDED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Error de autenticación del proveedor Football-Data.org (EXTERNAL_API_AUTH_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /lineups:
+    get:
+      summary: Obtener alineación de un partido vía WhoScored
+      description: Busca en WhoScored el partido por coincidencia de equipos y fecha para extraer las formaciones tácticas, titulares y suplentes.
+      operationId: getMatchLineup
+      parameters:
+        - name: homeTeam
+          in: query
+          required: true
+          description: Nombre del equipo local
+          schema:
+            type: string
+            example: "Arsenal"
+        - name: awayTeam
+          in: query
+          required: true
+          description: Nombre del equipo visitante
+          schema:
+            type: string
+            example: "Chelsea"
+        - name: date
+          in: query
+          required: true
+          description: Fecha del partido en formato ISO-8601 (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+            example: "2026-09-20"
+      responses:
+        '200':
+          description: Alineación extraída exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchLineup'
+        '400':
+          description: Parámetros de consulta faltantes o inválidos (INVALID_REQUEST_PARAMS)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Autenticación rechazada internamente (UNAUTHORIZED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Partido no localizado en WhoScored (MATCH_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '502':
+          description: Bloqueo anti-scraping en WhoScored (SCRAPE_BLOCKED)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '504':
+          description: Timeout al raspar la alineación en WhoScored (SCRAPE_TIMEOUT)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Clave secreta de servicio para comunicación servicio-a-servicio
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          example: "UP"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-09-22T20:00:00Z"
+
+    PlayerStats:
+      type: object
+      required:
+        - goals
+        - assists
+        - shots
+        - keyPasses
+        - dribbles
+        - tackles
+        - rating
+        - minutosJugados
+        - tarjetasAmarillas
+        - tarjetasRojas
+      properties:
+        goals:
+          type: integer
+          minimum: 0
+          example: 12
+        assists:
+          type: integer
+          minimum: 0
+          example: 8
+        shots:
+          type: integer
+          minimum: 0
+          example: 45
+        keyPasses:
+          type: integer
+          minimum: 0
+          example: 32
+        dribbles:
+          type: integer
+          minimum: 0
+          example: 27
+        tackles:
+          type: integer
+          minimum: 0
+          example: 14
+        rating:
+          type: number
+          format: float
+          minimum: 0.0
+          example: 7.65
+        minutosJugados:
+          type: integer
+          minimum: 0
+          example: 1840
+        tarjetasAmarillas:
+          type: integer
+          minimum: 0
+          example: 2
+        tarjetasRojas:
+          type: integer
+          minimum: 0
+          example: 0
+
+    MatchFixture:
+      type: object
+      required:
+        - id
+        - competition
+        - utcDate
+        - status
+        - homeTeam
+        - awayTeam
+      properties:
+        id:
+          type: integer
+          example: 438120
+        competition:
+          type: string
+          example: "PL"
+        utcDate:
+          type: string
+          format: date-time
+          example: "2026-09-20T16:30:00Z"
+        status:
+          type: string
+          enum: [SCHEDULED, TIMED, IN_PLAY, PAUSED, FINISHED, POSTPONED, CANCELLED, SUSPENDED]
+          example: "FINISHED"
+        matchday:
+          type: integer
+          example: 5
+        homeTeam:
+          $ref: '#/components/schemas/TeamRef'
+        awayTeam:
+          $ref: '#/components/schemas/TeamRef'
+        score:
+          $ref: '#/components/schemas/ScoreInfo'
+
+    TeamRef:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          example: 57
+        name:
+          type: string
+          example: "Arsenal FC"
+        shortName:
+          type: string
+          example: "Arsenal"
+        tla:
+          type: string
+          example: "ARS"
+
+    ScoreInfo:
+      type: object
+      properties:
+        winner:
+          type: string
+          nullable: true
+          example: "HOME_TEAM"
+        duration:
+          type: string
+          example: "REGULAR"
+        fullTime:
+          type: object
+          properties:
+            home:
+              type: integer
+              nullable: true
+              example: 2
+            away:
+              type: integer
+              nullable: true
+              example: 1
+        halfTime:
+          type: object
+          properties:
+            home:
+              type: integer
+              nullable: true
+              example: 1
+            away:
+              type: integer
+              nullable: true
+              example: 0
+
+    MatchLineup:
+      type: object
+      required:
+        - source
+        - date
+        - homeTeam
+        - awayTeam
+      properties:
+        source:
+          type: string
+          enum: ["WHOSCORED"]
+          example: "WHOSCORED"
+        date:
+          type: string
+          format: date
+          example: "2026-09-20"
+        homeTeam:
+          $ref: '#/components/schemas/TeamLineup'
+        awayTeam:
+          $ref: '#/components/schemas/TeamLineup'
+
+    TeamLineup:
+      type: object
+      required:
+        - name
+        - formation
+        - startingXI
+        - bench
+      properties:
+        name:
+          type: string
+          example: "Arsenal"
+        formation:
+          type: string
+          example: "4-3-3"
+        startingXI:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerLineupEntry'
+        bench:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlayerLineupEntry'
+
+    PlayerLineupEntry:
+      type: object
+      required:
+        - name
+      properties:
+        id:
+          type: string
+          example: "12345"
+        name:
+          type: string
+          example: "Bukayo Saka"
+        shirtNumber:
+          type: integer
+          example: 7
+        position:
+          type: string
+          example: "FW"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - status
+        - timestamp
+      properties:
+        error:
+          type: string
+          enum:
+            - UNAUTHORIZED
+            - INVALID_REQUEST_PARAMS
+            - PLAYER_NOT_FOUND
+            - MATCH_NOT_FOUND
+            - SCRAPE_TIMEOUT
+            - SCRAPE_BLOCKED
+            - RATE_LIMIT_EXCEEDED
+            - EXTERNAL_API_AUTH_ERROR
+          example: "MATCH_NOT_FOUND"
+        message:
+          type: string
+          example: "No se encontró el partido especificado en la fuente externa correspondiente (sea por identificador en Football-Data.org o por coincidencia de equipos y fecha en WhoScored)."
+        status:
+          type: integer
+          example: 404
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-09-22T20:00:00Z"

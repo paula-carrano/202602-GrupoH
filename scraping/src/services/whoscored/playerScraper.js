@@ -12,9 +12,91 @@ const {
  * Parses raw HTML string extracted from WhoScored and returns normalized PlayerStats object
  */
 const parsePlayerStatsFromHtml = (html) => {
-  // Regex parsing for standalone testability without requiring a full live Chromium browser instance
+  if (!html || typeof html !== 'string') {
+    return {
+      goals: 0,
+      assists: 0,
+      shots: 0,
+      keyPasses: 0,
+      dribbles: 0,
+      tackles: 0,
+      rating: 0.0,
+      minutosJugados: 0,
+      tarjetasAmarillas: 0,
+      tarjetasRojas: 0
+    };
+  }
+
+  // Strategy 1: Check for WhoScored embedded DataStore / require.config.params['args']
+  // In live WhoScored pages, tournament statistics and detailed totals are rendered via Client-Side Templates
+  // using data injected in require.config.params['args'] = { tournaments: [...], ... };
+  const scriptRegex = /require\.config\.params\['args'\]\s*=\s*(\{[\s\S]*?\});/;
+  const scriptMatch = html.match(scriptRegex);
+
+  if (scriptMatch) {
+    try {
+      const jsonStr = scriptMatch[1];
+      // Safely evaluate JS object literal
+      const argsData = Function('"use strict";return (' + jsonStr + ')')();
+
+      if (argsData && Array.isArray(argsData.tournaments) && argsData.tournaments.length > 0) {
+        let totalGoals = 0;
+        let totalAssists = 0;
+        let totalShots = 0;
+        let totalKeyPasses = 0;
+        let totalDribbles = 0;
+        let totalTackles = 0;
+        let totalYellow = 0;
+        let totalRed = 0;
+        let weightedRatingSum = 0;
+        let totalApps = 0;
+
+        for (const t of argsData.tournaments) {
+          totalGoals += toInt(t.Goals);
+          totalAssists += toInt(t.Assists);
+          totalShots += toInt(t.TotalShots);
+          totalKeyPasses += toInt(t.KeyPasses);
+          totalDribbles += toInt(t.Dribbles);
+          totalTackles += toInt(t.TotalTackles);
+          totalYellow += toInt(t.Yellow) + toInt(t.SecondYellow);
+          totalRed += toInt(t.Red);
+
+          const apps = toInt(t.GameStarted) + toInt(t.SubOn);
+          totalApps += apps;
+          const r = toFloat(t.Rating);
+          weightedRatingSum += r * apps;
+        }
+
+        const avgRating = totalApps > 0 ? toFloat(weightedRatingSum / totalApps) : 0.0;
+
+        // Sum minutes played across match incidents / matches table if present
+        let totalMins = 0;
+        const minRegex = /class="[^"]*col-data-mins[^"]*"[^>]*>\s*(\d+)'?\s*<\/div>/gi;
+        let minMatch;
+        while ((minMatch = minRegex.exec(html)) !== null) {
+          totalMins += toInt(minMatch[1]);
+        }
+
+        return {
+          goals: totalGoals,
+          assists: totalAssists,
+          shots: totalShots,
+          keyPasses: totalKeyPasses,
+          dribbles: totalDribbles,
+          tackles: totalTackles,
+          rating: avgRating,
+          minutosJugados: totalMins,
+          tarjetasAmarillas: totalYellow,
+          tarjetasRojas: totalRed
+        };
+      }
+    } catch (e) {
+      // Fallback to table extraction if JSON/object parsing fails
+    }
+  }
+
+  // Strategy 2: Legacy / Server-rendered HTML table extraction
   const getCell = (colName) => {
-    // Top summary table matching
     const headerRegex = new RegExp(`<th>\\s*${colName}\\s*</th>`, 'i');
     const headerMatch = html.match(headerRegex);
     if (!headerMatch) return null;
@@ -23,7 +105,6 @@ const parsePlayerStatsFromHtml = (html) => {
     const tbodyMatch = tableMatch.match(/<tbody>[\s\S]*?<tr>([\s\S]*?)<\/tr>/i);
     if (!tbodyMatch) return null;
 
-    // Find column index
     const theadMatch = html.substring(0, headerMatch.index);
     const prevThs = theadMatch.match(/<th>/gi) || [];
     const colIndex = prevThs.length;
@@ -42,7 +123,6 @@ const parsePlayerStatsFromHtml = (html) => {
   const red = getCell('Red');
   const rating = getCell('Rating');
 
-  // Parse specialized statistics tables
   const parseClassValue = (className) => {
     const regex = new RegExp(`class="${className}">([^<]*)<`, 'i');
     const match = html.match(regex);
@@ -87,7 +167,7 @@ const scrapePlayerStats = async (whoscoredId, abortSignal = null) => {
             abortSignal.addEventListener('abort', async () => {
               try {
                 if (page && !page.isClosed()) await page.close();
-              } catch (e) {}
+              } catch (e) { }
             });
           }
 
@@ -136,7 +216,7 @@ const scrapePlayerStats = async (whoscoredId, abortSignal = null) => {
           if (page && !page.isClosed()) {
             try {
               await page.close();
-            } catch (e) {}
+            } catch (e) { }
           }
         }
       },

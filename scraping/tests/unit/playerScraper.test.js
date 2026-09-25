@@ -42,4 +42,24 @@ describe('playerScraper unit parsing', () => {
       tarjetasRojas: 0
     });
   });
+
+  it('should parse live-player.html (real WhoScored structure for Harry Kane) accurately into 10 quantitative fields', () => {
+    const htmlPath = path.resolve(__dirname, '../fixtures/whoscored/live-player.html');
+    const html = fs.readFileSync(htmlPath, 'utf8');
+
+    const stats = parsePlayerStatsFromHtml(html);
+
+    expect(stats).toEqual({
+      goals: 21,
+      assists: 4,
+      shots: 84,
+      keyPasses: 28,
+      dribbles: 17,
+      tackles: 13,
+      rating: 7.66,
+      minutosJugados: 836,
+      tarjetasAmarillas: 1,
+      tarjetasRojas: 0
+    });
+  });
 });

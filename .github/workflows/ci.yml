@@ -42,6 +42,7 @@ jobs:
         working-directory: front
         run: |
           npm ci
+          npm test
           npm run build
 
       - name: Cache SonarCloud packages

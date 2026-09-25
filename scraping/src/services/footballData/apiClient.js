@@ -6,11 +6,13 @@ const {
   RateLimitExceededError,
   ExternalApiAuthError
 } = require('../../utils/errors');
+const { AppError } = require('../../utils/errors');
 
 const FOOTBALL_DATA_BASE_URL = 'https://api.football-data.org/v4';
 
 const client = axios.create({
   baseURL: FOOTBALL_DATA_BASE_URL,
+  ...(config.NODE_ENV === 'test' ? { proxy: false } : {}),
   timeout: 10000
 });
 
@@ -87,7 +89,41 @@ const getMatchById = async (matchId) => {
   });
 };
 
+const invalidCatalog = () => new AppError('Respuesta de plantel incompatible', 502, 'INVALID_EXTERNAL_RESPONSE');
+const validId = id => Number.isSafeInteger(id) && id > 0;
+const requiredName = name => typeof name === 'string' && name.trim().length > 0;
+
+const getCompetitionTeams = async (code) => limiter.schedule(async () => {
+  const response = await client.get(`/competitions/${code}/teams`);
+  if (!Array.isArray(response.data?.teams)) throw invalidCatalog();
+  return response.data.teams.map(team => {
+    if (!team || !validId(team.id) || !requiredName(team.name)) throw invalidCatalog();
+    return { id: team.id, name: team.name };
+  });
+});
+
+const getTeamSquad = async (teamId) => limiter.schedule(async () => {
+  const { data } = await client.get(`/teams/${teamId}`);
+  if (!data || !validId(data.id) || data.id !== teamId || !requiredName(data.name) || !Array.isArray(data.squad)) {
+    throw invalidCatalog();
+  }
+  return {
+    team: { id: data.id, name: data.name },
+    players: data.squad.map(player => {
+      if (!player || !validId(player.id) || !requiredName(player.name)) throw invalidCatalog();
+      return {
+        id: player.id, name: player.name,
+        firstName: player.firstName || null, lastName: player.lastName || null,
+        birthDate: player.dateOfBirth || null, nationality: player.nationality || null,
+        position: player.position || null
+      };
+    })
+  };
+});
+
 module.exports = {
+  getCompetitionTeams,
+  getTeamSquad,
   client,
   getCompetitionMatches,
   getMatchById,

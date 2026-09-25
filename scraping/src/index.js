@@ -35,6 +35,9 @@ const {
 
 app.get('/competitions/:competitionCode/matches', validateCompetitionMatches, matchController.getCompetitionMatches);
 app.get('/matches/:matchId', validateMatchDetail, matchController.getMatchDetail);
+const catalogController = require('./controllers/catalogController');
+app.get('/competitions/:competitionCode/teams', validateCompetitionMatches, catalogController.getTeams);
+app.get('/teams/:teamId/squad', catalogController.getSquad);
 app.get('/lineups', validateLineupParams, lineupController.getLineups);
 
 // Manejador centralizado de errores

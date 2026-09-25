@@ -14,20 +14,20 @@ public class Player {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "first_name", nullable = false, length = 50)
+    @Column(name = "first_name", nullable = false, length = 200)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false, length = 50)
+    @Column(name = "last_name", nullable = false, length = 200)
     private String lastName;
 
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String nationality;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private PlayerPosition position;
 
     @Column(name = "current_team", nullable = false, length = 80)
@@ -50,6 +50,23 @@ public class Player {
 
     public Player() {
     }
+
+    @Column(name = "football_data_id", unique = true)
+    private Long footballDataId;
+    public Long getFootballDataId() { return footballDataId; }
+    public void setFootballDataId(Long value) { footballDataId = value; }
+    @Column(name = "football_data_team_id")
+    private Long footballDataTeamId;
+    public Long getFootballDataTeamId() { return footballDataTeamId; }
+    public void setFootballDataTeamId(Long value) { footballDataTeamId = value; }
+    @Column(name = "whoscored_id", unique = true)
+    private Long whoscoredId;
+    public Long getWhoscoredId() { return whoscoredId; }
+    public void setWhoscoredId(Long value) { whoscoredId = value; }
+    @Column(name = "last_catalog_sync_at")
+    private java.time.Instant lastCatalogSyncAt;
+    public java.time.Instant getLastCatalogSyncAt() { return lastCatalogSyncAt; }
+    public void setLastCatalogSyncAt(java.time.Instant value) { lastCatalogSyncAt = value; }
 
     public Player(String firstName, String lastName, LocalDate birthDate, String nationality,
                   PlayerPosition position, String currentTeam, String league) {

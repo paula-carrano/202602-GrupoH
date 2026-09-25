@@ -1,7 +1,9 @@
 target/
+/tp-desarrollo/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+/docs/
 
 ### STS ###
 .apt_generated

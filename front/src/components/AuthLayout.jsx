@@ -1,14 +1,4 @@
-import { FaFutbol } from 'react-icons/fa6'
-
-const BrandPanel = () => (
-  <aside className="brand-panel col-md-5 d-flex flex-column align-items-center justify-content-center text-center text-white" aria-label="Football Market Platform">
-    <div className="brand-panel__center d-flex flex-column align-items-center gap-3">
-      <FaFutbol className="brand-panel__ball" aria-hidden="true" />
-      <strong>FOOTBALL MARKET<br />PLATFORM</strong>
-      <span>Conectando el talento con el mercado</span>
-    </div>
-  </aside>
-)
+import { BrandPanel } from './BrandPanel'
 
 export const AuthLayout = ({ icon: Icon, title, intro, children, footer }) => (
   <main className="auth-page d-flex align-items-center justify-content-center min-vh-100 p-3 p-md-4">

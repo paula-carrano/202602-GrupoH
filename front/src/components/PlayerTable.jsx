@@ -1,6 +1,6 @@
 import { formatBirthDate } from '../utils/date'
 
-export const PlayerTable = ({ players, hasResults, rankingOffset = 0 }) => (
+export const PlayerTable = ({ players, hasResults, rankingOffset = 0, onPlayerSelect }) => (
     <div className="table-responsive catalog-table-scroll">
         <table className="table players-table mb-0">
             <thead>
@@ -19,7 +19,14 @@ export const PlayerTable = ({ players, hasResults, rankingOffset = 0 }) => (
                     <tr key={player.id}>
                         <td className="text-center">{rankingOffset + index + 1}</td>
                         <td>
-                            {player.firstName} {player.lastName}
+                            <button
+                                type="button"
+                                className="player-name-button"
+                                onClick={() => onPlayerSelect?.(player)}
+                                aria-label={`Ver perfil de ${player.firstName} ${player.lastName}`}
+                            >
+                                {player.firstName} {player.lastName}
+                            </button>
                         </td>
                         <td className="text-center">{formatBirthDate(player.birthDate)}</td>
                         <td className="text-center">{player.nationality}</td>

@@ -46,6 +46,23 @@ body { min-width: 320px; }
 .players-table th { position: sticky; top: 0; z-index: 1; background: #edf5ff; color: #0c345f; font-weight: 500; }
 .players-table tbody td { border-top: 1px solid #d4e2f5; }
 .players-table th:last-child, .players-table td:last-child { border-right: 0; }
+.player-name-button { padding: 0; border: 0; background: transparent; color: #0865ec; font: inherit; font-weight: 600; text-align: left; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
+.player-name-button:hover, .player-name-button:focus-visible { color: #064eaf; text-decoration-color: currentColor; }
+.player-profile-modal { overflow-y: auto; }
+.player-profile-card { overflow: hidden; border: 1px solid #23496e; border-radius: 14px; background: #102f50; color: #fff; box-shadow: 0 20px 60px rgb(4 24 47 / 35%); }
+.player-profile-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; background: linear-gradient(110deg, #123a64, #0a2746); }
+.player-profile-eyebrow { color: #b8d5f5; font-size: 13px; }
+.player-profile-name { color: #fff; font-size: clamp(21px, 4vw, 28px); font-weight: 750; }
+.player-profile-team { color: #d6e6f8; }
+.player-profile-header .btn { flex: none; border-color: #6683a2; font-size: 13px; }
+.player-profile-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 4px 24px 20px; }
+.player-profile-metric { display: flex; min-height: 74px; flex-direction: column; justify-content: center; gap: 5px; padding: 12px; border: 1px solid #365675; border-radius: 10px; background: #153758; }
+.player-profile-metric span { color: #c1d6ec; font-size: 12px; }
+.player-profile-metric strong { color: #fff; font-size: 17px; font-weight: 700; }
+.player-card-marker { width: 12px; height: 15px; border-radius: 2px; }
+.player-card-marker--yellow { background: #e3c52b; }
+.player-card-marker--red { background: #e12f3d; }
+.player-profile-pending { padding: 0 24px 18px; color: #b8d5f5; font-size: 12px; }
 .empty-results { border: 1px solid #d4e2f5; border-top: 0; font-size: 14px; }
 .catalog-state { min-height: 270px; color: #37618d; }
 .catalog-footer { font-size: 13px; }
@@ -66,4 +83,7 @@ body { min-width: 320px; }
   .dashboard-brand span { display: none; }
   .catalog-search { width: 100%; }
   .catalog-table-scroll { max-height: 60vh; }
+  .player-profile-header { padding: 18px 16px 14px; }
+  .player-profile-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 4px 16px 16px; }
+  .player-profile-pending { padding: 0 16px 16px; }
 }

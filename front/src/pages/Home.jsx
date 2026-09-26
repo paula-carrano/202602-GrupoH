@@ -1,9 +1,11 @@
+import { useState } from 'react'
 import { FaMagnifyingGlass, FaUserGroup } from 'react-icons/fa6'
-import { DashboardLayout, ErrorDialog, FeedbackAlert, Pagination, PlayerTable } from '../components'
+import { DashboardLayout, ErrorDialog, FeedbackAlert, Pagination, PlayerProfileDialog, PlayerTable } from '../components'
 import { usePlayerCatalog } from '../hooks/usePlayerCatalog'
 
 export const Home = ({ session, onLogout }) => {
   const catalog = usePlayerCatalog({ session, onLogout })
+  const [selectedPlayer, setSelectedPlayer] = useState(null)
 
   return <>
     <DashboardLayout session={session} onLogout={onLogout}>
@@ -37,6 +39,7 @@ export const Home = ({ session, onLogout }) => {
           players={catalog.visible}
           hasResults={catalog.filteredCount > 0}
           rankingOffset={(catalog.page - 1) * catalog.pageSize}
+          onPlayerSelect={setSelectedPlayer}
         />
         <Pagination
           page={catalog.page}
@@ -46,6 +49,7 @@ export const Home = ({ session, onLogout }) => {
         />
       </>}
     </DashboardLayout>
+    <PlayerProfileDialog player={selectedPlayer} onClose={() => setSelectedPlayer(null)} />
     {catalog.modalError && <ErrorDialog message={catalog.modalError} onClose={catalog.closeModalError} />}
   </>
 }

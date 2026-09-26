@@ -62,7 +62,8 @@ body { min-width: 320px; }
 .player-card-marker { width: 12px; height: 15px; border-radius: 2px; }
 .player-card-marker--yellow { background: #e3c52b; }
 .player-card-marker--red { background: #e12f3d; }
-.player-profile-pending { padding: 0 24px 18px; color: #b8d5f5; font-size: 12px; }
+.player-profile-status { padding: 0 24px 18px; color: #b8d5f5; font-size: 12px; }
+.player-profile-status--error { color: #ffc2c2; }
 .empty-results { border: 1px solid #d4e2f5; border-top: 0; font-size: 14px; }
 .catalog-state { min-height: 270px; color: #37618d; }
 .catalog-footer { font-size: 13px; }
@@ -85,5 +86,5 @@ body { min-width: 320px; }
   .catalog-table-scroll { max-height: 60vh; }
   .player-profile-header { padding: 18px 16px 14px; }
   .player-profile-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding: 4px 16px 16px; }
-  .player-profile-pending { padding: 0 16px 16px; }
+  .player-profile-status { padding: 0 16px 16px; }
 }

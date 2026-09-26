@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { Login, Register } from "./pages/AuthPages";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import { Home } from "./pages/Home";
 import { ErrorPage } from "./pages/ErrorPage";
 import { clearSession, getSession } from "./services/session";
@@ -25,19 +26,21 @@ const App = () => {
                     session ? (
                         <Navigate to="/home" replace />
                     ) : (
-                        <Login onLogin={setSession} />
+                        <LoginPage onLogin={setSession} />
                     )
                 }
             />
             <Route
                 path="/register"
                 element={
-                    session ? <Navigate to="/home" replace /> : <Register />
+                    session ? <Navigate to="/home" replace /> : <RegisterPage />
                 }
             />
             <Route
                 path="/home"
-                element={<Home session={session} onLogout={signOut} preview={!session} />}
+                element={session
+                    ? <Home session={session} onLogout={signOut} />
+                    : <Navigate to="/login" replace state={{ from: { pathname: '/home' } }} />}
             />
             <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<ErrorPage notFound />} />

@@ -40,3 +40,5 @@ credentials.json
 ### Logs ###
 *.log
 logs/
+coverage/
+.scannerwork/

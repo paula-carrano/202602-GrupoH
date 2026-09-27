@@ -177,12 +177,12 @@ public class WhoScoredBulkLinkService {
             } else if (exact.isEmpty()) {
                 progress.noMatch++;
             } else {
-                progress.review(player, "MULTIPLE_EXACT_MATCHES", exact);
+                progress.addReviewItem(player, "MULTIPLE_EXACT_MATCHES", exact);
             }
         } catch (RuntimeException error) {
             progress.errors++;
             boolean blocked = isProviderBlocked(error);
-            progress.review(player, blocked ? SCRAPE_BLOCKED : "LINK_OR_SEARCH_ERROR", exact);
+            progress.addReviewItem(player, blocked ? SCRAPE_BLOCKED : "LINK_OR_SEARCH_ERROR", exact);
             if (blocked)
                 progress.status = BLOCKED;
         }

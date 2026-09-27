@@ -46,6 +46,29 @@ public final class ScrapingRestAdapter implements ScrapingPort {
     }
 
     @Override
+    public List<com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto> searchPlayers(String query) {
+        if (query == null || query.trim().length() < 2 || query.trim().length() > 120) {
+            throw new IllegalArgumentException("Player search query must contain 2 to 120 characters");
+        }
+        List<com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto> candidates = get(uri ->
+                uri.path("/players/search").queryParam("q", query.trim()).build(), new TypeReference<>() {});
+        if (candidates.stream().anyMatch(java.util.Objects::isNull)) throw invalidResponse();
+        return List.copyOf(candidates);
+    }
+
+    @Override
+    public List<com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto> searchTeamPlayers(String teamName, String country) {
+        if (teamName == null || teamName.isBlank() || country == null || country.isBlank()) {
+            throw new IllegalArgumentException("teamName y country son obligatorios");
+        }
+        List<com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto> candidates = get(uri ->
+                uri.path("/teams/search/players").queryParam("name", teamName.trim())
+                        .queryParam("country", country.trim()).build(), new TypeReference<>() {});
+        if (candidates.stream().anyMatch(java.util.Objects::isNull)) throw invalidResponse();
+        return List.copyOf(candidates);
+    }
+
+    @Override
     public List<MatchDto> getCompetitionMatches(String competitionCode, LocalDate dateFrom, LocalDate dateTo) {
         String code = competitionCode == null ? "" : competitionCode.toUpperCase(Locale.ROOT);
         if (!COMPETITIONS.contains(code)) {

@@ -10,6 +10,8 @@ public interface ScrapingPort {
     com.cbo.players.adapter.dto.TeamSquadDto getTeamSquad(long footballDataTeamId);
     /** Receives the external WhoScored ID, not the local player ID. */
     PlayerStatsDto getPlayerStats(long whoscoredId);
+    List<com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto> searchPlayers(String query);
+    List<com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto> searchTeamPlayers(String teamName, String country);
     List<MatchDto> getCompetitionMatches(String competitionCode, LocalDate dateFrom, LocalDate dateTo);
     MatchDto getMatch(long matchId);
 }

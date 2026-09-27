@@ -23,6 +23,8 @@ app.use(authMiddleware);
 // Rutas de Jugadores (User Story 1 - MVP)
 const playerController = require('./controllers/playerController');
 app.get('/players/:whoscoredId/stats', playerController.getPlayerStats);
+app.get('/players/search', playerController.searchPlayers);
+app.get('/teams/search/players', playerController.searchTeamPlayers);
 
 // Rutas de Competiciones y Partidos (User Story 2)
 const matchController = require('./controllers/matchController');

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class CatalogScheduler {
     private final CatalogSyncService sync;
     public CatalogScheduler(CatalogSyncService sync) { this.sync = sync; }
-    @Scheduled(cron = "${app.catalog-sync.cron:0 0 15 * * MON}",
+    @Scheduled(cron = "${app.catalog-sync.cron:0 0 15 * * WEN}",
             zone = "${app.catalog-sync.zone:America/Argentina/Buenos_Aires}")
     public void synchronize() {
         try { sync.start(CatalogSyncRun.Origin.SCHEDULED); }

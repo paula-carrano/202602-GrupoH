@@ -152,11 +152,13 @@ class WhoScoredBulkLinkServiceTest {
         assertEquals(0, initial.processed());
         assertEquals(1, completed.processed());
 
+        var reviewItems = completed.reviewItems();
+
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> completed.reviewItems().clear());
+                reviewItems::clear);
 
-        var candidates = completed.reviewItems().get(0).candidates();
+        var candidates = reviewItems.get(0).candidates();
 
         assertThrows(
                 UnsupportedOperationException.class,

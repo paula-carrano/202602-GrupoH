@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
-import { Login, Register } from '../pages/AuthPages'
+import { LoginPage } from '../pages/LoginPage'
+import { RegisterPage } from '../pages/RegisterPage'
 import { api } from '../services/api'
 
 const renderRoute = (path, element) => render(
@@ -23,7 +24,7 @@ describe('autenticación', () => {
     const user = userEvent.setup()
     const onLogin = vi.fn()
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { accessToken: 'token-de-prueba', expiresInSeconds: 3600 } })
-    renderRoute('/login', <Login onLogin={onLogin} />)
+    renderRoute('/login', <LoginPage onLogin={onLogin} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Usuario' }), 'messi')
     await user.type(screen.getByLabelText('Contraseña'), 'password123')
@@ -38,7 +39,7 @@ describe('autenticación', () => {
   it('muestra el error de credenciales que devuelve la API', async () => {
     const user = userEvent.setup()
     vi.spyOn(api, 'post').mockRejectedValue({ response: { data: { detail: 'Credenciales inválidas' } } })
-    renderRoute('/login', <Login onLogin={vi.fn()} />)
+    renderRoute('/login', <LoginPage onLogin={vi.fn()} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Usuario' }), 'messi')
     await user.type(screen.getByLabelText('Contraseña'), 'incorrecta')
@@ -50,7 +51,7 @@ describe('autenticación', () => {
   it('registra con los campos que acepta el backend y dirige al login', async () => {
     const user = userEvent.setup()
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { id: 1 } })
-    renderRoute('/register', <Register />)
+    renderRoute('/register', <RegisterPage />)
 
     await user.type(screen.getByRole('textbox', { name: 'Usuario' }), 'jugador')
     await user.type(screen.getByRole('textbox', { name: 'Email' }), 'jugador@example.com')
@@ -65,7 +66,7 @@ describe('autenticación', () => {
   it('impide enviar contraseñas distintas', async () => {
     const user = userEvent.setup()
     const post = vi.spyOn(api, 'post')
-    renderRoute('/register', <Register />)
+    renderRoute('/register', <RegisterPage />)
 
     await user.type(screen.getByRole('textbox', { name: 'Usuario' }), 'jugador')
     await user.type(screen.getByRole('textbox', { name: 'Email' }), 'jugador@example.com')

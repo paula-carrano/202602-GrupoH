@@ -36,24 +36,28 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Browsers do not attach these credential headers automatically. JSON login
-                // returns a token in the body, without creating an authenticated cookie session.
+                // Safe because this application is a stateless REST API.
+                // Authentication is performed through Authorization: Bearer JWT
+                // or X-API-Key headers, never through authentication cookies.
+                // Login/register receive JSON credentials and do not establish
+                // browser sessions.
                 .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::usesExplicitCredentials,
                         SecurityConfig::isJsonAuthentication))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
-                        .requestMatchers("/actuator/health", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/actuator/health", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
+                        .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -70,7 +74,8 @@ public class SecurityConfig {
     private static boolean isJsonAuthentication(HttpServletRequest request) {
         String path = request.getServletPath();
         if (!"POST".equals(request.getMethod()) || !("/api/v1/auth/login".equals(path)
-                || "/api/v1/auth/register".equals(path))) return false;
+                || "/api/v1/auth/register".equals(path)))
+            return false;
         try {
             return request.getContentType() != null && MediaType.APPLICATION_JSON
                     .includes(MediaType.parseMediaType(request.getContentType()));

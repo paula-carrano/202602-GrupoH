@@ -1,6 +1,7 @@
 package com.cbo.players.controller;
 
 import com.cbo.players.dto.response.PlayerResponseDto;
+import com.cbo.players.dto.response.PlayerDetailResponseDto;
 import com.cbo.players.exception.ErrorCode;
 import com.cbo.players.exception.GlobalExceptionHandler;
 import com.cbo.players.exception.ResourceNotFoundException;
@@ -60,8 +61,8 @@ class PlayerControllerTest {
 
     @Test
     void getPlayerById_existingId_returns200() throws Exception {
-        PlayerResponseDto player = new PlayerResponseDto(1L, "Lionel", "Messi", LocalDate.of(1987, 6, 24),
-                "Argentina", PlayerPosition.FORWARD, "Inter Miami", "MLS", true);
+        PlayerDetailResponseDto player = new PlayerDetailResponseDto(1L, "Lionel", "Messi", LocalDate.of(1987, 6, 24),
+                "Argentina", PlayerPosition.FORWARD, "Inter Miami", "MLS", true, null);
 
         when(playerService.getPlayerById(1L)).thenReturn(player);
 

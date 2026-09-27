@@ -2,6 +2,7 @@ package com.cbo.players.controller;
 
 import com.cbo.players.config.OpenApiConfig;
 import com.cbo.players.dto.response.PlayerResponseDto;
+import com.cbo.players.dto.response.PlayerDetailResponseDto;
 import com.cbo.players.service.PlayerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -60,10 +61,10 @@ public class PlayerController {
             @ApiResponse(responseCode = "401", description = "No autenticado (requiere JWT o API Key)"),
             @ApiResponse(responseCode = "404", description = "Jugador no encontrado")
     })
-    public ResponseEntity<PlayerResponseDto> getPlayerById(
+    public ResponseEntity<PlayerDetailResponseDto> getPlayerById(
             @Parameter(description = "Identificador único del jugador", example = "1")
             @PathVariable Long id) {
-        PlayerResponseDto player = playerService.getPlayerById(id);
+        PlayerDetailResponseDto player = playerService.getPlayerById(id);
         return ResponseEntity.ok(player);
     }
 }

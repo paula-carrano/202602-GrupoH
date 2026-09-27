@@ -153,7 +153,7 @@ class CatalogIntegrationTest {
         Long id = sync.start(CatalogSyncRun.Origin.MANUAL);
         try {
             assertTrue(entered.await(5,TimeUnit.SECONDS));
-            mvc.perform(post("/api/v1/admin/catalog-sync").with(user("admin").roles("ADMIN")))
+            mvc.perform(post("/api/admin/catalog-sync").with(user("admin").roles("ADMIN")))
                     .andExpect(status().isConflict());
             assertEquals(CatalogSyncRun.Status.RUNNING,runs.get(id).status());
         } finally { release.countDown(); }
@@ -167,17 +167,17 @@ class CatalogIntegrationTest {
     @Test
     void adminEndpointsRequireRoleAndValidateLinks() throws Exception {
         Long id = importedPlayer();
-        mvc.perform(post("/api/v1/admin/catalog-sync").with(user("regular").roles("USER")))
+        mvc.perform(post("/api/admin/catalog-sync").with(user("regular").roles("USER")))
                 .andExpect(status().isForbidden());
-        mvc.perform(get("/api/v1/admin/catalog-sync/1").with(user("regular").roles("USER")))
+        mvc.perform(get("/api/admin/catalog-sync/1").with(user("regular").roles("USER")))
                 .andExpect(status().isForbidden());
-        mvc.perform(put("/api/v1/admin/players/"+id+"/whoscored").with(user("regular").roles("USER"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("regular").roles("USER"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}")).andExpect(status().isForbidden());
-        mvc.perform(put("/api/v1/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isBadRequest());
-        mvc.perform(put("/api/v1/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":-1}")).andExpect(status().isBadRequest());
-        mvc.perform(put("/api/v1/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.whoscoredId").value(123));
         mvc.perform(get("/api/v1/players/"+id+"/stats").with(user("regular").roles("USER")))
@@ -185,18 +185,18 @@ class CatalogIntegrationTest {
         catalog.saveStatistics(new CatalogPersistenceService.LinkedPlayer(id,123L),METRICS);
         mvc.perform(get("/api/v1/players/"+id+"/stats").with(user("regular").roles("USER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.rating").value(7.65));
-        mvc.perform(get("/api/v1/admin/catalog-sync/999").with(user("admin").roles("ADMIN")))
+        mvc.perform(get("/api/admin/catalog-sync/999").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void manualEndpointReturnsAcceptedAndCanBePolled() throws Exception {
-        String response = mvc.perform(post("/api/v1/admin/catalog-sync").with(user("admin").roles("ADMIN")))
+        String response = mvc.perform(post("/api/admin/catalog-sync").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isAccepted()).andExpect(header().exists("Location"))
                 .andReturn().getResponse().getContentAsString();
         Long id = new com.fasterxml.jackson.databind.ObjectMapper().readTree(response).get("id").asLong();
         completed(id);
-        mvc.perform(get("/api/v1/admin/catalog-sync/"+id).with(user("admin").roles("ADMIN")))
+        mvc.perform(get("/api/admin/catalog-sync/"+id).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SUCCESS"));
     }
 

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.awaitility.Awaitility.await;
@@ -32,6 +33,9 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("test")
 class CatalogIntegrationTest {
     @MockBean ScrapingPort scraper;
+    @MockBean com.cbo.players.security.CustomUserDetailsService userDetails;
+    @MockBean ApiKeyService apiKeys;
+    @Autowired com.cbo.players.security.JwtTokenProvider tokens;
     @Autowired CatalogPersistenceService catalog;
     @Autowired CatalogSyncService sync;
     @Autowired CatalogRunService runs;
@@ -153,7 +157,7 @@ class CatalogIntegrationTest {
         Long id = sync.start(CatalogSyncRun.Origin.MANUAL);
         try {
             assertTrue(entered.await(5,TimeUnit.SECONDS));
-            mvc.perform(post("/api/admin/catalog-sync").with(user("admin").roles("ADMIN")))
+            mvc.perform(post("/api/admin/catalog-sync").with(csrf()).with(user("admin").roles("ADMIN")))
                     .andExpect(status().isConflict());
             assertEquals(CatalogSyncRun.Status.RUNNING,runs.get(id).status());
         } finally { release.countDown(); }
@@ -167,36 +171,36 @@ class CatalogIntegrationTest {
     @Test
     void adminEndpointsRequireRoleAndValidateLinks() throws Exception {
         Long id = importedPlayer();
-        mvc.perform(post("/api/admin/catalog-sync").with(user("regular").roles("USER")))
+        mvc.perform(post("/api/admin/catalog-sync").with(csrf()).with(user("regular").roles("USER")))
                 .andExpect(status().isForbidden());
-        mvc.perform(get("/api/admin/catalog-sync/1").with(user("regular").roles("USER")))
+        mvc.perform(get("/api/admin/catalog-sync/1").with(csrf()).with(user("regular").roles("USER")))
                 .andExpect(status().isForbidden());
-        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("regular").roles("USER"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(csrf()).with(user("regular").roles("USER"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}")).andExpect(status().isForbidden());
-        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(csrf()).with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isBadRequest());
-        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(csrf()).with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":-1}")).andExpect(status().isBadRequest());
-        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(user("admin").roles("ADMIN"))
+        mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(csrf()).with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.whoscoredId").value(123));
-        mvc.perform(get("/api/v1/players/"+id+"/stats").with(user("regular").roles("USER")))
+        mvc.perform(get("/api/v1/players/"+id+"/stats").with(csrf()).with(user("regular").roles("USER")))
                 .andExpect(status().isNotFound());
         catalog.saveStatistics(new CatalogPersistenceService.LinkedPlayer(id,123L),METRICS);
-        mvc.perform(get("/api/v1/players/"+id+"/stats").with(user("regular").roles("USER")))
+        mvc.perform(get("/api/v1/players/"+id+"/stats").with(csrf()).with(user("regular").roles("USER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.rating").value(7.65));
-        mvc.perform(get("/api/admin/catalog-sync/999").with(user("admin").roles("ADMIN")))
+        mvc.perform(get("/api/admin/catalog-sync/999").with(csrf()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void manualEndpointReturnsAcceptedAndCanBePolled() throws Exception {
-        String response = mvc.perform(post("/api/admin/catalog-sync").with(user("admin").roles("ADMIN")))
+        String response = mvc.perform(post("/api/admin/catalog-sync").with(csrf()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isAccepted()).andExpect(header().exists("Location"))
                 .andReturn().getResponse().getContentAsString();
         Long id = new com.fasterxml.jackson.databind.ObjectMapper().readTree(response).get("id").asLong();
         completed(id);
-        mvc.perform(get("/api/admin/catalog-sync/"+id).with(user("admin").roles("ADMIN")))
+        mvc.perform(get("/api/admin/catalog-sync/"+id).with(csrf()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("SUCCESS"));
     }
 
@@ -209,5 +213,62 @@ class CatalogIntegrationTest {
         var zone = ZoneId.of("America/Argentina/Buenos_Aires");
         var next = CronExpression.parse("0 0 15 * * MON").next(ZonedDateTime.of(2026,9,25,15,0,0,0,zone));
         assertEquals(Instant.parse("2026-09-28T18:00:00Z"),next.toInstant());
+    }
+
+    @Test void csrfProtectsRequestsWithoutExplicitCredentials() throws Exception {
+        Long id = importedPlayer();
+        String path = "/api/admin/players/" + id + "/whoscored";
+        mvc.perform(put(path).with(user("admin").roles("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(path).with(user("admin").roles("ADMIN")).with(csrf().useInvalidToken())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put(path).with(user("admin").roles("ADMIN"))
+                .header("Authorization", "Bearer ").contentType(MediaType.APPLICATION_JSON)
+                .content("{\"whoscoredId\":123}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/auth/login").servletPath("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED).content("username=x&password=y"))
+                .andExpect(status().isForbidden());
+        assertNull(players.findById(id).orElseThrow().getWhoscoredId());
+    }
+
+    @Test void jsonLoginRemainsUsableWithoutCsrfAndInvalidCredentialsDoNotAuthorizeWrites() throws Exception {
+        mvc.perform(post("/api/v1/auth/login").servletPath("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(put("/api/admin/players/1/whoscored").header("Authorization", "Bearer invalid")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/admin/players/1/whoscored").header("X-API-Key", "invalid")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test void playerDetailIncludesPersistedStatistics() throws Exception {
+        Long id = importedPlayer();
+        catalog.link(id, 123L);
+        catalog.saveStatistics(new CatalogPersistenceService.LinkedPlayer(id,123L),METRICS);
+        mvc.perform(get("/api/v1/players/" + id).with(user("reader").roles("USER")))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.statistics.rating").value(7.65))
+                .andExpect(jsonPath("$.statistics.minutesPlayed").value(800));
+    }
+
+    @Test void headerCredentialsStillAuthorizeWritesWithoutCsrfTokens() throws Exception {
+        Long id = importedPlayer();
+        when(userDetails.loadUserByUsername("admin")).thenReturn(
+                org.springframework.security.core.userdetails.User.withUsername("admin")
+                        .password("unused").roles("ADMIN").build());
+        String jwt = tokens.generateToken("admin", 1L, "ROLE_ADMIN");
+        mvc.perform(put("/api/admin/players/" + id + "/whoscored").header("Authorization", "Bearer " + jwt)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.whoscoredId").value(123));
+        User admin = new User("admin", "admin@example.com", "unused", UserRole.ROLE_ADMIN);
+        admin.setId(1L);
+        when(apiKeys.validateApiKey("test-key")).thenReturn(Optional.of(new ApiKey(admin, "test", "hash", "prefix")));
+        mvc.perform(put("/api/admin/players/" + id + "/whoscored").header("X-API-Key", "test-key")
+                .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":456}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.whoscoredId").value(456));
     }
 }

@@ -8,6 +8,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @EnableScheduling
 public class CatalogSyncConfiguration {
     @Bean
+    public ThreadPoolTaskExecutor bulkLinkExecutor() {
+        var executor = catalogSyncExecutor();
+        executor.setThreadNamePrefix("bulk-link-");
+        return executor;
+    }
+    @Bean
     public ThreadPoolTaskExecutor catalogSyncExecutor() {
         var executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(1);

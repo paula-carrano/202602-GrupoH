@@ -7,7 +7,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,7 +43,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                // Browsers do not attach these credential headers automatically. JSON login
+                // returns a token in the body, without creating an authenticated cookie session.
+                .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::usesExplicitCredentials,
+                        SecurityConfig::isJsonAuthentication))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
@@ -53,5 +58,24 @@ public class SecurityConfig {
                 .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static boolean usesExplicitCredentials(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        return (authorization != null && authorization.startsWith("Bearer ")
+                && StringUtils.hasText(authorization.substring(7)))
+                || StringUtils.hasText(request.getHeader("X-API-Key"));
+    }
+
+    private static boolean isJsonAuthentication(HttpServletRequest request) {
+        String path = request.getServletPath();
+        if (!"POST".equals(request.getMethod()) || !("/api/v1/auth/login".equals(path)
+                || "/api/v1/auth/register".equals(path))) return false;
+        try {
+            return request.getContentType() != null && MediaType.APPLICATION_JSON
+                    .includes(MediaType.parseMediaType(request.getContentType()));
+        } catch (IllegalArgumentException error) {
+            return false;
+        }
     }
 }

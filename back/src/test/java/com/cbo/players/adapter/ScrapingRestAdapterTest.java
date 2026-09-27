@@ -133,15 +133,17 @@ class ScrapingRestAdapterTest {
         assertThrows(IllegalArgumentException.class, () -> adapter.getMatch(-1));
         assertThrows(IllegalArgumentException.class, () -> adapter.getCompetitionMatches(null, null, null));
         assertThrows(IllegalArgumentException.class, () -> adapter.getCompetitionMatches("INVALID", null, null));
-        assertThrows(IllegalArgumentException.class, () -> adapter.getCompetitionMatches("PL",
-                LocalDate.of(2026, 9, 25), LocalDate.of(2026, 9, 1)));
+        var from = LocalDate.of(2026, 9, 25);
+        var to = LocalDate.of(2026, 9, 1);
+        assertThrows(IllegalArgumentException.class, () -> adapter.getCompetitionMatches("PL", from, to));
         server.verify();
     }
 
     @Test
     void rejectsMissingKeyBeforeHttp() {
         for (String key : new String[] {null, "", " "}) {
-            var error = assertThrows(ScrapingException.class, () -> createAdapter(key).getMatch(1));
+            var missingKeyAdapter = createAdapter(key);
+            var error = assertThrows(ScrapingException.class, () -> missingKeyAdapter.getMatch(1));
             assertEquals(CONFIGURATION, error.getKind());
         }
         server.verify();
@@ -265,6 +267,42 @@ class ScrapingRestAdapterTest {
     void rejectsInvalidSquads(String body) {
         expect("/teams/57/squad",body);
         assertEquals(INVALID_RESPONSE,assertThrows(ScrapingException.class, () -> adapter.getTeamSquad(57)).getKind());
+        server.verify();
+    }
+
+    @Test void readsSearchCandidatesAndEncodesQueries() {
+        String body = "[{\"whoscoredId\":10,\"name\":\"Alex Doe\",\"profileUrl\":\"https://www.whoscored.com/players/10\"}]";
+        expect("/players/search?q=Alex%20Doe", body);
+        expect("/teams/search/players?name=Team%20FC&country=England", body);
+        assertEquals(10L, adapter.searchPlayers(" Alex Doe ").get(0).whoscoredId());
+        assertEquals("Alex Doe", adapter.searchTeamPlayers(" Team FC ", " England ").get(0).name());
+        server.verify();
+    }
+
+    @Test void rejectsSearchParametersBeforeHttp() {
+        for (String query : new String[] {null, "", "a", "x".repeat(121)}) {
+            assertThrows(IllegalArgumentException.class, () -> adapter.searchPlayers(query));
+        }
+        for (String missing : new String[] {null, "", " "}) {
+            assertThrows(IllegalArgumentException.class, () -> adapter.searchTeamPlayers(missing, "England"));
+            assertThrows(IllegalArgumentException.class, () -> adapter.searchTeamPlayers("Team", missing));
+        }
+        assertThrows(IllegalArgumentException.class, () -> adapter.getCompetitionTeams(null));
+        server.verify();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"[null]", "[{}]", "[{\"whoscoredId\":0,\"name\":\"A\",\"profileUrl\":\"x\"}]",
+            "[{\"whoscoredId\":1,\"name\":null,\"profileUrl\":\"x\"}]",
+            "[{\"whoscoredId\":1,\"name\":\" \",\"profileUrl\":\"x\"}]",
+            "[{\"whoscoredId\":1,\"name\":\"A\",\"profileUrl\":null}]",
+            "[{\"whoscoredId\":1,\"name\":\"A\",\"profileUrl\":\"\"}]"})
+    void rejectsMalformedSearchCandidates(String body) {
+        expect("/players/search?q=Alex", body);
+        expect("/teams/search/players?name=Team&country=England", body);
+        assertEquals(INVALID_RESPONSE, assertThrows(ScrapingException.class, () -> adapter.searchPlayers("Alex")).getKind());
+        assertEquals(INVALID_RESPONSE, assertThrows(ScrapingException.class,
+                () -> adapter.searchTeamPlayers("Team", "England")).getKind());
         server.verify();
     }
 }

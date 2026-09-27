@@ -26,7 +26,8 @@ public class CatalogPersistenceService {
 
     @Transactional
     public ImportResult importSquad(String league, TeamSquadDto squad) {
-        int created = 0, updated = 0;
+        int created = 0;
+        int updated = 0;
         for (SquadPlayerDto source : squad.players()) {
             Player player = players.findByFootballDataId(source.id()).orElse(null);
             if (player == null) {

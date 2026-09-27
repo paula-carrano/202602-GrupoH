@@ -56,3 +56,18 @@ productiva. Los tests y sus archivos auxiliares no cuentan como código producti
 Sonar usa los binarios Java de `target/classes` y `target/test-classes`, más los
 JAR de ámbito test copiados a `target/sonar-libraries` (incluyen dependencias de
 compilación y ejecución). No ejecutar un segundo scanner Maven.
+
+Los resultados de ejecución Java se importan desde `back/target/surefire-reports`
+mediante `sonar.junit.reportPaths`; son independientes del XML de cobertura JaCoCo.
+
+## Pruebas de las correcciones del Quality Gate
+
+Las suites cubren vinculación masiva (coincidencias, ambigüedades, bloqueo del
+proveedor, errores y concurrencia), búsqueda HTML y cancelación del navegador,
+validación de candidatos externos, endpoints del catálogo y autenticación.
+La API mantiene CSRF activo salvo para credenciales explícitas por cabecera
+(`Authorization: Bearer ...` o `X-API-Key`) y POST JSON de login/registro, que
+devuelven tokens en el cuerpo. Las solicitudes restantes que modifican estado
+necesitan un token CSRF. Las pruebas comprueban que cabeceras con credenciales
+inválidas no conceden acceso, y que JWT/API keys válidas siguen funcionando.
+No habilitar autenticación por cookies ni CORS permisivo sin revisar este modelo.

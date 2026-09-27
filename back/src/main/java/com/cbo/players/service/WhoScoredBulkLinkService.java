@@ -5,172 +5,183 @@ import com.cbo.players.adapter.ScrapingException;
 import com.cbo.players.adapter.dto.WhoScoredPlayerCandidateDto;
 import com.cbo.players.model.Player;
 import com.cbo.players.repository.PlayerRepository;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.text.Normalizer;
-import java.util.List;
-import java.util.Map;
-import java.util.Locale;
-import java.util.LinkedHashMap;
-import java.util.concurrent.CompletableFuture;
+import java.util.*;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 /** Runs resumable-by-restart bulk matching; already linked players are skipped. */
 @Service
 public class WhoScoredBulkLinkService {
+    private static final String BLOCKED = "BLOCKED";
+    private static final String SCRAPE_BLOCKED = "SCRAPE_BLOCKED";
     public record ReviewItem(Long playerId, String playerName, String currentTeam, String reason,
-                             List<WhoScoredPlayerCandidateDto> candidates) {}
+                             List<WhoScoredPlayerCandidateDto> candidates) {
+        public ReviewItem { candidates = List.copyOf(candidates); }
+    }
     public record JobStatus(String id, String status, int total, int processed, int linked,
-                            int noMatch, int needsReview, int errors, List<ReviewItem> reviewItems) {}
+                            int noMatch, int needsReview, int errors, List<ReviewItem> reviewItems) {
+        public JobStatus { reviewItems = List.copyOf(reviewItems); }
+    }
 
     private final PlayerRepository players;
     private final CatalogPersistenceService catalog;
     private final ScrapingPort scraper;
+    private final Executor executor;
     private final AtomicBoolean running = new AtomicBoolean();
-    private volatile JobStatus latest;
+    private final AtomicReference<JobStatus> latest = new AtomicReference<>();
 
-    public WhoScoredBulkLinkService(PlayerRepository players, CatalogPersistenceService catalog, ScrapingPort scraper) {
+    public WhoScoredBulkLinkService(PlayerRepository players, CatalogPersistenceService catalog,
+            ScrapingPort scraper, @Qualifier("bulkLinkExecutor") Executor executor) {
         this.players = players;
         this.catalog = catalog;
         this.scraper = scraper;
+        this.executor = executor;
     }
 
     public synchronized JobStatus start() {
         if (!running.compareAndSet(false, true)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.CONFLICT, "Ya hay una vinculacion WhoScored en curso");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ya hay una vinculacion WhoScored en curso");
         }
+        JobStatus previous = latest.get();
         try {
             List<Player> pending = players.findAllByActiveTrueAndWhoscoredIdIsNull();
-            String id = java.util.UUID.randomUUID().toString();
-            latest = new JobStatus(id, "RUNNING", pending.size(), 0, 0, 0, 0, 0, List.of());
-            CompletableFuture.runAsync(() -> process(id, pending));
-            return latest;
+            Progress progress = new Progress(UUID.randomUUID().toString(), pending.size());
+            JobStatus initial = progress.snapshot();
+            latest.set(initial);
+            executor.execute(() -> process(progress, pending));
+            return initial;
         } catch (RuntimeException error) {
+            latest.set(previous);
             running.set(false);
             throw error;
         }
     }
 
     public JobStatus status(String id) {
-        JobStatus value = latest;
+        JobStatus value = latest.get();
         if (value == null || !value.id().equals(id)) {
-            throw new org.springframework.web.server.ResponseStatusException(
-                    org.springframework.http.HttpStatus.NOT_FOUND, "Ejecucion de vinculacion inexistente");
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Ejecucion de vinculacion inexistente");
         }
         return value;
     }
 
-    private void process(String id, List<Player> pending) {
-        int processed = 0, linked = 0, noMatch = 0, needsReview = 0, errors = 0;
-        var review = new java.util.ArrayList<ReviewItem>();
-        String finalStatus = "COMPLETED";
+    // Mutable counters are confined to the worker; readers only see immutable snapshots.
+    private static class Progress {
+        final String id;
+        final int total;
+        int processed;
+        int linked;
+        int noMatch;
+        int errors;
+        String status = "RUNNING";
+        final List<ReviewItem> review = new ArrayList<>();
+        Progress(String id, int total) { this.id = id; this.total = total; }
+        void review(Player player, String reason, List<WhoScoredPlayerCandidateDto> candidates) {
+            review.add(new ReviewItem(player.getId(), fullName(player), player.getCurrentTeam(), reason, candidates));
+        }
+        JobStatus snapshot() {
+            return new JobStatus(id, status, total, processed, linked, noMatch, review.size(), errors, review);
+        }
+    }
+
+    private void process(Progress progress, List<Player> pending) {
         try {
             Map<String, List<Player>> byTeam = pending.stream().collect(Collectors.groupingBy(
-                    p -> normalize(p.getLeague()) + "|" + normalize(p.getCurrentTeam()), LinkedHashMap::new, Collectors.toList()));
-            for (List<Player> teamPlayers : byTeam.values()) {
-                Player first = teamPlayers.get(0);
-                String country = country(first.getLeague());
-                if (country == null) {
-                    for (Player player : teamPlayers) {
-                        needsReview++;
-                        processed++;
-                        review.add(new ReviewItem(player.getId(), fullName(player), player.getCurrentTeam(),
-                                "UNSUPPORTED_LEAGUE", List.of()));
-                    }
-                    publishIfDue(id, pending.size(), processed, linked, noMatch, needsReview, errors, review);
-                    continue;
-                }
-                List<WhoScoredPlayerCandidateDto> roster = null;
-                try {
-                    roster = scraper.searchTeamPlayers(first.getCurrentTeam(), country);
-                } catch (RuntimeException error) {
-                    errors++;
-                    if (isProviderBlocked(error)) {
-                        for (Player player : teamPlayers) {
-                            needsReview++;
-                            processed++;
-                            review.add(new ReviewItem(player.getId(), fullName(player), player.getCurrentTeam(),
-                                    "SCRAPE_BLOCKED", List.of()));
-                        }
-                        publishIfDue(id, pending.size(), processed, linked, noMatch, needsReview, errors, review);
-                        finalStatus = "BLOCKED";
-                        break;
-                    }
-                    // Roster lookup failed, but each player still gets exactly one
-                    // fallback attempt below. Count each player only in that loop.
-                    roster = List.of();
-                }
-                if (finalStatus.equals("BLOCKED")) break;
-                if (roster == null) roster = List.of();
-                for (Player player : teamPlayers) {
-                    String name = fullName(player);
-                    List<WhoScoredPlayerCandidateDto> exact = roster.stream()
-                            .filter(c -> normalize(c.name()).equals(normalize(name))).toList();
-                    try {
-                        if (exact.size() == 1) {
-                            catalog.link(player.getId(), exact.get(0).whoscoredId());
-                            linked++;
-                        } else if (exact.isEmpty()) {
-                            List<WhoScoredPlayerCandidateDto> search = scraper.searchPlayers(name);
-                            List<WhoScoredPlayerCandidateDto> exactSearch = search.stream()
-                                    .filter(c -> normalize(c.name()).equals(normalize(name))).toList();
-                            if (exactSearch.size() == 1) {
-                                catalog.link(player.getId(), exactSearch.get(0).whoscoredId());
-                                linked++;
-                            } else if (exactSearch.size() > 1) {
-                                needsReview++;
-                                review.add(new ReviewItem(player.getId(), name, player.getCurrentTeam(),
-                                        "MULTIPLE_EXACT_MATCHES", exactSearch));
-                            } else {
-                                noMatch++;
-                            }
-                        } else {
-                            needsReview++;
-                            review.add(new ReviewItem(player.getId(), name, player.getCurrentTeam(),
-                                    "MULTIPLE_EXACT_MATCHES", exact));
-                        }
-                    } catch (RuntimeException error) {
-                        errors++;
-                        needsReview++;
-                        review.add(new ReviewItem(player.getId(), name, player.getCurrentTeam(),
-                                isProviderBlocked(error) ? "SCRAPE_BLOCKED" : "LINK_OR_SEARCH_ERROR", exact));
-                        if (isProviderBlocked(error)) finalStatus = "BLOCKED";
-                    }
-                    processed++;
-                    publishIfDue(id, pending.size(), processed, linked, noMatch, needsReview, errors, review);
-                    if (finalStatus.equals("BLOCKED")) break;
-                }
-                if (finalStatus.equals("BLOCKED")) break;
+                    p -> normalize(p.getLeague()) + "|" + normalize(p.getCurrentTeam()),
+                    LinkedHashMap::new, Collectors.toList()));
+            for (List<Player> team : byTeam.values()) {
+                processTeam(progress, team);
+                if (BLOCKED.equals(progress.status)) break;
             }
-            publish(id, pending.size(), processed, linked, noMatch, needsReview, errors, review, finalStatus);
+            if (!BLOCKED.equals(progress.status)) progress.status = "COMPLETED";
+        } catch (RuntimeException error) {
+            progress.errors++;
+            progress.status = "FAILED";
         } finally {
+            latest.set(progress.snapshot());
             running.set(false);
         }
     }
 
-    private void publishIfDue(String id, int total, int processed, int linked, int noMatch,
-                              int needsReview, int errors, List<ReviewItem> review) {
-        if (processed % 10 == 0 || processed == total) {
-            publish(id, total, processed, linked, noMatch, needsReview, errors, review, "RUNNING");
+    private void processTeam(Progress progress, List<Player> team) {
+        Player first = team.get(0);
+        String country = country(first.getLeague());
+        if (country == null) {
+            reviewTeam(progress, team, "UNSUPPORTED_LEAGUE");
+            return;
         }
+        List<WhoScoredPlayerCandidateDto> roster;
+        try {
+            roster = scraper.searchTeamPlayers(first.getCurrentTeam(), country);
+        } catch (RuntimeException error) {
+            progress.errors++;
+            if (isProviderBlocked(error)) {
+                progress.status = BLOCKED;
+                reviewTeam(progress, team, SCRAPE_BLOCKED);
+                return;
+            }
+            roster = List.of();
+        }
+        if (roster == null) roster = List.of();
+        for (Player player : team) {
+            processPlayer(progress, player, roster);
+            progress.processed++;
+            publishIfDue(progress);
+            if (BLOCKED.equals(progress.status)) return;
+        }
+    }
+
+    private void reviewTeam(Progress progress, List<Player> team, String reason) {
+        for (Player player : team) {
+            progress.review(player, reason, List.of());
+            progress.processed++;
+        }
+        publishIfDue(progress);
+    }
+
+    private void processPlayer(Progress progress, Player player, List<WhoScoredPlayerCandidateDto> roster) {
+        List<WhoScoredPlayerCandidateDto> exact = exactMatches(roster, player);
+        try {
+            if (exact.isEmpty()) exact = exactMatches(scraper.searchPlayers(fullName(player)), player);
+            if (exact.size() == 1) {
+                catalog.link(player.getId(), exact.get(0).whoscoredId());
+                progress.linked++;
+            } else if (exact.isEmpty()) {
+                progress.noMatch++;
+            } else {
+                progress.review(player, "MULTIPLE_EXACT_MATCHES", exact);
+            }
+        } catch (RuntimeException error) {
+            progress.errors++;
+            boolean blocked = isProviderBlocked(error);
+            progress.review(player, blocked ? SCRAPE_BLOCKED : "LINK_OR_SEARCH_ERROR", exact);
+            if (blocked) progress.status = BLOCKED;
+        }
+    }
+
+    private static List<WhoScoredPlayerCandidateDto> exactMatches(List<WhoScoredPlayerCandidateDto> candidates, Player player) {
+        String expected = normalize(fullName(player));
+        return candidates.stream().filter(c -> normalize(c.name()).equals(expected)).toList();
+    }
+
+    private void publishIfDue(Progress progress) {
+        if (progress.processed % 10 == 0 || progress.processed == progress.total) latest.set(progress.snapshot());
     }
 
     private static boolean isProviderBlocked(RuntimeException error) {
         return error instanceof ScrapingException scrape
                 && (Integer.valueOf(403).equals(scrape.getRemoteStatus())
                 || Integer.valueOf(429).equals(scrape.getRemoteStatus())
-                || "SCRAPE_BLOCKED".equals(scrape.getRemoteCode())
+                || SCRAPE_BLOCKED.equals(scrape.getRemoteCode())
                 || "RATE_LIMIT_EXCEEDED".equals(scrape.getRemoteCode()));
-    }
-
-    private synchronized void publish(String id, int total, int processed, int linked, int noMatch,
-                                      int needsReview, int errors, List<ReviewItem> review, String status) {
-        if (latest != null && latest.id().equals(id)) {
-            latest = new JobStatus(id, status, total, processed, linked, noMatch, needsReview, errors,
-                    List.copyOf(review));
-        }
     }
 
     private static String fullName(Player player) {
@@ -192,6 +203,6 @@ public class WhoScoredBulkLinkService {
     private static String normalize(String value) {
         return Normalizer.normalize(value == null ? "" : value, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}+", "").toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", " ").trim().replaceAll("\\s+", " ");
+                .replaceAll("[^a-z0-9]+", " ").trim();
     }
 }

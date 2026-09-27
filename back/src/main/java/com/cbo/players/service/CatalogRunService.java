@@ -24,11 +24,13 @@ public class CatalogRunService {
     public void error(Long id, String summary) { find(id).error(summary); }
     public void finish(Long id, boolean interrupted) {
         var run = find(id);
-        var status = interrupted ? CatalogSyncRun.Status.INTERRUPTED
-                : run.getErrorCount() == 0 ? CatalogSyncRun.Status.SUCCESS
-                : run.getTeamsProcessed() > 0 || run.getStatisticsUpdated() > 0
-                    ? CatalogSyncRun.Status.PARTIAL : CatalogSyncRun.Status.FAILED;
-        run.finish(status);
+        run.finish(completionStatus(run, interrupted));
+    }
+    private CatalogSyncRun.Status completionStatus(CatalogSyncRun run, boolean interrupted) {
+        if (interrupted) return CatalogSyncRun.Status.INTERRUPTED;
+        if (run.getErrorCount() == 0) return CatalogSyncRun.Status.SUCCESS;
+        if (run.getTeamsProcessed() > 0 || run.getStatisticsUpdated() > 0) return CatalogSyncRun.Status.PARTIAL;
+        return CatalogSyncRun.Status.FAILED;
     }
     @Transactional(readOnly = true)
     public CatalogSyncRunDto get(Long id) { return CatalogSyncRunDto.from(find(id)); }

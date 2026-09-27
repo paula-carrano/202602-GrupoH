@@ -17,18 +17,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-/** Runs resumable-by-restart bulk matching; already linked players are skipped. */
+/**
+ * Runs resumable-by-restart bulk matching; already linked players are skipped.
+ */
 @Service
 public class WhoScoredBulkLinkService {
     private static final String BLOCKED = "BLOCKED";
     private static final String SCRAPE_BLOCKED = "SCRAPE_BLOCKED";
+
     public record ReviewItem(Long playerId, String playerName, String currentTeam, String reason,
-                             List<WhoScoredPlayerCandidateDto> candidates) {
-        public ReviewItem { candidates = List.copyOf(candidates); }
+            List<WhoScoredPlayerCandidateDto> candidates) {
+        public ReviewItem {
+            candidates = List.copyOf(candidates);
+        }
     }
+
     public record JobStatus(String id, String status, int total, int processed, int linked,
-                            int noMatch, int needsReview, int errors, List<ReviewItem> reviewItems) {
-        public JobStatus { reviewItems = List.copyOf(reviewItems); }
+            int noMatch, int needsReview, int errors, List<ReviewItem> reviewItems) {
+        public JobStatus {
+            reviewItems = List.copyOf(reviewItems);
+        }
     }
 
     private final PlayerRepository players;
@@ -73,7 +81,8 @@ public class WhoScoredBulkLinkService {
         return value;
     }
 
-    // Mutable counters are confined to the worker; readers only see immutable snapshots.
+    // Mutable counters are confined to the worker; readers only see immutable
+    // snapshots.
     private static class Progress {
         final String id;
         final int total;
@@ -83,10 +92,16 @@ public class WhoScoredBulkLinkService {
         int errors;
         String status = "RUNNING";
         final List<ReviewItem> review = new ArrayList<>();
-        Progress(String id, int total) { this.id = id; this.total = total; }
-        void review(Player player, String reason, List<WhoScoredPlayerCandidateDto> candidates) {
+
+        Progress(String id, int total) {
+            this.id = id;
+            this.total = total;
+        }
+
+        void addReviewItem(Player player, String reason, List<WhoScoredPlayerCandidateDto> candidates) {
             review.add(new ReviewItem(player.getId(), fullName(player), player.getCurrentTeam(), reason, candidates));
         }
+
         JobStatus snapshot() {
             return new JobStatus(id, status, total, processed, linked, noMatch, review.size(), errors, review);
         }
@@ -99,9 +114,11 @@ public class WhoScoredBulkLinkService {
                     LinkedHashMap::new, Collectors.toList()));
             for (List<Player> team : byTeam.values()) {
                 processTeam(progress, team);
-                if (BLOCKED.equals(progress.status)) break;
+                if (BLOCKED.equals(progress.status))
+                    break;
             }
-            if (!BLOCKED.equals(progress.status)) progress.status = "COMPLETED";
+            if (!BLOCKED.equals(progress.status))
+                progress.status = "COMPLETED";
         } catch (RuntimeException error) {
             progress.errors++;
             progress.status = "FAILED";
@@ -130,18 +147,20 @@ public class WhoScoredBulkLinkService {
             }
             roster = List.of();
         }
-        if (roster == null) roster = List.of();
+        if (roster == null)
+            roster = List.of();
         for (Player player : team) {
             processPlayer(progress, player, roster);
             progress.processed++;
             publishIfDue(progress);
-            if (BLOCKED.equals(progress.status)) return;
+            if (BLOCKED.equals(progress.status))
+                return;
         }
     }
 
     private void reviewTeam(Progress progress, List<Player> team, String reason) {
         for (Player player : team) {
-            progress.review(player, reason, List.of());
+            progress.addReviewItem(player, reason, List.of());
             progress.processed++;
         }
         publishIfDue(progress);
@@ -150,7 +169,8 @@ public class WhoScoredBulkLinkService {
     private void processPlayer(Progress progress, Player player, List<WhoScoredPlayerCandidateDto> roster) {
         List<WhoScoredPlayerCandidateDto> exact = exactMatches(roster, player);
         try {
-            if (exact.isEmpty()) exact = exactMatches(scraper.searchPlayers(fullName(player)), player);
+            if (exact.isEmpty())
+                exact = exactMatches(scraper.searchPlayers(fullName(player)), player);
             if (exact.size() == 1) {
                 catalog.link(player.getId(), exact.get(0).whoscoredId());
                 progress.linked++;
@@ -163,25 +183,28 @@ public class WhoScoredBulkLinkService {
             progress.errors++;
             boolean blocked = isProviderBlocked(error);
             progress.review(player, blocked ? SCRAPE_BLOCKED : "LINK_OR_SEARCH_ERROR", exact);
-            if (blocked) progress.status = BLOCKED;
+            if (blocked)
+                progress.status = BLOCKED;
         }
     }
 
-    private static List<WhoScoredPlayerCandidateDto> exactMatches(List<WhoScoredPlayerCandidateDto> candidates, Player player) {
+    private static List<WhoScoredPlayerCandidateDto> exactMatches(List<WhoScoredPlayerCandidateDto> candidates,
+            Player player) {
         String expected = normalize(fullName(player));
         return candidates.stream().filter(c -> normalize(c.name()).equals(expected)).toList();
     }
 
     private void publishIfDue(Progress progress) {
-        if (progress.processed % 10 == 0 || progress.processed == progress.total) latest.set(progress.snapshot());
+        if (progress.processed % 10 == 0 || progress.processed == progress.total)
+            latest.set(progress.snapshot());
     }
 
     private static boolean isProviderBlocked(RuntimeException error) {
         return error instanceof ScrapingException scrape
                 && (Integer.valueOf(403).equals(scrape.getRemoteStatus())
-                || Integer.valueOf(429).equals(scrape.getRemoteStatus())
-                || SCRAPE_BLOCKED.equals(scrape.getRemoteCode())
-                || "RATE_LIMIT_EXCEEDED".equals(scrape.getRemoteCode()));
+                        || Integer.valueOf(429).equals(scrape.getRemoteStatus())
+                        || SCRAPE_BLOCKED.equals(scrape.getRemoteCode())
+                        || "RATE_LIMIT_EXCEEDED".equals(scrape.getRemoteCode()));
     }
 
     private static String fullName(Player player) {
@@ -189,7 +212,8 @@ public class WhoScoredBulkLinkService {
     }
 
     private static String country(String league) {
-        if (league == null) return null;
+        if (league == null)
+            return null;
         return switch (league.toUpperCase(Locale.ROOT)) {
             case "PL" -> "England";
             case "BL1" -> "Germany";

@@ -1,4 +1,5 @@
 package com.cbo.players.config;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -9,10 +10,18 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class CatalogSyncConfiguration {
     @Bean
     public ThreadPoolTaskExecutor bulkLinkExecutor() {
-        var executor = catalogSyncExecutor();
+        var executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(1);
         executor.setThreadNamePrefix("bulk-link-");
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.setAwaitTerminationSeconds(5);
+
         return executor;
     }
+
     @Bean
     public ThreadPoolTaskExecutor catalogSyncExecutor() {
         var executor = new ThreadPoolTaskExecutor();

@@ -24,15 +24,21 @@ public class CatalogSyncService {
 
     public CatalogSyncService(ScrapingPort scraper, CatalogPersistenceService catalog, CatalogRunService runs,
             @Qualifier("catalogSyncExecutor") Executor executor) {
-        this.scraper = scraper; this.catalog = catalog; this.runs = runs; this.executor = executor;
+        this.scraper = scraper;
+        this.catalog = catalog;
+        this.runs = runs;
+        this.executor = executor;
     }
 
     @PostConstruct
-    void recover() { runs.recoverInterrupted(); }
+    void recover() {
+        runs.recoverInterrupted();
+    }
 
     public Long start(CatalogSyncRun.Origin origin) {
         if (!running.compareAndSet(false, true)) {
-            throw new ApiException("Ya hay una sincronizacion en curso", HttpStatus.CONFLICT, ErrorCode.CATALOG_SYNC_BUSY);
+            throw new ApiException("Ya hay una sincronizacion en curso", HttpStatus.CONFLICT,
+                    ErrorCode.CATALOG_SYNC_BUSY);
         }
         Long id = null;
         try {
@@ -42,7 +48,8 @@ public class CatalogSyncService {
             return id;
         } catch (RuntimeException error) {
             running.set(false);
-            if (id != null) runs.finish(id, true);
+            if (id != null)
+                runs.finish(id, true);
             throw error;
         }
     }
@@ -57,34 +64,61 @@ public class CatalogSyncService {
         } catch (RuntimeException error) {
             runs.error(id, "RUN: INTERNAL_ERROR");
         } finally {
-            try { runs.finish(id, interrupted || Thread.currentThread().isInterrupted()); }
-            finally { running.set(false); }
+            try {
+                runs.finish(id, interrupted || Thread.currentThread().isInterrupted());
+            } finally {
+                running.set(false);
+            }
         }
     }
 
     private void importCatalog(Long id) {
         for (String league : LEAGUES) {
             checkInterrupted();
+
             List<com.cbo.players.adapter.dto.CatalogTeamDto> teams;
-            try { teams = scraper.getCompetitionTeams(league); }
-            catch (RuntimeException error) {
-                report(id, league, error);
-                if (stopProvider(error)) return;
+            try {
+                teams = scraper.getCompetitionTeams(league);
+            } catch (RuntimeException error) {
+                if (handleLeagueError(id, league, error))
+                    return;
                 continue;
             }
-            for (var team : teams) {
-                checkInterrupted();
-                try {
-                    var squad = scraper.getTeamSquad(team.id());
-                    checkInterrupted();
-                    runs.imported(id, catalog.importSquad(league, squad));
-                } catch (SyncInterrupted error) { throw error; }
-                catch (RuntimeException error) {
-                    report(id, league + "/team/" + team.id(), error);
-                    if (stopProvider(error)) return;
-                }
+
+            if (importTeams(id, league, teams))
+                return;
+        }
+    }
+
+    private boolean importTeams(Long id, String league,
+            List<com.cbo.players.adapter.dto.CatalogTeamDto> teams) {
+
+        for (var team : teams) {
+            checkInterrupted();
+
+            try {
+                importTeam(id, league, team);
+            } catch (RuntimeException error) {
+                report(id, league + "/team/" + team.id(), error);
+                if (stopProvider(error))
+                    return true;
             }
         }
+
+        return false;
+    }
+
+    private void importTeam(Long id, String league,
+            com.cbo.players.adapter.dto.CatalogTeamDto team) {
+
+        var squad = scraper.getTeamSquad(team.id());
+        checkInterrupted();
+        runs.imported(id, catalog.importSquad(league, squad));
+    }
+
+    private boolean handleLeagueError(Long id, String league, RuntimeException error) {
+        report(id, league, error);
+        return stopProvider(error);
     }
 
     private void updateStatistics(Long id) {
@@ -93,12 +127,15 @@ public class CatalogSyncService {
             try {
                 var stats = scraper.getPlayerStats(link.whoscoredId());
                 checkInterrupted();
-                if (catalog.saveStatistics(link, stats)) runs.statisticsUpdated(id);
-            } catch (SyncInterrupted error) { throw error; }
-            catch (RuntimeException error) {
+                if (catalog.saveStatistics(link, stats))
+                    runs.statisticsUpdated(id);
+            } catch (SyncInterrupted error) {
+                throw error;
+            } catch (RuntimeException error) {
                 report(id, "player/" + link.playerId(), error);
                 if (stopProvider(error) || error instanceof ScrapingException scrape
-                        && "SCRAPE_BLOCKED".equals(scrape.getRemoteCode())) return;
+                        && "SCRAPE_BLOCKED".equals(scrape.getRemoteCode()))
+                    return;
             }
         }
     }
@@ -108,10 +145,12 @@ public class CatalogSyncService {
         String code = "PERSISTENCE_OR_INTERNAL_ERROR";
         if (error instanceof ScrapingException scrape) {
             code = scrape.getKind().name();
-            if (scrape.getRemoteStatus() != null) code += " HTTP_" + scrape.getRemoteStatus();
+            if (scrape.getRemoteStatus() != null)
+                code += " HTTP_" + scrape.getRemoteStatus();
             if (Set.of("UNAUTHORIZED", "EXTERNAL_API_AUTH_ERROR", "RATE_LIMIT_EXCEEDED",
                     "SCRAPE_BLOCKED", "SCRAPE_TIMEOUT", "PLAYER_NOT_FOUND", "MATCH_NOT_FOUND",
-                    "INVALID_EXTERNAL_RESPONSE").contains(scrape.getRemoteCode() == null ? "" : scrape.getRemoteCode())) {
+                    "INVALID_EXTERNAL_RESPONSE")
+                    .contains(scrape.getRemoteCode() == null ? "" : scrape.getRemoteCode())) {
                 code += " " + scrape.getRemoteCode();
             }
         }
@@ -119,7 +158,8 @@ public class CatalogSyncService {
     }
 
     private static boolean stopProvider(RuntimeException error) {
-        if (!(error instanceof ScrapingException scrape)) return false;
+        if (!(error instanceof ScrapingException scrape))
+            return false;
         return scrape.getKind() == ScrapingException.Kind.CONFIGURATION
                 || Integer.valueOf(401).equals(scrape.getRemoteStatus())
                 || Integer.valueOf(403).equals(scrape.getRemoteStatus())
@@ -127,8 +167,12 @@ public class CatalogSyncService {
                 || "EXTERNAL_API_AUTH_ERROR".equals(scrape.getRemoteCode())
                 || "RATE_LIMIT_EXCEEDED".equals(scrape.getRemoteCode());
     }
+
     private static void checkInterrupted() {
-        if (Thread.currentThread().isInterrupted()) throw new SyncInterrupted();
+        if (Thread.currentThread().isInterrupted())
+            throw new SyncInterrupted();
     }
-    private static class SyncInterrupted extends RuntimeException {}
+
+    private static class SyncInterrupted extends RuntimeException {
+    }
 }

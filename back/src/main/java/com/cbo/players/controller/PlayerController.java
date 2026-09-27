@@ -7,7 +7,6 @@ import com.cbo.players.service.PlayerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
@@ -23,48 +22,39 @@ import java.util.List;
 @Tag(name = "Jugadores", description = "Catálogo de jugadores de fútbol")
 public class PlayerController {
 
-    private final PlayerService playerService;
+        private final PlayerService playerService;
 
-    public PlayerController(PlayerService playerService) {
-        this.playerService = playerService;
-    }
+        public PlayerController(PlayerService playerService) {
+                this.playerService = playerService;
+        }
 
-    @GetMapping
-    @Operation(
-            summary = "Listar jugadores",
-            description = "Obtiene el listado completo de jugadores registrados en el catálogo",
-            security = {
-                    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH),
-                    @SecurityRequirement(name = OpenApiConfig.API_KEY_AUTH)
-            }
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Listado de jugadores obtenido exitosamente"),
-            @ApiResponse(responseCode = "401", description = "No autenticado (requiere JWT o API Key)")
-    })
-    public ResponseEntity<List<PlayerResponseDto>> getAllPlayers() {
-        List<PlayerResponseDto> players = playerService.getAllPlayers();
-        return ResponseEntity.ok(players);
-    }
+        @GetMapping
+        @Operation(summary = "Listar jugadores", description = "Obtiene el listado completo de jugadores registrados en el catálogo", security = {
+                        @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH),
+                        @SecurityRequirement(name = OpenApiConfig.API_KEY_AUTH)
+        })
 
-    @GetMapping("/{id}")
-    @Operation(
-            summary = "Obtener jugador por ID",
-            description = "Obtiene el detalle de un jugador específico a través de su identificador numérico",
-            security = {
-                    @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH),
-                    @SecurityRequirement(name = OpenApiConfig.API_KEY_AUTH)
-            }
-    )
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Jugador encontrado"),
-            @ApiResponse(responseCode = "401", description = "No autenticado (requiere JWT o API Key)"),
-            @ApiResponse(responseCode = "404", description = "Jugador no encontrado")
-    })
-    public ResponseEntity<PlayerDetailResponseDto> getPlayerById(
-            @Parameter(description = "Identificador único del jugador", example = "1")
-            @PathVariable Long id) {
-        PlayerDetailResponseDto player = playerService.getPlayerById(id);
-        return ResponseEntity.ok(player);
-    }
+        @ApiResponse(responseCode = "200", description = "Listado de jugadores obtenido exitosamente")
+        @ApiResponse(responseCode = "401", description = "No autenticado (requiere JWT o API Key)")
+
+        public ResponseEntity<List<PlayerResponseDto>> getAllPlayers() {
+                List<PlayerResponseDto> players = playerService.getAllPlayers();
+                return ResponseEntity.ok(players);
+        }
+
+        @GetMapping("/{id}")
+        @Operation(summary = "Obtener jugador por ID", description = "Obtiene el detalle de un jugador específico a través de su identificador numérico", security = {
+                        @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH),
+                        @SecurityRequirement(name = OpenApiConfig.API_KEY_AUTH)
+        })
+
+        @ApiResponse(responseCode = "200", description = "Jugador encontrado")
+        @ApiResponse(responseCode = "401", description = "No autenticado (requiere JWT o API Key)")
+        @ApiResponse(responseCode = "404", description = "Jugador no encontrado")
+
+        public ResponseEntity<PlayerDetailResponseDto> getPlayerById(
+                        @Parameter(description = "Identificador único del jugador", example = "1") @PathVariable Long id) {
+                PlayerDetailResponseDto player = playerService.getPlayerById(id);
+                return ResponseEntity.ok(player);
+        }
 }

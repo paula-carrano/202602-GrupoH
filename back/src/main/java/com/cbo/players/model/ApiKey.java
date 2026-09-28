@@ -2,6 +2,7 @@ package com.cbo.players.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "api_keys", indexes = {
@@ -48,7 +49,7 @@ public class ApiKey {
 
     @PrePersist
     protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public Long getId() {

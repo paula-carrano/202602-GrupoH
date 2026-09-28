@@ -3,6 +3,7 @@ package com.cbo.players.model;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 @Entity
 @Table(name = "player_quotes", indexes = {
@@ -35,7 +36,7 @@ public class PlayerQuote {
         this.player = player;
         this.price = price;
         this.currency = currency != null ? currency : "CRD";
-        this.timestamp = timestamp != null ? timestamp : LocalDateTime.now();
+        this.timestamp = timestamp != null ? timestamp : LocalDateTime.now(ZoneOffset.UTC);
     }
 
     public Long getId() {

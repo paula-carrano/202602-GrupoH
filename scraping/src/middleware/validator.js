@@ -24,7 +24,7 @@ const validateCompetitionMatches = (req, res, next) => {
 
 const validateMatchDetail = (req, res, next) => {
   const { matchId } = req.params;
-  if (!matchId || isNaN(parseInt(matchId, 10))) {
+  if (!matchId || Number.isNaN(Number.parseInt(matchId, 10))) {
     return next(new InvalidRequestParamsError('matchId debe ser un número entero'));
   }
   next();

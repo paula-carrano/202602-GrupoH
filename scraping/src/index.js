@@ -5,7 +5,7 @@ const errorHandler = require('./middleware/errorHandler');
 const authMiddleware = require('./middleware/auth');
 
 const app = express();
-
+app.disable('x-powered-by');
 app.use(express.json());
 app.use(logger);
 

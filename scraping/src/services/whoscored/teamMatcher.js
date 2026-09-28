@@ -1,8 +1,10 @@
 /**
- * Normalizes team name by trimming, lowercasing, removing accents and stripping common football suffixes.
+ * Normalizes team name by trimming, lowercasing, removing accents
+ * and stripping common football suffixes.
  */
 const normalizeTeamName = (name) => {
   if (!name || typeof name !== 'string') return '';
+
   return name
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
@@ -20,87 +22,265 @@ const normalizeTeamName = (name) => {
 const teamsMatch = (teamA, teamB) => {
   const normA = normalizeTeamName(teamA);
   const normB = normalizeTeamName(teamB);
+
   if (!normA || !normB) return false;
-  return normA === normB || normA.includes(normB) || normB.includes(normA);
+
+  return (
+    normA === normB ||
+    normA.includes(normB) ||
+    normB.includes(normA)
+  );
 };
 
 /**
- * Finds matching match URL from WhoScored daily fixture page HTML or Live Scores page
+ * Extracts match URLs from WhoScored HTML.
  */
-const findMatchUrlFromFixturesHtml = (html, homeTeam, awayTeam) => {
-  if (!html || typeof html !== 'string') return null;
+const extractMatchUrls = (html) => {
+  const urls = [];
+  const regex =
+    /href="(\/(?:matches|\w+\/Matches)\/\d+\/(?:Live|Show)\/[^"]+)"/gi;
 
-  // 1. Check legacy mock format: <div class="match-item">
-  const itemRegex = /<div class="match-item">([\s\S]*?)<\/div>/gi;
-  let itemMatch;
+  let match;
 
-  while ((itemMatch = itemRegex.exec(html)) !== null) {
-    const block = itemMatch[1];
-    const linkMatch = block.match(/href="([^"]+)"/i);
-    const homeMatch = block.match(/class="home-team">([^<]+)<\/span>/i);
-    const awayMatch = block.match(/class="away-team">([^<]+)<\/span>/i);
+  while ((match = regex.exec(html)) !== null) {
+    urls.push(match[1]);
+  }
 
-    if (linkMatch && homeMatch && awayMatch) {
-      const scrapedHome = homeMatch[1].trim();
-      const scrapedAway = awayMatch[1].trim();
+  return urls;
+};
 
-      if (teamsMatch(scrapedHome, homeTeam) && teamsMatch(scrapedAway, awayTeam)) {
-        return linkMatch[1];
-      }
+/**
+ * Checks whether a match URL contains both teams.
+ */
+const urlMatchesTeams = (url, homeTeam, awayTeam) => {
+  const slug = url.split('/').pop().toLowerCase().replaceAll(',', '');
+
+  const normalizedHome = normalizeTeamName(homeTeam)
+    .replace(/\s+/g, '-');
+
+  const normalizedAway = normalizeTeamName(awayTeam)
+    .replace(/\s+/g, '-');
+
+  return (
+    slug.includes(normalizedHome) &&
+    slug.includes(normalizedAway)
+  );
+};
+
+/**
+ * Extracts HTML blocks using tag and optional class name.
+ */
+const extractHtmlBlocks = (html, tagName, className) => {
+  const blocks = [];
+
+  const openTag = className
+    ? `<${tagName} class="${className}">`
+    : `<${tagName}>`;
+
+  const endTag = `</${tagName}>`;
+
+  let start = html.indexOf(openTag);
+
+  while (start !== -1) {
+    const contentStart = start + openTag.length;
+    const end = html.indexOf(endTag, contentStart);
+
+    if (end === -1) {
+      break;
+    }
+
+    blocks.push(html.slice(contentStart, end));
+
+    start = html.indexOf(
+      openTag,
+      end + endTag.length
+    );
+  }
+
+  return blocks;
+};
+
+/**
+ * Extracts the value of an href attribute without using a regex.
+ */
+const extractHref = (block) => {
+  const hrefStart = block.indexOf('href="');
+
+  if (hrefStart === -1) {
+    return null;
+  }
+
+  const valueStart = hrefStart + 'href="'.length;
+  const valueEnd = block.indexOf('"', valueStart);
+
+  if (valueEnd === -1) {
+    return null;
+  }
+
+  return block.slice(valueStart, valueEnd);
+};
+
+/**
+ * Removes HTML tags without using a regular expression.
+ */
+const stripHtmlTags = (html) => {
+  const result = [];
+  let insideTag = false;
+
+  for (const character of html) {
+    if (character === '<') {
+      insideTag = true;
+      result.push(' ');
+      continue;
+    }
+
+    if (character === '>') {
+      insideTag = false;
+      continue;
+    }
+
+    if (!insideTag) {
+      result.push(character);
     }
   }
 
-  // 2. Check live match-link / divtable-row format:
-  // e.g. <a class="horiz-match-link" href="/Matches/12345/Live/..."> or generic /Matches/\d+/Live/ links
-  const matchLinkRegex = /href="(\/(?:[Mm]atches|\w+\/Matches)\/(\d+)\/(?:Live|Show)\/([^"]+))"/gi;
-  let mLink;
-  while ((mLink = matchLinkRegex.exec(html)) !== null) {
-    const url = mLink[1];
-    const slug = mLink[3].toLowerCase();
-    const normHome = normalizeTeamName(homeTeam).replace(/\s+/g, '-');
-    const normAway = normalizeTeamName(awayTeam).replace(/\s+/g, '-');
+  return result.join('');
+};
 
-    if (slug.includes(normHome) && slug.includes(normAway)) {
-      return url;
-    }
+/**
+ * Finds a match URL inside an HTML block using team names.
+ */
+const findMatchUrlInBlock = (
+  block,
+  homeTeam,
+  awayTeam
+) => {
+  const url = extractHref(block);
+
+  if (!url) {
+    return null;
+  }
+
+  const text = stripHtmlTags(block);
+
+  if (
+    teamsMatch(text, homeTeam) &&
+    teamsMatch(text, awayTeam)
+  ) {
+    return url;
   }
 
   return null;
 };
 
 /**
- * Finds matching match URL from WhoScored Search results HTML:
- * https://www.whoscored.com/Search/?q=...
+ * Finds matching match URL from WhoScored daily fixture page HTML
+ * or Live Scores page.
  */
-const findMatchUrlFromSearchHtml = (html, homeTeam, awayTeam) => {
-  if (!html || typeof html !== 'string') return null;
+const findMatchUrlFromFixturesHtml = (
+  html,
+  homeTeam,
+  awayTeam
+) => {
+  if (!html || typeof html !== 'string') {
+    return null;
+  }
 
-  // Search results contain links to matches in format:
-  // <a href="/Matches/1982341/Live/England-Premier-League-2026-2027-Arsenal-Chelsea">...</a>
-  const matchRegex = /href="(\/(?:[Mm]atches|\w+\/Matches)\/(\d+)\/(?:Live|Show)\/([^"]+))"/gi;
-  let match;
-  const normHome = normalizeTeamName(homeTeam);
-  const normAway = normalizeTeamName(awayTeam);
+  // 1. Check legacy mock format:
+  // <div class="match-item">
+  const matchItems = extractHtmlBlocks(
+    html,
+    'div',
+    'match-item'
+  );
 
-  while ((match = matchRegex.exec(html)) !== null) {
-    const url = match[1];
-    const slug = match[3].toLowerCase().replace(/-/g, ' ');
-    if (teamsMatch(slug, normHome) && teamsMatch(slug, normAway)) {
-      return url;
+  for (const block of matchItems) {
+    const result = findMatchUrlInBlock(
+      block,
+      homeTeam,
+      awayTeam
+    );
+
+    if (result) {
+      return result;
     }
   }
 
-  // Also check table rows in search results table (e.g. search-result / search-item)
-  const searchRowRegex = /<tr>([\s\S]*?)<\/tr>|<div class="search-item">([\s\S]*?)<\/div>/gi;
-  let rowMatch;
-  while ((rowMatch = searchRowRegex.exec(html)) !== null) {
-    const block = rowMatch[1] || rowMatch[2];
-    const linkMatch = block.match(/href="([^"]*\/Matches\/\d+\/[^"]+)"/i);
-    if (linkMatch) {
-      const text = block.replace(/<[^>]*>/g, ' ');
-      if (teamsMatch(text, normHome) && teamsMatch(text, normAway)) {
-        return linkMatch[1];
-      }
+  // 2. Check live match-link / divtable-row format.
+  const matchUrls = extractMatchUrls(html);
+
+  return (
+    matchUrls.find((url) =>
+      urlMatchesTeams(
+        url,
+        homeTeam,
+        awayTeam
+      )
+    ) || null
+  );
+};
+
+/**
+ * Finds matching match URL from WhoScored Search results HTML.
+ */
+const findMatchUrlFromSearchHtml = (
+  html,
+  homeTeam,
+  awayTeam
+) => {
+  if (!html || typeof html !== 'string') {
+    return null;
+  }
+
+  // Search result match URLs.
+  const matchUrls = extractMatchUrls(html);
+
+  const directMatch = matchUrls.find((url) =>
+    urlMatchesTeams(
+      url,
+      homeTeam,
+      awayTeam
+    )
+  );
+
+  if (directMatch) {
+    return directMatch;
+  }
+
+  // Check table rows in search results.
+  const rows = extractHtmlBlocks(
+    html,
+    'tr'
+  );
+
+  for (const block of rows) {
+    const result = findMatchUrlInBlock(
+      block,
+      homeTeam,
+      awayTeam
+    );
+
+    if (result) {
+      return result;
+    }
+  }
+
+  // Check search-result / search-item blocks.
+  const searchItems = extractHtmlBlocks(
+    html,
+    'div',
+    'search-item'
+  );
+
+  for (const block of searchItems) {
+    const result = findMatchUrlInBlock(
+      block,
+      homeTeam,
+      awayTeam
+    );
+
+    if (result) {
+      return result;
     }
   }
 
@@ -113,3 +293,4 @@ module.exports = {
   findMatchUrlFromFixturesHtml,
   findMatchUrlFromSearchHtml
 };
+

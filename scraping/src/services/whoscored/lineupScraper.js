@@ -127,7 +127,7 @@ const parseMatchCentreData = (html, matchDate) => {
       homeTeam: parseMatchCentreSide(data.home),
       awayTeam: parseMatchCentreSide(data.away)
     };
-  } catch (error) {
+  } catch  {
   // Invalid matchCentreData is expected to fall back to legacy HTML parsing.
     return null;
   }

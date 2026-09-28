@@ -1,8 +1,15 @@
+const crypto = require('node:crypto');
+
 /**
  * Executes an async operation with exponential backoff and jitter.
  * Non-retryable errors (e.g. 404 PlayerNotFoundError or MatchNotFoundError) fail immediately.
  */
-const withRetry = async (fn, maxRetries = 3, baseDelayMs = 1000, isRetryable = null) => {
+const withRetry = async (
+  fn,
+  maxRetries = 3,
+  baseDelayMs = 1000,
+  isRetryable = null
+) => {
   let attempt = 0;
 
   while (attempt <= maxRetries) {
@@ -22,10 +29,10 @@ const withRetry = async (fn, maxRetries = 3, baseDelayMs = 1000, isRetryable = n
       }
 
       // Calculate exponential backoff with full jitter
-      // Delay = rand(0, baseDelay * 2^(attempt - 1))
+      // Delay = random(0, baseDelay * 2^(attempt - 1))
       const factor = Math.pow(2, attempt - 1);
       const maxDelay = baseDelayMs * factor;
-      const delay = Math.floor(Math.random() * maxDelay);
+      const delay = crypto.randomInt(maxDelay);
 
       // In test mode, don't actually sleep to avoid slowing down the suite
       if (process.env.NODE_ENV !== 'test') {
@@ -38,3 +45,4 @@ const withRetry = async (fn, maxRetries = 3, baseDelayMs = 1000, isRetryable = n
 module.exports = {
   withRetry
 };
+

@@ -4,17 +4,17 @@
  */
 const toInt = (val) => {
   if (val === null || val === undefined) return 0;
-  const cleaned = String(val).replace(/,/g, '').trim();
+  const cleaned = String(val).replaceAll(',', '').trim();
   if (cleaned === '' || cleaned === '-' || cleaned === 'N/A') return 0;
-  const num = parseInt(cleaned, 10);
+  const num = Number.parseInt(cleaned, 10);
   return Number.isNaN(num) ? 0 : num;
 };
 
 const toFloat = (val) => {
   if (val === null || val === undefined) return 0.0;
-  const cleaned = String(val).replace(/,/g, '').trim();
+ const cleaned = String(val).replaceAll(',', '').trim();
   if (cleaned === '' || cleaned === '-' || cleaned === 'N/A') return 0.0;
-  const num = parseFloat(cleaned);
+  const num = Number.parseFloat(cleaned);
   return Number.isNaN(num) ? 0.0 : Math.round(num * 100) / 100;
 };
 

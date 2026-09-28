@@ -1,4 +1,6 @@
 const playerScraper = require('../services/whoscored/playerScraper');
+const playerSearchScraper = require('../services/whoscored/playerSearchScraper');
+const { InvalidRequestParamsError } = require('../utils/errors');
 
 const getPlayerStats = async (req, res, next) => {
   const { whoscoredId } = req.params;
@@ -22,6 +24,42 @@ const getPlayerStats = async (req, res, next) => {
   }
 };
 
+const searchPlayers = async (req, res, next) => {
+  const query = typeof req.query.q === 'string' ? req.query.q.trim() : '';
+  if (query.length < 2 || query.length > 120) {
+    return next(new InvalidRequestParamsError('q debe tener entre 2 y 120 caracteres'));
+  }
+
+  const controller = new AbortController();
+  req.on('close', () => {
+    if (!res.writableEnded) controller.abort();
+  });
+  try {
+    res.status(200).json(await playerSearchScraper.searchPlayers(query, controller.signal));
+  } catch (error) {
+    if (!controller.signal.aborted) next(error);
+  }
+};
+
+const searchTeamPlayers = async (req, res, next) => {
+  const teamName = typeof req.query.name === 'string' ? req.query.name.trim() : '';
+  const country = typeof req.query.country === 'string' ? req.query.country.trim() : '';
+  if (teamName.length < 2 || teamName.length > 120 || country.length > 80) {
+    return next(new InvalidRequestParamsError('name debe tener entre 2 y 120 caracteres y country hasta 80'));
+  }
+  const controller = new AbortController();
+  req.on('close', () => {
+    if (!res.writableEnded) controller.abort();
+  });
+  try {
+    res.status(200).json(await playerSearchScraper.searchTeamPlayers(teamName, country, controller.signal));
+  } catch (error) {
+    if (!controller.signal.aborted) next(error);
+  }
+};
+
 module.exports = {
-  getPlayerStats
+  getPlayerStats,
+  searchPlayers,
+  searchTeamPlayers
 };

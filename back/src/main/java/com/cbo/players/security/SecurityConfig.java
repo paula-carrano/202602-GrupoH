@@ -7,7 +7,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,23 +36,51 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+            throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable)
+                // Safe because this application is a stateless REST API.
+                // Authentication is performed through Authorization: Bearer JWT
+                // or X-API-Key headers, never through authentication cookies.
+                // Login/register receive JSON credentials and do not establish
+                // browser sessions.
+                .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::usesExplicitCredentials,
+                        SecurityConfig::isJsonAuthentication))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
-                        .requestMatchers("/actuator/health", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
-                        .anyRequest().authenticated()
-                )
+                        .requestMatchers("/actuator/health", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
+                        .permitAll()
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .anyRequest().authenticated())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(apiKeyAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private static boolean usesExplicitCredentials(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
+        return (authorization != null && authorization.startsWith("Bearer ")
+                && StringUtils.hasText(authorization.substring(7)))
+                || StringUtils.hasText(request.getHeader("X-API-Key"));
+    }
+
+    private static boolean isJsonAuthentication(HttpServletRequest request) {
+        String path = request.getServletPath();
+        if (!"POST".equals(request.getMethod()) || !("/api/v1/auth/login".equals(path)
+                || "/api/v1/auth/register".equals(path)))
+            return false;
+        try {
+            return request.getContentType() != null && MediaType.APPLICATION_JSON
+                    .includes(MediaType.parseMediaType(request.getContentType()));
+        } catch (IllegalArgumentException error) {
+            return false;
+        }
     }
 }

@@ -1,10 +1,12 @@
 package com.cbo.players.service;
 
 import com.cbo.players.dto.response.PlayerResponseDto;
+import com.cbo.players.dto.response.PlayerDetailResponseDto;
 import com.cbo.players.exception.ResourceNotFoundException;
 import com.cbo.players.model.Player;
 import com.cbo.players.model.PlayerPosition;
 import com.cbo.players.repository.PlayerRepository;
+import com.cbo.players.repository.PlayerStatisticsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,12 +25,14 @@ class PlayerServiceTest {
 
     @Mock
     private PlayerRepository playerRepository;
+    @Mock
+    private PlayerStatisticsRepository playerStatisticsRepository;
 
     private PlayerService playerService;
 
     @BeforeEach
     void setUp() {
-        playerService = new PlayerService(playerRepository);
+        playerService = new PlayerService(playerRepository, playerStatisticsRepository);
     }
 
     @Test
@@ -54,7 +58,7 @@ class PlayerServiceTest {
 
         when(playerRepository.findById(1L)).thenReturn(Optional.of(player));
 
-        PlayerResponseDto result = playerService.getPlayerById(1L);
+        PlayerDetailResponseDto result = playerService.getPlayerById(1L);
 
         assertNotNull(result);
         assertEquals(1L, result.id());

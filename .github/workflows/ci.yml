@@ -36,13 +36,24 @@ jobs:
         with:
           node-version: '22'
           cache: 'npm'
-          cache-dependency-path: front/package-lock.json
+          cache-dependency-path: |
+            front/package-lock.json
+            scraping/package-lock.json
 
       - name: Build frontend
         working-directory: front
         run: |
           npm ci
+          npm run test:coverage
           npm run build
+
+      - name: Test scraping with coverage
+        working-directory: scraping
+        env:
+          PUPPETEER_SKIP_DOWNLOAD: 'true'
+        run: |
+          npm ci
+          npm run test:coverage
 
       - name: Cache SonarCloud packages
         uses: actions/cache@v4
@@ -58,14 +69,20 @@ jobs:
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
 
-      - name: Build and analyze with Maven & SonarCloud
+      - name: Build backend with coverage and collect Java dependencies
         working-directory: back
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           chmod +x mvnw
-          ./mvnw clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            -Dsonar.projectKey=202602-GrupoH_tp-desarrollo \
-            -Dsonar.organization=202602-grupoh \
-            -Dsonar.host.url=https://sonarcloud.io
+          ./mvnw -B clean verify org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies \
+            -DincludeScope=test -DoutputDirectory=target/sonar-libraries
+
+      - name: Verify coverage reports
+        run: |
+          test -s back/target/site/jacoco/jacoco.xml
+          test -s front/coverage/lcov.info
+          test -s scraping/coverage/lcov.info
+
+      - name: Analyze all modules and wait for Quality Gate
+        uses: SonarSource/sonarqube-scan-action@v7
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -29,8 +29,8 @@ export const PlayerTable = ({ players, hasResults, rankingOffset = 0, onPlayerSe
                             </button>
                         </td>
                         <td className="text-center">{formatBirthDate(player.birthDate)}</td>
-                        <td className="text-center">{player.nationality}</td>
-                        <td className="text-center">{player.position}</td>
+                        <td className="text-center">{player.nationality || 'N/D'}</td>
+                        <td className="text-center">{player.position || 'N/D'}</td>
                         <td className="text-center">{player.currentTeam}</td>
                         <td className="text-center">{player.league}</td>
                     </tr>

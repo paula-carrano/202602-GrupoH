@@ -1,261 +1,504 @@
+const JSON5 = require('json5');
+
 const browserPool = require('./browserPool');
 const teamMatcher = require('./teamMatcher');
 const config = require('../../config/env');
 const { withRetry } = require('../../utils/retry');
+
 const {
   MatchNotFoundError,
   ScrapeTimeoutError,
   ScrapeBlockedError
 } = require('../../utils/errors');
 
+const EMPTY_TEAM = {
+  name: '',
+  formation: 'Unknown',
+  startingXI: [],
+  bench: []
+};
+
 /**
- * Parses match lineup HTML string and extracts lineups for both teams.
- * Strategy 1: Check for embedded matchCentreData in <script> blocks (WhoScored Live Match Centre).
- * Strategy 2: Legacy fallback using CSS selectors/DOM attributes.
+ * Creates an empty lineup response.
  */
-const parseLineupFromHtml = (html, matchDate = '') => {
-  if (!html || typeof html !== 'string') {
-    return {
-      source: 'WHOSCORED',
-      date: matchDate,
-      homeTeam: { name: '', formation: 'Unknown', startingXI: [], bench: [] },
-      awayTeam: { name: '', formation: 'Unknown', startingXI: [], bench: [] }
-    };
+const createEmptyLineup = (matchDate = '') => ({
+  source: 'WHOSCORED',
+  date: matchDate,
+  homeTeam: { ...EMPTY_TEAM },
+  awayTeam: { ...EMPTY_TEAM }
+});
+
+/**
+ * Parses a player from WhoScored match centre data.
+ */
+const parseMatchCentrePlayer = (player) => {
+  let id = '';
+
+  if (player.playerId !== undefined) {
+    id = String(player.playerId);
+  } else if (player.id !== undefined) {
+    id = String(player.id);
   }
 
-  // Strategy 1: Check embedded matchCentreData script block
-  // e.g.: var matchCentreData = { ... }; or matchCentreData = { ... };
-  const matchCentreRegex = /(?:var\s+matchCentreData|matchCentreData)\s*=\s*(\{[\s\S]*?\});/;
-  const matchCentreMatch = html.match(matchCentreRegex);
+  const shirtNumber = Number.parseInt(
+    player.shirtNo || player.shirtNumber || player.jerseyNumber || 0,
+    10
+  );
 
-  if (matchCentreMatch) {
-    try {
-      const jsonStr = matchCentreMatch[1];
-      const data = Function('"use strict";return (' + jsonStr + ')')();
+  let position = player.position || player.field;
 
-      if (data && (data.home || data.away)) {
-        const parseSide = (sideData) => {
-          if (!sideData) return { name: '', formation: 'Unknown', startingXI: [], bench: [] };
-
-          const name = sideData.name || '';
-          const formation = sideData.formations && sideData.formations.length > 0
-            ? sideData.formations[0].formationName || 'Unknown'
-            : sideData.formation || 'Unknown';
-
-          const startingXI = [];
-          const bench = [];
-
-          if (Array.isArray(sideData.players)) {
-            for (const p of sideData.players) {
-              const entry = {
-                id: p.playerId !== undefined ? String(p.playerId) : (p.id !== undefined ? String(p.id) : ''),
-                name: p.name || p.knownName || '',
-                shirtNumber: parseInt(p.shirtNo || p.shirtNumber || p.jerseyNumber || 0, 10),
-                position: p.position || p.field || (p.isFirstEleven ? 'Starter' : 'Sub')
-              };
-
-              if (p.isFirstEleven) {
-                startingXI.push(entry);
-              } else {
-                bench.push(entry);
-              }
-            }
-          }
-
-          return {
-            name,
-            formation: String(formation),
-            startingXI,
-            bench
-          };
-        };
-
-        return {
-          source: 'WHOSCORED',
-          date: matchDate || (data.startTime ? data.startTime.substring(0, 10) : ''),
-          homeTeam: parseSide(data.home),
-          awayTeam: parseSide(data.away)
-        };
-      }
-    } catch (e) {
-      // Fallback to DOM strategy
-    }
+  if (!position) {
+    position = player.isFirstEleven ? 'Starter' : 'Sub';
   }
-
-  // Strategy 2: Legacy mock / DOM parsing
-  const getTeamChunk = (className) => {
-    if (className === 'home') {
-      const match = html.match(/<div class="home">([\s\S]*?)<div class="away">/i);
-      return match ? match[1] : '';
-    } else {
-      const match = html.match(/<div class="away">([\s\S]*?)<\/body>/i);
-      return match ? match[1] : '';
-    }
-  };
-
-  const parseTeamBlock = (teamClass) => {
-    const chunk = getTeamChunk(teamClass);
-    if (!chunk) return { name: '', formation: 'Unknown', startingXI: [], bench: [] };
-
-    const formationMatch = chunk.match(/class="formation">([^<]+)<\/span>/i);
-    const nameMatch = chunk.match(/class="team-name">([^<]+)<\/span>/i);
-
-    const parseSection = (sectionName) => {
-      const startTag = `<div class="${sectionName}">`;
-      const startIndex = chunk.indexOf(startTag);
-      if (startIndex === -1) return [];
-
-      const afterStart = chunk.substring(startIndex + startTag.length);
-      // It ends at either `<div class="substitutes">` or `</div>\s*</div>` (end of team)
-      const nextSectionMatch = afterStart.match(/<div class="substitutes">|<\/div>\s*<\/div>/i);
-      const sectionHtml = nextSectionMatch ? afterStart.substring(0, nextSectionMatch.index) : afterStart;
-
-      const playerRegex = /data-player-id="([^"]+)"\s+data-player-name="([^"]+)"\s+data-player-number="([^"]+)"\s+data-position="([^"]+)"/gi;
-      const players = [];
-      let p;
-      while ((p = playerRegex.exec(sectionHtml)) !== null) {
-        players.push({
-          id: p[1],
-          name: p[2],
-          shirtNumber: parseInt(p[3], 10) || 0,
-          position: p[4]
-        });
-      }
-      return players;
-    };
-
-    return {
-      name: nameMatch ? nameMatch[1].trim() : '',
-      formation: formationMatch ? formationMatch[1].trim() : 'Unknown',
-      startingXI: parseSection('starting-lineup'),
-      bench: parseSection('substitutes')
-    };
-  };
 
   return {
-    source: 'WHOSCORED',
-    date: matchDate,
-    homeTeam: parseTeamBlock('home'),
-    awayTeam: parseTeamBlock('away')
+    id,
+    name: player.name || player.knownName || '',
+    shirtNumber,
+    position
   };
 };
 
 /**
- * Scrapes WhoScored lineup with resilient match discovery (search + date fallback) and retry policy
+ * Parses one team from WhoScored match centre data.
  */
-const scrapeLineup = async (homeTeam, awayTeam, date, abortSignal = null) => {
+const parseMatchCentreSide = (sideData) => {
+  if (!sideData) {
+    return { ...EMPTY_TEAM };
+  }
+
+  const name = sideData.name || '';
+
+  let formation = 'Unknown';
+
+  if (sideData.formations?.length > 0) {
+    formation = sideData.formations[0].formationName || 'Unknown';
+  } else if (sideData.formation) {
+    formation = sideData.formation;
+  }
+
+  const startingXI = [];
+  const bench = [];
+
+  if (Array.isArray(sideData.players)) {
+    for (const player of sideData.players) {
+      const entry = parseMatchCentrePlayer(player);
+
+      if (player.isFirstEleven) {
+        startingXI.push(entry);
+      } else {
+        bench.push(entry);
+      }
+    }
+  }
+
+  return {
+    name,
+    formation: String(formation),
+    startingXI,
+    bench
+  };
+};
+
+/**
+ * Parses embedded matchCentreData from WhoScored HTML.
+ */
+const parseMatchCentreData = (html, matchDate) => {
+  const matchCentreRegex =
+    /(?:var\s+matchCentreData|matchCentreData)\s*=\s*(\{[\s\S]*?\});/;
+
+  const matchCentreMatch = matchCentreRegex.exec(html);
+
+  if (!matchCentreMatch) {
+    return null;
+  }
+
+  try {
+    const jsonStr = matchCentreMatch[1];
+    const data = JSON5.parse(jsonStr);
+
+    if (!data || (!data.home && !data.away)) {
+      return null;
+    }
+
+    return {
+      source: 'WHOSCORED',
+      date: matchDate || data.startTime?.substring(0, 10) || '',
+      homeTeam: parseMatchCentreSide(data.home),
+      awayTeam: parseMatchCentreSide(data.away)
+    };
+  } catch (error) {
+  // Invalid matchCentreData is expected to fall back to legacy HTML parsing.
+    return null;
+  }
+};
+
+/**
+ * Returns the HTML chunk corresponding to one team.
+ */
+const getTeamChunk = (html, teamClass) => {
+  let regex;
+
+  if (teamClass === 'home') {
+    regex = /<div class="home">([\s\S]*?)<div class="away">/i;
+  } else {
+    regex = /<div class="away">([\s\S]*?)<\/body>/i;
+  }
+
+  const match = regex.exec(html);
+
+  return match ? match[1] : '';
+};
+
+/**
+ * Parses players from one section of the legacy HTML.
+ */
+const parseLegacyPlayerSection = (chunk, sectionName) => {
+  const startTag = `<div class="${sectionName}">`;
+  const startIndex = chunk.indexOf(startTag);
+
+  if (startIndex === -1) {
+    return [];
+  }
+
+  const afterStart = chunk.substring(startIndex + startTag.length);
+
+  const nextSectionRegex =
+    /<div class="substitutes">|<\/div>\s*<\/div>/i;
+
+  const nextSectionMatch = nextSectionRegex.exec(afterStart);
+
+  const sectionHtml = nextSectionMatch
+    ? afterStart.substring(0, nextSectionMatch.index)
+    : afterStart;
+
+  const playerRegex =
+    /data-player-id="([^"]+)"\s+data-player-name="([^"]+)"\s+data-player-number="([^"]+)"\s+data-position="([^"]+)"/gi;
+
+  const players = [];
+  let playerMatch;
+
+  while ((playerMatch = playerRegex.exec(sectionHtml)) !== null) {
+    players.push({
+      id: playerMatch[1],
+      name: playerMatch[2],
+      shirtNumber: Number.parseInt(playerMatch[3], 10) || 0,
+      position: playerMatch[4]
+    });
+  }
+
+  return players;
+};
+
+/**
+ * Parses one team using the legacy DOM-like HTML structure.
+ */
+const parseLegacyTeamBlock = (html, teamClass) => {
+  const chunk = getTeamChunk(html, teamClass);
+
+  if (!chunk) {
+    return { ...EMPTY_TEAM };
+  }
+
+  const formationRegex = /class="formation">([^<]+)<\/span>/i;
+  const nameRegex = /class="team-name">([^<]+)<\/span>/i;
+
+  const formationMatch = formationRegex.exec(chunk);
+  const nameMatch = nameRegex.exec(chunk);
+
+  return {
+    name: nameMatch ? nameMatch[1].trim() : '',
+    formation: formationMatch
+      ? formationMatch[1].trim()
+      : 'Unknown',
+    startingXI: parseLegacyPlayerSection(
+      chunk,
+      'starting-lineup'
+    ),
+    bench: parseLegacyPlayerSection(
+      chunk,
+      'substitutes'
+    )
+  };
+};
+
+/**
+ * Parses match lineup HTML string and extracts lineups for both teams.
+ *
+ * Strategy 1:
+ * Check embedded matchCentreData in script blocks.
+ *
+ * Strategy 2:
+ * Legacy fallback using CSS selectors/DOM attributes.
+ */
+const parseLineupFromHtml = (html, matchDate = '') => {
+  if (!html || typeof html !== 'string') {
+    return createEmptyLineup(matchDate);
+  }
+
+  const matchCentreData = parseMatchCentreData(
+    html,
+    matchDate
+  );
+
+  if (matchCentreData) {
+    return matchCentreData;
+  }
+
+  return {
+    source: 'WHOSCORED',
+    date: matchDate,
+    homeTeam: parseLegacyTeamBlock(html, 'home'),
+    awayTeam: parseLegacyTeamBlock(html, 'away')
+  };
+};
+
+/**
+ * Checks whether a WhoScored response indicates blocking.
+ */
+const ensureResponseIsNotBlocked = (response, html) => {
+  if (
+    response &&
+    (response.status() === 403 || response.status() === 429)
+  ) {
+    throw new ScrapeBlockedError();
+  }
+
+  if (
+    html.includes('Attention Required! | Cloudflare') ||
+    html.includes('cf-browser-verification')
+  ) {
+    throw new ScrapeBlockedError();
+  }
+};
+
+/**
+ * Searches WhoScored for the requested match.
+ */
+const findMatchFromSearch = async (
+  page,
+  homeTeam,
+  awayTeam
+) => {
+  const searchQuery = encodeURIComponent(
+    `${homeTeam} ${awayTeam}`
+  );
+
+  const searchUrl =
+    `https://www.whoscored.com/Search/?q=${searchQuery}`;
+
+  try {
+    const searchRes = await page.goto(searchUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: config.SCRAPE_TIMEOUT_MS
+    });
+
+    const searchHtml = await page.content();
+
+    ensureResponseIsNotBlocked(searchRes, searchHtml);
+
+    return teamMatcher.findMatchUrlFromSearchHtml(
+      searchHtml,
+      homeTeam,
+      awayTeam
+    );
+  } catch (error) {
+    if (error instanceof ScrapeBlockedError) {
+      throw error;
+    }
+
+    return null;
+  }
+};
+
+/**
+ * Searches WhoScored fixtures by date.
+ */
+const findMatchFromFixtures = async (
+  page,
+  homeTeam,
+  awayTeam,
+  date
+) => {
+  if (!date) {
+    return null;
+  }
+
+  const fixturesUrl =
+    `https://www.whoscored.com/Matches?date=${date}`;
+
+  try {
+    const fixturesRes = await page.goto(fixturesUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: config.SCRAPE_TIMEOUT_MS
+    });
+
+    const fixturesHtml = await page.content();
+
+    ensureResponseIsNotBlocked(
+      fixturesRes,
+      fixturesHtml
+    );
+
+    return teamMatcher.findMatchUrlFromFixturesHtml(
+      fixturesHtml,
+      homeTeam,
+      awayTeam
+    );
+  } catch (error) {
+    if (error instanceof ScrapeBlockedError) {
+      throw error;
+    }
+
+    return null;
+  }
+};
+
+/**
+ * Finds the requested match using search and date fallback.
+ */
+const findMatchUrl = async (
+  page,
+  homeTeam,
+  awayTeam,
+  date
+) => {
+  let matchUrl = await findMatchFromSearch(
+    page,
+    homeTeam,
+    awayTeam
+  );
+
+  if (!matchUrl) {
+    matchUrl = await findMatchFromFixtures(
+      page,
+      homeTeam,
+      awayTeam,
+      date
+    );
+  }
+
+  return matchUrl;
+};
+
+/**
+ * Navigates to the match page and parses the lineup.
+ */
+const scrapeMatchPage = async (
+  page,
+  matchUrl,
+  date
+) => {
+  const fullMatchUrl = matchUrl.startsWith('http')
+    ? matchUrl
+    : `https://www.whoscored.com${matchUrl}`;
+
+  let matchRes;
+
+  try {
+    matchRes = await page.goto(fullMatchUrl, {
+      waitUntil: 'domcontentloaded',
+      timeout: config.SCRAPE_TIMEOUT_MS
+    });
+  } catch (error) {
+    if (error.name === 'TimeoutError') {
+      throw new ScrapeTimeoutError();
+    }
+
+    throw error;
+  }
+
+  const matchHtml = await page.content();
+
+  ensureResponseIsNotBlocked(matchRes, matchHtml);
+
+  return parseLineupFromHtml(matchHtml, date);
+};
+
+/**
+ * Scrapes WhoScored lineup with resilient match discovery
+ * and retry policy.
+ */
+const scrapeLineup = async (
+  homeTeam,
+  awayTeam,
+  date,
+  abortSignal = null
+) => {
   return browserPool.schedule(async () => {
     return withRetry(
       async () => {
         let page = null;
+
         try {
           page = await browserPool.acquirePage();
 
-          if (abortSignal && abortSignal.aborted) {
+          if (abortSignal?.aborted) {
             throw new Error('ABORTED');
           }
 
           if (abortSignal) {
-            abortSignal.addEventListener('abort', async () => {
-              try {
-                if (page && !page.isClosed()) await page.close();
-              } catch (e) {}
-            });
-          }
-
-          let matchUrl = null;
-
-          // 1. Intentar descubrir el partido mediante búsqueda directa en WhoScored Search
-          const searchQuery = encodeURIComponent(`${homeTeam} ${awayTeam}`);
-          const searchUrl = `https://www.whoscored.com/Search/?q=${searchQuery}`;
-
-          try {
-            const searchRes = await page.goto(searchUrl, {
-              waitUntil: 'domcontentloaded',
-              timeout: config.SCRAPE_TIMEOUT_MS
-            });
-
-            if (searchRes && (searchRes.status() === 403 || searchRes.status() === 429)) {
-              throw new ScrapeBlockedError();
-            }
-
-            const searchHtml = await page.content();
-            if (searchHtml.includes('Attention Required! | Cloudflare') || searchHtml.includes('cf-browser-verification')) {
-              throw new ScrapeBlockedError();
-            }
-
-            matchUrl = teamMatcher.findMatchUrlFromSearchHtml(searchHtml, homeTeam, awayTeam);
-          } catch (err) {
-            if (err instanceof ScrapeBlockedError) throw err;
-            // Si la búsqueda falla o da 404, continuar al fallback por cartelera/fecha
-          }
-
-          // 2. Si no se encontró en la búsqueda, intentar fallback en la cartelera por fecha
-          if (!matchUrl && date) {
-            const fixturesUrl = `https://www.whoscored.com/Matches?date=${date}`;
-            try {
-              const fixturesRes = await page.goto(fixturesUrl, {
-                waitUntil: 'domcontentloaded',
-                timeout: config.SCRAPE_TIMEOUT_MS
-              });
-
-              if (fixturesRes && (fixturesRes.status() === 403 || fixturesRes.status() === 429)) {
-                throw new ScrapeBlockedError();
+            abortSignal.addEventListener(
+              'abort',
+              async () => {
+                try {
+                  if (page && !page.isClosed()) {
+                    await page.close();
+                  }
+                } catch (error) {
+                  // Page may already be closed.
+                }
               }
-
-              const fixturesHtml = await page.content();
-              if (fixturesHtml.includes('Attention Required! | Cloudflare') || fixturesHtml.includes('cf-browser-verification')) {
-                throw new ScrapeBlockedError();
-              }
-
-              matchUrl = teamMatcher.findMatchUrlFromFixturesHtml(fixturesHtml, homeTeam, awayTeam);
-            } catch (err) {
-              if (err instanceof ScrapeBlockedError) throw err;
-            }
+            );
           }
+
+          const matchUrl = await findMatchUrl(
+            page,
+            homeTeam,
+            awayTeam,
+            date
+          );
 
           if (!matchUrl) {
-            throw new MatchNotFoundError(`No se encontró el partido entre ${homeTeam} y ${awayTeam} para la fecha ${date} en WhoScored.`);
+            throw new MatchNotFoundError(
+              `No se encontró el partido entre ${homeTeam} y ${awayTeam} para la fecha ${date} en WhoScored.`
+            );
           }
 
-          // 3. Navegar al detalle del partido para extraer alineaciones
-          const fullMatchUrl = matchUrl.startsWith('http') ? matchUrl : `https://www.whoscored.com${matchUrl}`;
-          let matchRes;
-          try {
-            matchRes = await page.goto(fullMatchUrl, {
-              waitUntil: 'domcontentloaded',
-              timeout: config.SCRAPE_TIMEOUT_MS
-            });
-          } catch (err) {
-            if (err.name === 'TimeoutError') throw new ScrapeTimeoutError();
-            throw err;
+          return await scrapeMatchPage(
+            page,
+            matchUrl,
+            date
+          );
+        } catch (error) {
+          if (
+            error instanceof MatchNotFoundError ||
+            error instanceof ScrapeBlockedError
+          ) {
+            throw error;
           }
 
-          if (matchRes && (matchRes.status() === 403 || matchRes.status() === 429)) {
-            throw new ScrapeBlockedError();
-          }
-
-          const matchHtml = await page.content();
-          return parseLineupFromHtml(matchHtml, date);
-        } catch (err) {
-          if (err instanceof MatchNotFoundError || err instanceof ScrapeBlockedError) {
-            throw err; // Non-retryable
-          }
-          if (err.message && err.message.includes('timeout')) {
+          if (error.message?.includes('timeout')) {
             throw new ScrapeTimeoutError();
           }
-          throw err;
+
+          throw error;
         } finally {
           if (page && !page.isClosed()) {
             try {
               await page.close();
-            } catch (e) {}
+            } catch (error) {
+              // Page may already be closed.
+            }
           }
         }
       },
       config.MAX_RETRIES,
       1000,
-      (err) => !(err instanceof MatchNotFoundError) && !(err instanceof ScrapeBlockedError) && err.message !== 'ABORTED'
+      (error) =>
+        !(error instanceof MatchNotFoundError) &&
+        !(error instanceof ScrapeBlockedError) &&
+        error.message !== 'ABORTED'
     );
   });
 };

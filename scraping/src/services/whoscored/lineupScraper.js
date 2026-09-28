@@ -1,9 +1,8 @@
 const JSON5 = require('json5');
 
-const browserPool = require('./browserPool');
+const { scrapeWithPage } = require('./scrapeWithPage');
 const teamMatcher = require('./teamMatcher');
 const config = require('../../config/env');
-const { withRetry } = require('../../utils/retry');
 
 const {
   MatchNotFoundError,
@@ -419,89 +418,16 @@ const scrapeMatchPage = async (
  * Scrapes WhoScored lineup with resilient match discovery
  * and retry policy.
  */
-const scrapeLineup = async (
-  homeTeam,
-  awayTeam,
-  date,
-  abortSignal = null
-) => {
-  return browserPool.schedule(async () => {
-    return withRetry(
-      async () => {
-        let page = null;
-
-        try {
-          page = await browserPool.acquirePage();
-
-          if (abortSignal?.aborted) {
-            throw new Error('ABORTED');
-          }
-
-          if (abortSignal) {
-            abortSignal.addEventListener(
-              'abort',
-              async () => {
-                try {
-                  if (page && !page.isClosed()) {
-                    await page.close();
-                  }
-                } catch (error) {
-                  // Page may already be closed.
-                }
-              }
-            );
-          }
-
-          const matchUrl = await findMatchUrl(
-            page,
-            homeTeam,
-            awayTeam,
-            date
-          );
-
-          if (!matchUrl) {
-            throw new MatchNotFoundError(
-              `No se encontró el partido entre ${homeTeam} y ${awayTeam} para la fecha ${date} en WhoScored.`
-            );
-          }
-
-          return await scrapeMatchPage(
-            page,
-            matchUrl,
-            date
-          );
-        } catch (error) {
-          if (
-            error instanceof MatchNotFoundError ||
-            error instanceof ScrapeBlockedError
-          ) {
-            throw error;
-          }
-
-          if (error.message?.includes('timeout')) {
-            throw new ScrapeTimeoutError();
-          }
-
-          throw error;
-        } finally {
-          if (page && !page.isClosed()) {
-            try {
-              await page.close();
-            } catch (error) {
-              // Page may already be closed.
-            }
-          }
-        }
-      },
-      config.MAX_RETRIES,
-      1000,
-      (error) =>
-        !(error instanceof MatchNotFoundError) &&
-        !(error instanceof ScrapeBlockedError) &&
-        error.message !== 'ABORTED'
-    );
-  });
-};
+const scrapeLineup = (homeTeam, awayTeam, date, abortSignal = null) =>
+  scrapeWithPage(async page => {
+    const matchUrl = await findMatchUrl(page, homeTeam, awayTeam, date);
+    if (!matchUrl) {
+      throw new MatchNotFoundError(
+        `No se encontró el partido entre ${homeTeam} y ${awayTeam} para la fecha ${date} en WhoScored.`
+      );
+    }
+    return scrapeMatchPage(page, matchUrl, date);
+  }, abortSignal, MatchNotFoundError);
 
 module.exports = {
   parseLineupFromHtml,

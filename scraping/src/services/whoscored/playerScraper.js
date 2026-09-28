@@ -1,10 +1,9 @@
 const JSON5 = require('json5');
 
-const browserPool = require('./browserPool');
+const { scrapeWithPage } = require('./scrapeWithPage');
 const config = require('../../config/env');
 
 const { toInt, toFloat } = require('../../utils/normalizer');
-const { withRetry } = require('../../utils/retry');
 
 const {
   PlayerNotFoundError,
@@ -315,75 +314,11 @@ const fetchPlayerHtml = async (page, whoscoredId) => {
  * Scrapes WhoScored player profile page using Puppeteer
  * with retry policy.
  */
-const scrapePlayerStats = async (
-  whoscoredId,
-  abortSignal = null
-) => {
-  return browserPool.schedule(async () => {
-    return withRetry(
-      async () => {
-        let page = null;
-
-        try {
-          page = await browserPool.acquirePage();
-
-          if (abortSignal?.aborted) {
-            throw new Error('ABORTED');
-          }
-
-          if (abortSignal) {
-            abortSignal.addEventListener(
-              'abort',
-              async () => {
-                try {
-                  if (page && !page.isClosed()) {
-                    await page.close();
-                  }
-                } catch (error) {
-                  // Page may already be closed.
-                }
-              }
-            );
-          }
-
-          const html = await fetchPlayerHtml(
-            page,
-            whoscoredId
-          );
-
-          return parsePlayerStatsFromHtml(html);
-        } catch (error) {
-          if (
-            error instanceof PlayerNotFoundError ||
-            error instanceof ScrapeBlockedError
-          ) {
-            throw error;
-          }
-
-          if (error.message?.includes('timeout')) {
-            throw new ScrapeTimeoutError();
-          }
-
-          throw error;
-        } finally {
-          if (page && !page.isClosed()) {
-            try {
-              await page.close();
-            } catch (error) {
-              // Page may already be closed.
-            }
-          }
-        }
-      },
-      config.MAX_RETRIES,
-      1000,
-      (error) =>
-        !(error instanceof PlayerNotFoundError) &&
-        !(error instanceof ScrapeBlockedError) &&
-        error.message !== 'ABORTED'
-    );
-  });
-};
+const scrapePlayerStats = (whoscoredId, abortSignal = null) =>
+  scrapeWithPage(async page => {
+    const html = await fetchPlayerHtml(page, whoscoredId);
+    return parsePlayerStatsFromHtml(html);
+  }, abortSignal, PlayerNotFoundError);
 
 module.exports = {
   parsePlayerStatsFromHtml,

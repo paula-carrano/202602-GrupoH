@@ -89,11 +89,12 @@ test('does not navigate an already aborted request', async () => {
 
 test.each([false, true])('closes on abort and tolerates a failed close: %s', async closeFails => {
   let listener;
-  const signal = { aborted: false, addEventListener: jest.fn((_, fn) => { listener = fn }) };
+  const signal = { aborted: false, removeEventListener: jest.fn(), addEventListener: jest.fn((_, fn) => { listener = fn }) };
   if (closeFails) page.close.mockRejectedValue(new Error('already closed'));
   page.goto.mockImplementation(async () => { await listener(); return null; });
   await expect(run(signal)).resolves.toMatchObject({ homeTeam: { name: 'Arsenal' } });
   expect(page.close).toHaveBeenCalled();
+  expect(signal.removeEventListener).toHaveBeenCalledWith('abort', listener);
 });
 
 test('does not close an already closed page', async () => {

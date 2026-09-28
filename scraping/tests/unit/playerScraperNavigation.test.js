@@ -50,11 +50,12 @@ test('does not navigate or retry an already aborted request', async () => {
 
 test.each([false, true])('cancels in-flight work even if page close fails: %s', async closeFails => {
   let listener;
-  const signal = { aborted: false, addEventListener: jest.fn((_, fn) => { listener = fn }) };
+  const signal = { aborted: false, removeEventListener: jest.fn(), addEventListener: jest.fn((_, fn) => { listener = fn }) };
   if (closeFails) page.close.mockRejectedValue(new Error('already closed'));
   page.goto.mockImplementation(async () => { await listener(); return null; });
   await expect(scrapePlayerStats(7, signal)).resolves.toMatchObject({ goals: 0 });
   expect(page.close).toHaveBeenCalled();
+  expect(signal.removeEventListener).toHaveBeenCalledWith('abort', listener);
 });
 
 test('does not close an already closed page', async () => {

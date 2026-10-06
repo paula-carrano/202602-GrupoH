@@ -12,7 +12,6 @@ import com.cbo.players.service.ApiKeyService;
 import com.cbo.players.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -39,11 +38,9 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(summary = "Registrar nuevo usuario", description = "Crea una nueva cuenta de usuario con rol USER por defecto")
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Usuario registrado exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos o error de validación"),
-            @ApiResponse(responseCode = "409", description = "El correo electrónico o nombre de usuario ya existe")
-    })
+    @ApiResponse(responseCode = "201", description = "Usuario registrado exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos o error de validación")
+    @ApiResponse(responseCode = "409", description = "El correo electrónico o nombre de usuario ya existe")
     public ResponseEntity<UserResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
         UserResponseDto response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -51,11 +48,9 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Iniciar sesión", description = "Autentica credenciales y emite un token JWT Bearer")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Autenticación exitosa con token JWT"),
-            @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos"),
-            @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
-    })
+    @ApiResponse(responseCode = "200", description = "Autenticación exitosa con token JWT")
+    @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos")
+    @ApiResponse(responseCode = "401", description = "Credenciales inválidas")
     public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         LoginResponseDto response = authService.login(request);
         return ResponseEntity.ok(response);
@@ -67,11 +62,9 @@ public class AuthController {
             description = "Crea una API Key para acceso programático M2M. La clave en texto plano solo se devuelve una única vez en esta respuesta.",
             security = @SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
     )
-    @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "API Key creada exitosamente"),
-            @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos"),
-            @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido")
-    })
+    @ApiResponse(responseCode = "201", description = "API Key creada exitosamente")
+    @ApiResponse(responseCode = "400", description = "Datos de solicitud inválidos")
+    @ApiResponse(responseCode = "401", description = "No autenticado o token JWT inválido")
     public ResponseEntity<ApiKeyCreatedResponseDto> createApiKey(
             @Valid @RequestBody CreateApiKeyRequestDto request,
             @AuthenticationPrincipal UserPrincipal userPrincipal) {

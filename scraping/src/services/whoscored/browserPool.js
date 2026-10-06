@@ -3,13 +3,12 @@ const Bottleneck = require("bottleneck");
 const config = require("../../config/env");
 
 class BrowserPool {
-	constructor() {
-		this.browser = null;
-		// Limitador de concurrencia usando Bottleneck exclusivamente
-		this.limiter = new Bottleneck({
-			maxConcurrent: config.MAX_CONCURRENT_SCRAPES || 2,
-		});
-	}
+	browser = null;
+
+	// Limitador de concurrencia usando Bottleneck exclusivamente
+	limiter = new Bottleneck({
+		maxConcurrent: config.MAX_CONCURRENT_SCRAPES || 2,
+	});
 
 	async getBrowser() {
 		if (!this.browser?.connected) {

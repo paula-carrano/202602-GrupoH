@@ -33,6 +33,7 @@ public class JwtTokenProvider {
                 userPrincipal.getAuthorities().iterator().next().getAuthority());
     }
 
+    @SuppressWarnings("java:S2143")
     public String generateToken(String username, Long userId, String role) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(expirationMs);

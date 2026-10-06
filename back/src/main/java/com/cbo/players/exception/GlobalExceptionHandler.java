@@ -10,15 +10,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-
 import java.net.URI;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -48,10 +45,9 @@ public class GlobalExceptionHandler {
         String correlationId = UUID.randomUUID().toString();
         log.warn("Error de validación [{}] en {}", correlationId, request.getRequestURI());
 
-        List<ViolationDto> violations = new ArrayList<>();
-        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
-            violations.add(new ViolationDto(fieldError.getField(), fieldError.getDefaultMessage()));
-        }
+        List<ViolationDto> violations = ex.getBindingResult().getFieldErrors().stream()
+                .map(fieldError -> new ViolationDto(fieldError.getField(), fieldError.getDefaultMessage()))
+                .toList();
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,

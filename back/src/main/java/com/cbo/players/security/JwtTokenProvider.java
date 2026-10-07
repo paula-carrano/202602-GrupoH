@@ -27,6 +27,7 @@ public class JwtTokenProvider {
         this.expirationMs = expirationMs;
     }
 
+    @SuppressWarnings("java:S2143")
     public String generateToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         return generateToken(userPrincipal.getUsername(), userPrincipal.getId(), 

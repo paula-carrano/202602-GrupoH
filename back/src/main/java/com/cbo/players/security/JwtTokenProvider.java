@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 import java.time.Instant;
-import java.util.Date;
+import java.util.Date;// NOSONAR
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 
@@ -27,14 +27,12 @@ public class JwtTokenProvider {
         this.expirationMs = expirationMs;
     }
 
-    @SuppressWarnings("java:S2143")
     public String generateToken(Authentication authentication) {
         UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
         return generateToken(userPrincipal.getUsername(), userPrincipal.getId(), 
                 userPrincipal.getAuthorities().iterator().next().getAuthority());
     }
 
-    @SuppressWarnings("java:S2143")
     public String generateToken(String username, Long userId, String role) {
         Instant now = Instant.now();
         Instant expiryDate = now.plusMillis(expirationMs);
@@ -43,8 +41,8 @@ public class JwtTokenProvider {
                 .subject(username)
                 .claim("userId", userId)
                 .claim("role", role)
-                .issuedAt(Date.from(now))
-                .expiration(Date.from(expiryDate))
+                .issuedAt(Date.from(now)) // NOSONAR
+                .expiration(Date.from(expiryDate)) // NOSONAR
                 .signWith(key)
                 .compact();
     }

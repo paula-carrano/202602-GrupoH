@@ -599,27 +599,22 @@ La cobertura deberá respetar los criterios definidos por la materia.
 
 # **7\. Entrega 2 — Funcionalidad Core**
 
-## **7.1 Persistencia para testing**
+## **7.1 Perfiles de testing (`unit` y `e2e`)**
 
-La aplicación deberá soportar un perfil específico de pruebas utilizando:
-
-* HSQLDB o H2.
+*(Aclaración oficial de cátedra: Se descarta HSQLDB/H2 ya que el proyecto opera directamente sobre PostgreSQL. El único requerimiento core técnico para la Entrega 2 es la separación de perfiles de testing).*
 
 Se deberán definir perfiles independientes para:
 
-unit
+* `unit` (pruebas unitarias aisladas)
+* `e2e` (pruebas de extremo a extremo)
 
-e2e
-
-La base de datos principal de producción continuará siendo PostgreSQL.
+La base de datos principal del sistema continuará siendo PostgreSQL.
 
 ---
 
-## **7.2 Datos iniciales**
+## **7.2 Datos iniciales (Descartado por cátedra)**
 
-La aplicación deberá poder crear datos de prueba automáticamente al iniciar en los perfiles correspondientes.
-
-Estos datos deberán permitir ejecutar y demostrar las funcionalidades de la Entrega 2\.
+*(Descartado por cátedra al estar vinculado originalmente al uso de H2 en memoria).*
 
 ---
 
@@ -778,9 +773,25 @@ El ranking deberá calcularse utilizando la estrategia de valoración activa.
 
 ---
 
-## **7.11 Coverage Job**
+## **7.11 Coverage Job (Cubierto en Entrega 1 con SonarCloud)**
 
-GitHub Actions deberá contar con un job específico para ejecutar y/o verificar la cobertura de tests de acuerdo con los criterios establecidos por la materia.
+*(Aclaración oficial de cátedra: Ya cubierto mediante la integración de SonarCloud en la Entrega 1).*
+
+---
+
+## **7.12 Visualización de Datos de Usuario con Gráficos en el Frontend**
+
+El frontend deberá implementar gráficos interactivos para visualizar los datos financieros del usuario y del mercado:
+
+* Gráfico de serie temporal de cotización histórica del jugador.
+* Gráfico de distribución de cartera (dona/torta de tokens poseídos por jugador).
+* Gráfico de evolución del patrimonio y saldo del usuario.
+
+---
+
+## **7.13 Feature Adicional — Alertas de Precios y Notificaciones en Tiempo Real**
+
+El sistema deberá implementar como feature adicional propio de la Entrega 2 un mecanismo de **Alertas de Precios con Notificaciones en Tiempo Real (WebSockets / Server-Sent Events)** hacia el frontend, permitiendo que el usuario reciba una notificación instantánea cuando un jugador alcance el umbral configurado y pueda ejecutar una compra/venta en tiempo real.
 
 ---
 

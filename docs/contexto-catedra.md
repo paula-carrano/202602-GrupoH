@@ -106,13 +106,24 @@
 * [ ] Sacar lo de `/v1`
 * [ ] Reveer la estructura de sync de WhoScored y la DB. Fijarse si se puede simplificar un poco la obtención del ID y que se guarde la data junto con lo de Football-Data
 
-#### CORE (De momento no son necesarios, quedaron viejos o ya se hicieron):
-* Estado de build en "Verde"
-* Utilizar HSQLDB para persistir datos (opción H2)
-* Crear datos de prueba cuando levanta la aplicación
-* Documentación de Endpoints (APIs) con Swagger (v3)
-* Separar profiles de testing para unitarios y e2e
-* Implementar JOB de Coverage
+#### CORE — Aclaración Oficial de Cátedra (Discord):
+> *"La gran mayoría de los puntos de entrega 'core' ya no tienen sentido o fueron cubiertos en la Entrega 1. No se tienen que preocupar ya por ninguno de estos puntos:"*
+* ~~Utilizar HSQLDB para persistir datos / opción H2~~ *(Descartado: ya se usa base de datos relacional PostgreSQL directamente).*
+* ~~Crear datos de prueba cuando levanta la aplicación~~ *(Descartado: estaba relacionado a H2).*
+* ~~Documentación de Endpoints (APIs) con Swagger (v3)~~ *(Ya cubierto en Entrega 1).*
+* ~~Implementar JOB de Coverage~~ *(Es parte de SonarCloud, ya cubierto en Entrega 1).*
+
+**Único punto CORE pendiente para Entrega 2:**
+* [ ] **Separar profiles de testing para unitarios (`unit`) y end-to-end (`e2e`).**
+
+#### NUEVOS REQUERIMIENTOS CENTRALES (En reemplazo del antiguo Core):
+1. **Visualización de datos de usuario con gráficos en el Front:**
+   * Gráfico de serie temporal de cotización histórica del jugador.
+   * Gráfico de distribución de cartera (dona/torta de tokens poseídos).
+   * Gráfico de evolución del patrimonio y saldo del usuario.
+2. **Feature ADICIONAL del TP (Planificar, Implementar y Presentar):**
+   * **Decisión del Grupo:** *Alertas de Precios con Notificaciones en Tiempo Real (WebSockets / Server-Sent Events hacia React)* permitiendo que aparezca una notificación al usuario cuando un jugador cruza un umbral de precio y pueda ejecutar una compra/venta en tiempo real.
+   * **Requisito de Presentación:** Explicar qué se hizo, justificarlo a nivel producto ("venderlo bien"), justificarlo a nivel técnico, hacer una demo en vivo y profundizar en el código.
 
 #### FUNCIONALIDAD:
 **BACK:**
@@ -121,10 +132,11 @@
 * Cotización de jugador a una fecha dada
 * Historial de operaciones
 * Ranking de jugadores según estrategia activa
-* Feature ADICIONAL para el TP (planificar, implementar y presentar)
+* Feature ADICIONAL: Sistema de Alertas de Precios y Notificaciones en Tiempo Real (WebSockets/SSE)
 
 **FRONT:**
-* Visualización de datos de usuario con gráficos en el front
+* Visualización de datos de usuario con 3 gráficos en el front (evolución de cotización, distribución de cartera, evolución de patrimonio/saldo)
+* Notificaciones en tiempo real con acción rápida de compra/venta
 * Botón de compra/venta de tokens
 * Mostrar la cotización de un jugador
 * Opción de ver historial de operaciones
@@ -137,32 +149,24 @@
 1. **Cálculo y Recálculo de Cotizaciones (P1):**
    - Mínimo 2 estrategias configurables (pesos por goles, asistencias, minutos, rating, etc.).
    - Versionado histórico en `PlayerQuote` (fecha, valor, estrategia, versión).
-   - Recálculo bajo demanda: `POST /api/quotes/recalculate`.
+   - Recálculo bajo demanda: `POST /quotes/recalculate`.
 2. **Mercado de Tokens (P1):**
-   - Máximo estricto de 100 tokens emitidos por jugador.
-   - Valor base inicial de 1 crédito en posesión del superusuario/pool.
-   - Compra transaccional: `POST /api/orders/buy` (valida fondos y tokens disponibles, actualiza precio promedio).
-   - Venta transaccional: `POST /api/orders/sell` (valida tenencia del usuario, liquida a cotización vigente).
+   - Máximo estricto de 100 tokens emitidos por jugador, valor inicial de 1 crédito en posesión del superusuario.
+   - Compra transaccional: `POST /orders/buy`.
+   - Venta transaccional: `POST /orders/sell`.
 3. **Cotización Histórica y por Fecha (P1):**
-   - Consulta a fecha determinada: `GET /api/players/{id}/quotes?date=YYYY-MM-DD`.
-   - Serie temporal para gráficos: `GET /api/players/{id}/quotes`.
-4. **Portfolio y Rendimiento Financiero (P2):**
-   - `GET /api/users/{id}/portfolio`: tokens poseídos, costo invertido, valor actual y PnL (+/-).
-5. **Historial de Operaciones (P2):**
-   - `GET /api/users/{id}/transactions`: registro inmutable y auditable de compras/ventas.
-6. **Ranking de Jugadores (P2):**
-   - `GET /api/players/ranking` ordenado por la cotización bajo la estrategia activa.
-7. **Scheduler Semanal (P2):**
-   - Proceso periódico `@Scheduled` para actualización autónoma de cotizaciones.
-8. **Integración Unificada y Fallback (P3):**
-   - Consolidación de Football-Data.org y WhoScored en un solo modelo.
-   - Resiliencia ante fallos (`SCRAPE_TIMEOUT`, `SCRAPE_BLOCKED`) usando datos locales y caché.
-9. **Feature Adicional Propuesto (P3):**
-   - *Sistema de Alertas de Precios (Price Alerts)*: configuración de umbrales con disparo automático de notificaciones (`POST /api/alerts`, `GET /api/alerts`).
-10. **Frontend en React (P2):**
-    - Gráfico interactivo de evolución de cotización, botones de compra/venta y vista de portfolio.
-11. **Estandarización de Endpoints (TP1 Issue):**
-    - Rutas sin `/v1`: `/api/players`, `/api/quotes`, `/api/orders`, `/api/users`, `/api/alerts`.
+   - Consulta a fecha determinada: `GET /players/{id}/quotes?date=YYYY-MM-DD`.
+   - Serie temporal para gráficos: `GET /players/{id}/quotes`.
+4. **Visualización de Datos de Usuario con Gráficos en el Front (P1):**
+   - Serie temporal de cotización del jugador, distribución de cartera (dona/torta) y evolución del patrimonio/saldo.
+5. **Feature Adicional — Alertas con Notificaciones en Tiempo Real y Compra Directa (P1):**
+   - Configuración de umbrales (`POST /alerts`, `GET /alerts`), evaluación reactiva post-recálculo y envío push por WebSockets/SSE al navegador para operar al instante.
+6. **Portfolio e Historial de Operaciones (P2):**
+   - `GET /users/{id}/portfolio` y `GET /users/{id}/transactions`.
+7. **Ranking y Scheduler Semanal (P2):**
+   - `GET /players/ranking` según estrategia activa y job periódico `@Scheduled`.
+8. **Separación de Profiles (`unit` y `e2e`) y Estandarización sin `/v1` (P2):**
+   - Único punto Core vigente (`unit` vs `e2e` sobre PostgreSQL) y remoción de `/v1`.
 
 ---
 

@@ -31,4 +31,8 @@
 
 ## Notes
 
-- Especificación completada y validada para la Entrega 2. Cubre cálculo de cotizaciones por estrategia, mercado de tokens (compra/venta con límite de 100 tokens), histórico y cotización por fecha, portfolio y PnL, historial de transacciones, ranking, scheduler semanal, unificación de fuentes con fallback, feature adicional (Alertas de precio), perfiles de prueba H2/HSQLDB y componentes de gráficos en el frontend sin prefijo `/v1`.
+- Especificación actualizada conforme a las directivas de cátedra:
+  1. Se depuran los puntos Core ya cubiertos en Entrega 1 (HSQLDB/H2, datos de prueba de H2, Swagger y Coverage Job), quedando únicamente la **separación de profiles de testing (`unit` y `e2e`)**.
+  2. Se incorpora el requerimiento de **Visualización de datos de usuario con gráficos en el Frontend** (Serie temporal de cotizaciones, Distribución de cartera y Evolución del patrimonio/saldo).
+  3. Se define y justifica (a nivel producto y técnico) el **Feature Adicional**: **Alertas de Precios con Notificaciones en Tiempo Real (WebSockets/SSE)** y acción rápida de compra/venta en vivo.
+  4. Rutas alineadas a la Consigna Oficial sin el prefijo `/v1`.

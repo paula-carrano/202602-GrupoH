@@ -4,7 +4,21 @@
 **Created**: 2026-10-12  
 **Status**: Draft  
 **Google Docs Oficial del Proyecto**: [Documento de Cátedra y SDD](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?usp=drivesdk) (ID: `1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us`)  
-**Input**: User description: "Crea una spec para realizar lo pedido para la entrega 2: Cálculo de cotización de jugadores según estrategia, compra/venta de tokens, cotización a una fecha dada, historial de operaciones, ranking según estrategia activa, feature adicional planificado, persistencia testing H2/HSQLDB, scheduler semanal, integración y sync unificado de WhoScored y Football-Data sin /v1, y componentes de frontend con gráficos."
+**Consigna Oficial (Solo Lectura)**: [Documento de Visión](https://docs.google.com/document/d/12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8/edit?usp=sharing) (ID: `12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8`)  
+**Input**: User description: "Actualización de Spec para Entrega 2 incorporando directivas docentes: Se descartan HSQLDB/H2, creación de datos de prueba ligada a H2, documentación Swagger y Job de Coverage (ya cubiertos en Entrega 1). Queda como único punto Core separar profiles de testing para unitarios y e2e. Se priorizan los dos requerimientos clave: (1) Visualización de datos de usuario con gráficos en el front (serie temporal de cotización, distribución de cartera y evolución patrimonial) y (2) Feature Adicional: Sistema de Alertas de Precios con Notificaciones en Tiempo Real (WebSockets/SSE) permitiendo compra/venta inmediata, además de cotizaciones por estrategia, mercado de tokens, historial, ranking, scheduler semanal y unificación de fuentes sin /v1."
+
+---
+
+## Directivas de Cátedra — Alcance Depurado de Entrega 2
+
+Por indicación expresa del cuerpo docente, se depuran los puntos de infraestructura que ya fueron cubiertos en la Entrega 1:
+- **Descartados (ya resueltos o sin efecto):**
+  1. ~~Utilizar HSQLDB / H2 para persistir datos~~ *(El proyecto ya opera directamente sobre PostgreSQL).*
+  2. ~~Crear datos de prueba cuando levanta la aplicación~~ *(Estaba vinculado al uso de H2).*
+  3. ~~Documentación de Endpoints con Swagger~~ *(Cubierto y entregado en Entrega 1).*
+  4. ~~Implementar Job de Coverage~~ *(Integrado en SonarCloud durante Entrega 1).*
+- **Único punto Core técnico requerido en Entrega 2:**
+  1. **Separar profiles de testing para pruebas unitarias (`unit`) y end-to-end (`e2e`).**
 
 ---
 
@@ -16,13 +30,13 @@ Como administrador o sistema automatizado, quiero calcular y actualizar periódi
 
 **Why this priority**: Es el núcleo del valor diferencial de la plataforma. Sin una cotización calculada por estrategia no existe precio de mercado para habilitar la compra, venta o ranking de tokens.
 
-**Independent Test**: Puede probarse configurando dos estrategias de valoración distintas en la base de datos, invocando el endpoint de recálculo `POST /api/quotes/recalculate`, y verificando que cada jugador posea una nueva cotización generada, asociada a la versión de la estrategia activa y persistida en su histórico.
+**Independent Test**: Puede probarse configurando dos estrategias de valoración distintas en la base de datos, invocando el endpoint de recálculo `POST /quotes/recalculate`, y verificando que cada jugador posea una nueva cotización generada, asociada a la versión de la estrategia activa y persistida en su histórico.
 
 **Acceptance Scenarios**:
 
 1. **Recálculo Masivo Exitoso**:
    - **Given** un catálogo de jugadores con métricas deportivas registradas y una estrategia de valoración activa configurada con pesos para goles, asistencias, minutos y rating,
-   - **When** se solicita el recálculo mediante `POST /api/quotes/recalculate`,
+   - **When** se solicita el recálculo mediante `POST /quotes/recalculate`,
    - **Then** el sistema calcula la nueva cotización para cada jugador, persiste un nuevo registro en `PlayerQuote` con fecha actual, valor calculado, identificador y versión de la estrategia, y responde con código HTTP `200 OK` informando la cantidad de jugadores actualizados.
 
 2. **Soporte de Múltiples Estrategias Configurables**:
@@ -43,18 +57,18 @@ Como usuario inversor autenticado, quiero comprar y vender tokens de jugadores a
 
 **Why this priority**: Es la funcionalidad transaccional principal del sistema. Implementa el intercambio económico, garantiza la integridad del suministro de tokens (100 por jugador) y la consistencia de saldos.
 
-**Independent Test**: Registrar un usuario con créditos disponibles, ejecutar una compra vía `POST /api/orders/buy` verificando descuento de créditos y acreditación de tokens; luego ejecutar una venta vía `POST /api/orders/sell` verificando el reintegro de créditos a cotización vigente y disminución de tokens en cartera.
+**Independent Test**: Registrar un usuario con créditos disponibles, ejecutar una compra vía `POST /orders/buy` verificando descuento de créditos y acreditación de tokens; luego ejecutar una venta vía `POST /orders/sell` verificando el reintegro de créditos a cotización vigente y disminución de tokens en cartera.
 
 **Acceptance Scenarios**:
 
 1. **Compra Exitosa de Tokens**:
-   - **Given** un usuario autenticado con saldo suficiente (e.g. 50 créditos) y un jugador con cotización vigente de 5 créditos y 10 tokens disponibles en posesión del pool/superusuario,
-   - **When** el usuario envía una solicitud a `POST /api/orders/buy` solicitando comprar 4 tokens,
-   - **Then** el sistema debita 20 créditos del saldo del usuario, transfiere los 4 tokens del pool al usuario, registra la transacción como `COMPRA`, actualiza su posición en el portfolio con el precio promedio correspondiente, y retorna HTTP `200 OK`.
+   - **Given** un usuario autenticado con saldo suficiente (e.g. 50 créditos) y un jugador con cotización vigente de 5 créditos y 10 tokens disponibles en posesión del superusuario,
+   - **When** el usuario envía una solicitud a `POST /orders/buy` solicitando comprar 4 tokens,
+   - **Then** el sistema debita 20 créditos del saldo del usuario, transfiere los 4 tokens del superusuario al usuario, registra la transacción como `COMPRA`, actualiza su posición en el portfolio con el precio promedio ponderado correspondiente, y retorna HTTP `200 OK`.
 
 2. **Rechazo de Compra por Saldo Insuficiente**:
    - **Given** un usuario con saldo de 10 créditos que intenta comprar tokens cuyo costo total asciende a 30 créditos,
-   - **When** envía la solicitud a `POST /api/orders/buy`,
+   - **When** envía la solicitud a `POST /orders/buy`,
    - **Then** el sistema rechaza la operación con código HTTP `400 Bad Request`, código de error `INSUFFICIENT_FUNDS` y mensaje en español "Saldo insuficiente para realizar la compra.", sin alterar saldos ni tokens.
 
 3. **Rechazo de Compra por Exceso de Disponibilidad (Límite 100 Tokens)**:
@@ -64,189 +78,184 @@ Como usuario inversor autenticado, quiero comprar y vender tokens de jugadores a
 
 4. **Venta Exitosa de Tokens**:
    - **Given** un usuario que posee 5 tokens de un jugador cuya cotización vigente es de 8 créditos,
-   - **When** envía una solicitud a `POST /api/orders/sell` para vender 3 tokens,
-   - **Then** el sistema retira 3 tokens de la cartera del usuario, acredita 24 créditos en su saldo, devuelve los tokens al pool de liquidez, registra la transacción como `VENTA`, y responde con código HTTP `200 OK`.
+   - **When** envía una solicitud a `POST /orders/sell` para vender 3 tokens,
+   - **Then** el sistema retira 3 tokens de la cartera del usuario, acredita 24 créditos en su saldo, devuelve los tokens al superusuario, registra la transacción como `VENTA`, y responde con código HTTP `200 OK`.
 
 5. **Rechazo de Venta por Tenencia Insuficiente**:
    - **Given** un usuario que posee 2 tokens de un jugador e intenta vender 4 tokens,
-   - **When** envía la solicitud a `POST /api/orders/sell`,
+   - **When** envía la solicitud a `POST /orders/sell`,
    - **Then** el sistema responde con código HTTP `400 Bad Request`, código de error `INSUFFICIENT_TOKEN_BALANCE` y mensaje en español indicando que no dispone de los tokens requeridos.
 
 ---
 
 ### User Story 3 - Consulta de Cotización Histórica y por Fecha Determinada (Priority: P1)
 
-Como usuario o analista, quiero consultar la cotización de un jugador en una fecha histórica específica o su serie temporal de cotizaciones, para evaluar la tendencia de revalorización del futbolista antes de tomar decisiones de inversión.
+Como usuario o analista, quiero consultar la cotización de un jugador en una fecha histórica específica o su serie temporal completa de cotizaciones, para evaluar la tendencia de revalorización del futbolista antes de tomar decisiones de inversión.
 
 **Why this priority**: Cumple con el requisito explícito de trazabilidad temporal del precio y alimenta los gráficos interactivos del frontend.
 
-**Independent Test**: Generar cotizaciones para un jugador con fechas pasadas, realizar peticiones a `GET /api/players/{id}/quotes?date=YYYY-MM-DD` y `GET /api/players/{id}/quotes`, validando que se devuelvan los valores precisos correspondientes al instante solicitado.
+**Independent Test**: Generar cotizaciones para un jugador con fechas pasadas, realizar peticiones a `GET /players/{id}/quotes?date=YYYY-MM-DD` y `GET /players/{id}/quotes`, validando que se devuelvan los valores precisos correspondientes al instante solicitado.
 
 **Acceptance Scenarios**:
 
 1. **Consulta de Cotización a una Fecha Determinada**:
    - **Given** un jugador con cotizaciones registradas el 2026-10-01 (valor: 2.50) y el 2026-10-08 (valor: 3.20),
-   - **When** el cliente solicita `GET /api/players/{id}/quotes?date=2026-10-05`,
+   - **When** el cliente solicita `GET /players/{id}/quotes?date=2026-10-05`,
    - **Then** el sistema retorna la cotización vigente a esa fecha (2.50 créditos) con código HTTP `200 OK`.
 
 2. **Consulta a una Fecha Anterior a la Primera Cotización**:
    - **Given** una fecha consultada anterior a la existencia de cotizaciones para ese jugador,
    - **When** el cliente solicita la cotización para dicha fecha previa,
-   - **Then** el sistema responde con el valor nominal inicial de 1.0 crédito o un mensaje explicativo con status HTTP `200 OK`.
+   - **Then** el sistema responde con el valor nominal inicial de 1.0 crédito con status HTTP `200 OK`.
 
 3. **Obtención del Histórico de Cotizaciones para Gráficos**:
    - **Given** un jugador con múltiples cotizaciones a lo largo de las semanas,
-   - **When** el cliente consulta `GET /api/players/{id}/quotes`,
+   - **When** el cliente consulta `GET /players/{id}/quotes`,
    - **Then** el sistema retorna una lista cronológica ordenada con fecha, valor, estrategia y versión, lista para ser consumida por el componente de gráficos del frontend.
 
 ---
 
-### User Story 4 - Consulta de Portfolio de Inversión y Rendimiento Financiero (Priority: P2)
+### User Story 4 - Visualización de Datos de Usuario con Gráficos en el Frontend (Priority: P1)
 
-Como usuario inversor autenticado, quiero consultar mi portfolio de inversiones para visualizar mis posiciones actuales de tokens, el precio promedio ponderado de compra, la valuación actual de mercado y mi ganancia o pérdida (PnL) acumulada por jugador y total.
+Como usuario inversor en la aplicación web, quiero visualizar mis datos financieros y de mercado a través de gráficos interactivos (evolución histórica de cotización por jugador, distribución de mi cartera de tokens y evolución de mi patrimonio/saldo), junto con controles directos de compra y venta, para analizar visualmente el rendimiento de mis inversiones.
 
-**Why this priority**: Proporciona la visión consolidada patrimonial del usuario, esencial para la experiencia de usuario y la toma de decisiones financieras.
+**Why this priority**: Es el **primer requerimiento nuevo central** estipulado por la cátedra para la Entrega 2 en reemplazo de los antiguos puntos core.
 
-**Independent Test**: Comprar tokens de dos jugadores a precios distintos, consultar `GET /api/users/{id}/portfolio`, y verificar que el DTO devuelva tokens en posesión, precio promedio ponderado, cotización vigente, valor total de cartera y ganancia/pérdida porcentual y nominal calculada correctamente.
-
-**Acceptance Scenarios**:
-
-1. **Visualización de Portfolio con Posiciones Activas**:
-   - **Given** un usuario que posee 10 tokens de Jugador A comprados a precio promedio de 2.0 y cotización actual de 3.0,
-   - **When** consulta `GET /api/users/{id}/portfolio`,
-   - **Then** el sistema devuelve código HTTP `200 OK` con el desglose: tokens poseídos (10), costo invertido (20.0), valor actual (30.0), ganancia (+10.0 / +50%) y el balance de créditos disponible.
-
-2. **Portfolio de Usuario sin Inversiones**:
-   - **Given** un usuario recién registrado sin compras realizadas,
-   - **When** consulta su portfolio,
-   - **Then** el sistema responde con una lista de posiciones vacía, valor total invertido en 0 y su saldo inicial de créditos.
-
----
-
-### User Story 5 - Consulta del Historial de Operaciones Financieras (Priority: P2)
-
-Como usuario o auditor, quiero consultar el historial completo de todas las operaciones de compra y venta realizadas por mi cuenta, para mantener un registro transparente y auditable de mis transacciones.
-
-**Why this priority**: Garantiza la trazabilidad y rendición de cuentas estipulada en la Constitución del proyecto.
-
-**Independent Test**: Realizar una secuencia de compras y ventas y consultar `GET /api/users/{id}/transactions`, verificando que se listen todas las operaciones con timestamp, jugador, tipo de operación, cantidad de tokens, precio unitario y resultado.
+**Independent Test**: Iniciar sesión en el frontend con un usuario que posea transacciones e inversiones activas, navegar al dashboard de portfolio y al detalle de un jugador, y comprobar el renderizado de los 3 gráficos interactivos con datos reales del backend.
 
 **Acceptance Scenarios**:
 
-1. **Listado Cronológico de Transacciones**:
-   - **Given** un usuario con operaciones previas registradas,
-   - **When** consulta `GET /api/users/{id}/transactions`,
-   - **Then** el sistema retorna un listado paginado u ordenado cronológicamente con `transactionId`, `fechaHora`, `tipo` (COMPRA / VENTA), `jugadorId`, `nombreJugador`, `cantidadTokens`, `precioUnitario`, `montoTotal` y `estado` (EXITOSA).
-
----
-
-### User Story 6 - Consulta de Ranking de Jugadores por Estrategia Activa (Priority: P2)
-
-Como usuario de la plataforma, quiero consultar una tabla de clasificación (ranking) de jugadores ordenada de mayor a menor según su cotización vigente bajo la estrategia activa, para identificar a los futbolistas más valiosos y con mejor desempeño deportivo del mercado.
-
-**Why this priority**: Fomenta el descubrimiento de jugadores y la dinámica competitiva de la plataforma.
-
-**Independent Test**: Invocar `GET /api/players/ranking` y verificar que el listado retorne los jugadores ordenados descendentemente por su cotización actual, indicando posición en el ranking, equipo, liga y variación respecto a la última medición.
-
-**Acceptance Scenarios**:
-
-1. **Ranking Ordenado Correctamente**:
-   - **Given** un catálogo con jugadores cotizados a distintos valores,
-   - **When** se consulta `GET /api/players/ranking`,
-   - **Then** el sistema devuelve la lista ordenada de mayor a menor valor, con paginación opcional y metadatos de la estrategia activa empleada.
-
----
-
-### User Story 7 - Actualización Periódica Automatizada de Cotizaciones (Scheduler Semanal) (Priority: P2)
-
-Como operador de la plataforma, quiero que el sistema ejecute de forma autónoma una tarea programada semanal para actualizar las cotizaciones de todos los jugadores en base a los datos deportivos más recientes, garantizando la frescura del mercado sin intervención manual continua.
-
-**Why this priority**: Automatiza el ciclo de vida del negocio conforme a los requerimientos de la Entrega 2.
-
-**Independent Test**: Configurar la anotación `@Scheduled` con periodicidad de prueba o invocar el bean del scheduler, verificando en los logs y en la base de datos que se haya disparado el cálculo y persistido la nueva tanda de cotizaciones.
-
-**Acceptance Scenarios**:
-
-1. **Disparo Programado del Scheduler**:
-   - **Given** el backend en ejecución con Spring Scheduler habilitado,
-   - **When** se alcanza el cron programado semanal,
-   - **Then** el servicio ejecuta el recálculo masivo de cotizaciones para todos los jugadores activos y loguea el inicio, cantidad procesada y tiempo total de ejecución.
-
----
-
-### User Story 8 - Integración y Mapeo Unificado de WhoScored y Football-Data.org con Tolerancia a Fallos (Priority: P3)
-
-Como subsistema de ingestión de datos, quiero unificar la obtención de información deportiva combinando la API oficial de Football-Data.org con las métricas detalladas obtenidas del scraper de WhoScored, asociando ambos orígenes al mismo registro de jugador y tolerando caídas de servicios externos mediante persistencia local.
-
-**Why this priority**: Resuelve el issue identificado en el TP1 sobre simplificar la estructura de sincronización y garantiza que el sistema continúe operando aún si WhoScored o Football-Data no están disponibles.
-
-**Independent Test**: Simular la desconexión del scraper de WhoScored o devolver error 502/504 ("SCRAPE_TIMEOUT"), y verificar que el servicio de sincronización mantenga los datos locales del jugador sin interrumpir las consultas ni los recálculos.
-
-**Acceptance Scenarios**:
-
-1. **Sincronización Unificada de Datos**:
-   - **Given** un jugador identificado con ID de Football-Data y mapping a WhoScored,
-   - **When** se ejecuta el proceso de sincronización,
-   - **Then** el sistema almacena las estadísticas futbolísticas detalladas directamente en el modelo del jugador en PostgreSQL, manteniendo un único identificador consistente en el dominio.
-
-2. **Fallback ante Indisponibilidad de Fuentes Externas**:
-   - **Given** que el microservicio de scraping WhoScored responde con error o agota el timeout,
-   - **When** el Adapter del backend detecta la falla,
-   - **Then** utiliza los datos locales previamente almacenados, registra una advertencia en logs y no propaga errores 500 al usuario.
-
----
-
-### User Story 9 - Feature Adicional: Sistema de Alertas de Precios y Notificaciones de Mercado (Priority: P3)
-
-Como usuario inversor, quiero configurar alertas de precio personalizadas para jugadores de mi interés (e.g. "notificarme si Erling Haaland supera los 15 créditos" o "si cae por debajo de 8 créditos"), para estar al tanto de oportunidades de compra o venta en el mercado.
-
-**Why this priority**: Cumple con el requisito obligatorio de la Entrega 2 de planificar, implementar y presentar un **feature adicional innovador** para el trabajo práctico.
-
-**Independent Test**: Crear una alerta de precio vía `POST /api/alerts` con un umbral determinado, ejecutar un recálculo de cotizaciones que cruce dicho umbral, y consultar `GET /api/alerts` o el buzón de notificaciones del usuario verificando que la alerta haya cambiado a estado `DISPARADA`.
-
-**Acceptance Scenarios**:
-
-1. **Creación de Alerta de Precio**:
-   - **Given** un usuario autenticado y un jugador con cotización de 10 créditos,
-   - **When** el usuario crea una alerta para `jugadorId=1` con condición `PRECIO_MAYOR_QUE` y valor `12.0`,
-   - **Then** el sistema persiste la alerta en estado `ACTIVA` y responde con código HTTP `201 Created`.
-
-2. **Disparo Automático de la Alerta tras Recálculo**:
-   - **Given** una alerta activa de precio mayor a 12.0 y una nueva cotización del jugador calculada en 13.5 créditos,
-   - **When** finaliza el recálculo de cotizaciones,
-   - **Then** el evaluador de alertas marca la alerta como `DISPARADA`, genera una notificación para el usuario con timestamp y mensaje en español ("La cotización de Erling Haaland ha alcanzado 13.50 créditos").
-
----
-
-### User Story 10 - Visualización Frontend: Gráficos de Cotización, Cartera y Operaciones (Priority: P2)
-
-Como usuario del cliente web en React, quiero ver gráficos interactivos de la evolución histórica de cotizaciones, operar con botones de compra y venta en tiempo real y visualizar mi portfolio con indicadores gráficos claros, para interactuar de forma intuitiva con la plataforma.
-
-**Why this priority**: Cumple con los requerimientos de la Entrega 2 para el frontend, enriqueciendo la experiencia de usuario.
-
-**Independent Test**: Navegar a la ficha de un jugador en la aplicación React, observar el gráfico de líneas con la serie histórica de precios, presionar el botón de compra, confirmar la transacción y observar la actualización inmediata del gráfico y del saldo en el portfolio.
-
-**Acceptance Scenarios**:
-
-1. **Renderizado de Gráfico de Cotización Histórica**:
+1. **Gráfico de Serie Temporal de Cotización del Jugador**:
    - **Given** la vista de detalle de un jugador con historial de cotizaciones,
-   - **When** se carga la página,
-   - **Then** se renderiza un gráfico de líneas temporal interactivo (con eje temporal y eje de créditos) sin errores de consola.
+   - **When** el usuario accede a la pantalla del jugador,
+   - **Then** se visualiza un gráfico de línea temporal mostrando la evolución del precio en créditos por fecha y versión de estrategia.
 
-2. **Flujo de Compra y Venta con Feedback Visual**:
-   - **Given** la interfaz de compra/venta en la vista de detalle,
-   - **When** el usuario ingresa la cantidad de tokens y confirma,
-   - **Then** la interfaz valida el formulario, envía la petición al backend, actualiza el saldo disponible y muestra un mensaje de confirmación o error en español.
+2. **Gráfico de Distribución de Cartera (Portfolio Allocation)**:
+   - **Given** un usuario con tokens de distintos jugadores en su portfolio,
+   - **When** accede a su panel de Portfolio,
+   - **Then** se renderiza un gráfico de dona/torta que representa la proporción del valor actual invertido en cada jugador respecto al total de su cartera.
+
+3. **Gráfico de Evolución del Patrimonio y Saldo del Usuario**:
+   - **Given** un usuario con historial de operaciones de compra/venta y variaciones de cotización,
+   - **When** visualiza su resumen financiero en el frontend,
+   - **Then** se muestra un gráfico evolutivo que compara su liquidez en créditos y la valoración total de sus posiciones a lo largo del tiempo.
+
+4. **Operación Interactiva de Compra/Venta y Historial**:
+   - **Given** la vista de un jugador o del portfolio,
+   - **When** el usuario presiona el botón de comprar o vender tokens y confirma la cantidad,
+   - **Then** la transacción impacta en el backend y actualiza dinámicamente los gráficos, el saldo y la tabla de historial de operaciones sin recargar la página completa.
+
+---
+
+### User Story 5 - Feature Adicional: Alertas de Precios con Notificaciones en Tiempo Real y Compra Directa (Priority: P1)
+
+Como usuario inversor, quiero configurar alertas de precio sobre jugadores específicos (por encima o por debajo de un umbral en créditos) y recibir una notificación instantánea en tiempo real en mi navegador (vía WebSockets / Server-Sent Events) cuando una cotización cruce dicho umbral, con un acceso rápido para ejecutar una compra o venta inmediata en ese instante.
+
+**Why this priority**: Es el **segundo requerimiento nuevo central** de la Entrega 2. Ejercita el desarrollo de producto e innovación técnica pedidos por la cátedra, conectando el motor de cotizaciones del backend con una experiencia reactiva en tiempo real en el frontend.
+
+#### Justificación de Producto (Valor de Negocio)
+En un mercado donde las cotizaciones varían según el desempeño deportivo y los tokens son escasos (máximo 100 por jugador), enterarse tarde de una variación de precio significa perder la oportunidad de compra o no poder tomar ganancias a tiempo. El sistema de **Alertas en Tiempo Real con Acción Rápida (One-Click Trade)** convierte una plataforma pasiva de consulta en una plataforma activa de trading deportivo.
+
+#### Justificación Técnica (Arquitectura)
+Incorpora un flujo **Event-Driven & Push Notification**:
+1. Al finalizar un recálculo de cotizaciones (manual o por Scheduler), el servicio publica un evento interno de actualización de precios.
+2. El motor de alertas evalúa las condiciones activas de los usuarios contra los nuevos precios.
+3. Cuando se cumple una condición, el backend envía un evento push en tiempo real mediante **WebSockets (STOMP) o Server-Sent Events (SSE)** hacia el cliente React conectado.
+4. El frontend despliega un banner/toast interactivo en vivo que permite abrir el modal de compra/venta pre-cargado para operar en tiempo real.
+
+**Independent Test**: Suscribir el cliente frontend al canal de notificaciones, crear una alerta (`POST /alerts`) para un jugador, disparar `POST /quotes/recalculate` de modo que el nuevo precio supere el umbral, y verificar que aparezca la notificación en tiempo real en el navegador con el botón de compra inmediata funcional.
+
+**Acceptance Scenarios**:
+
+1. **Suscripción y Creación de Alerta de Precio**:
+   - **Given** un usuario autenticado viendo un jugador con cotización actual de 10 créditos,
+   - **When** configura una alerta (`POST /alerts`) con condición `PRECIO_MAYOR_O_IGUAL` a `12.0` créditos,
+   - **Then** el sistema guarda la alerta en estado `ACTIVA` y retorna HTTP `201 Created`.
+
+2. **Notificación Push en Tiempo Real al Cumplirse la Condición**:
+   - **Given** una alerta activa y el usuario con sesión abierta en el frontend,
+   - **When** se recalcula la cotización del jugador y su nuevo valor pasa a `12.8` créditos,
+   - **Then** el backend cambia el estado de la alerta a `DISPARADA`, persiste la notificación y emite un mensaje por WebSocket/SSE al frontend, mostrando instantáneamente una alerta visual en pantalla.
+
+3. **Acción de Compra en Tiempo Real desde la Notificación**:
+   - **Given** la notificación emergente en tiempo real en el frontend,
+   - **When** el usuario hace clic en el botón "Comprar ahora" dentro de la notificación,
+   - **Then** se abre directamente el formulario de orden preconfigurado con ese jugador y su nueva cotización para confirmar la operación al instante.
+
+---
+
+### User Story 6 - Consulta de Portfolio de Inversión e Historial de Operaciones (Priority: P2)
+
+Como usuario inversor autenticado, quiero consultar el detalle de mi portfolio (`GET /users/{id}/portfolio`) y el registro auditable de todas mis transacciones (`GET /users/{id}/transactions`), para conocer mi cantidad de tokens por jugador, precio promedio de compra, valor actual, ganancia/pérdida (PnL) y el historial cronológico de operaciones.
+
+**Why this priority**: Provee los datos fundamentales que respaldan la auditoría financiera y alimentan las vistas y gráficos del usuario.
+
+**Independent Test**: Ejecutar compras y ventas con un usuario y consultar ambos endpoints verificando la exactitud matemática del precio promedio ponderado, la ganancia/pérdida y el registro inmutable de cada transacción.
+
+**Acceptance Scenarios**:
+
+1. **Cálculo Exacto de Posición y Rentabilidad en Portfolio**:
+   - **Given** un usuario que compró 10 tokens a 2.0 créditos y luego 10 tokens a 4.0 créditos (precio promedio: 3.0), y cuya cotización actual es 5.0,
+   - **When** consulta `GET /users/{id}/portfolio`,
+   - **Then** el sistema informa: 20 tokens, precio promedio 3.0, valor actual 100.0, ganancia neta +40.0 créditos (+66.67%).
+
+2. **Historial Auditable de Transacciones**:
+   - **Given** un usuario que realizó operaciones de compra y venta,
+   - **When** consulta `GET /users/{id}/transactions`,
+   - **Then** recibe la lista cronológica con fecha/hora, tipo de operación, jugador, cantidad de tokens, precio unitario, monto total y resultado.
+
+---
+
+### User Story 7 - Ranking de Jugadores según Estrategia Activa y Scheduler Semanal (Priority: P2)
+
+Como usuario u operador, quiero consultar el ranking de jugadores (`GET /players/ranking`) ordenado según la estrategia de valoración activa y contar con un proceso programado semanal (`Spring Scheduler`) que actualice automáticamente las cotizaciones.
+
+**Why this priority**: Completa el circuito funcional del sistema de cotización requerido para la Entrega 2.
+
+**Independent Test**: Invocar `GET /players/ranking` verificando el orden descendente por cotización vigente, y verificar la ejecución del job `@Scheduled` en el backend.
+
+**Acceptance Scenarios**:
+
+1. **Consulta de Ranking**:
+   - **Given** jugadores con distintas cotizaciones bajo la estrategia activa,
+   - **When** se solicita `GET /players/ranking`,
+   - **Then** el sistema retorna la lista ordenada de mayor a menor cotización incluyendo posición, datos del jugador, cotización actual y estrategia aplicada.
+
+2. **Ejecución Automática del Scheduler**:
+   - **Given** el job programado configurado en Spring,
+   - **When** se cumple el ciclo programado,
+   - **Then** recalcula las cotizaciones de todos los jugadores utilizando la estrategia activa y dispara las alertas de precio correspondientes.
+
+---
+
+### User Story 8 - Separación de Profiles de Testing (`unit` y `e2e`) y Simplificación de Sync / Rutas (Priority: P2)
+
+Como equipo de desarrollo, quiero separar la configuración de perfiles de ejecución para tests unitarios (`unit`) y tests end-to-end (`e2e`), unificar la estructura de sincronización entre Football-Data y WhoScored en la base de datos PostgreSQL, y exponer todos los endpoints sin el prefijo `/v1`.
+
+**Why this priority**: Satisface el **único requerimiento Core** vigente para la Entrega 2 y resuelve los puntos pendientes de revisión de la Entrega 1.
+
+**Independent Test**: Ejecutar la suite de tests bajo el perfil `unit` (rápido, con mocks y sin levantar dependencias externas) y bajo el perfil `e2e` (validando el flujo extremo a extremo contra la base de datos), comprobando que ambos perfiles corran de manera independiente y limpia.
+
+**Acceptance Scenarios**:
+
+1. **Ejecución Aislada por Perfil (`unit` vs `e2e`)**:
+   - **Given** las configuraciones `application-unit.yml` y `application-e2e.yml`,
+   - **When** se ejecutan los comandos de test filtrando por cada perfil,
+   - **Then** los tests unitarios se ejecutan de forma aislada sin requerir servicios externos y los tests E2E validan la integración completa de punta a punta.
+
+2. **Endpoints Estandarizados sin `/v1`**:
+   - **Given** la suite de controladores REST,
+   - **When** el frontend o un cliente invoca `/players`, `/quotes/recalculate`, `/orders/buy`, `/orders/sell`, `/users/{id}/portfolio`, `/users/{id}/transactions`,
+   - **Then** responden directamente sin el segmento `/v1`, alineados con la consigna oficial.
 
 ---
 
 ### Edge Cases
 
-- **Concurrencia en compra del último token:** Si dos usuarios intentan comprar simultáneamente el último token disponible de un jugador, la transacción debe resolverse con bloqueo optimista/pesimista para que uno adquiera el token y el otro reciba una respuesta controlada de tokens agotados (`INSUFFICIENT_TOKENS_AVAILABLE`).
-- **Límite absoluto de 100 tokens:** El sistema debe impedir bajo cualquier circunstancia (incluso recargas o ventas) que la suma de tokens en manos de usuarios más los tokens en el pool del superusuario sea distinta de 100.
-- **Cotización a fecha sin historial previo:** Si se consulta una fecha anterior al inicio del historial de cotizaciones, debe retornar el valor base inicial (1.0 crédito).
-- **Caída de servicios externos en ejecución de Scheduler:** Si el proveedor externo falla durante el recálculo periódico, el scheduler debe continuar el procesamiento de los demás jugadores y usar valores locales para los fallidos sin abortar la ejecución completa.
-- **Cero minutos jugados o sin estadísticas:** Jugadores sin actividad deportiva deben recibir la cotización base mínima garantizada (1 crédito) sin errores matemáticos.
+- **Concurrencia en compra del último token:** Si dos usuarios intentan comprar simultáneamente los últimos tokens disponibles de un jugador, la transacción debe asegurar mediante control de concurrencia que nunca se supere el límite de 100 tokens emitidos.
+- **Reconexión de cliente en Notificaciones en Tiempo Real:** Si el usuario pierde conexión temporalmente y vuelve a abrir la aplicación, debe poder visualizar las alertas que se dispararon durante su desconexión.
+- **Cotización a fecha sin historial previo:** Si se consulta una fecha anterior al primer registro de cotización del jugador, el sistema retorna el valor inicial nominal (1 crédito).
+- **Tolerancia a fallos de proveedores externos:** Si WhoScored o Football-Data fallan durante la sincronización o el scheduler, el sistema utiliza los datos persistidos en PostgreSQL sin interrumpir el mercado ni arrojar errores 500.
 
 ---
 
@@ -254,33 +263,30 @@ Como usuario del cliente web en React, quiero ver gráficos interactivos de la e
 
 ### Functional Requirements
 
-- **FR-001**: El sistema DEBE proveer al menos dos estrategias de valoración configurables (con pesos definibles para minutos, goles, asistencias, tiros, pases, intercepciones, tarjetas, posición y rating).
-- **FR-002**: El sistema DEBE versionar cada cotización generada, registrando fecha, valor, identificador de estrategia y versión aplicada para trazabilidad histórica.
-- **FR-003**: El sistema DEBE permitir recalcular las cotizaciones bajo demanda a través del endpoint `POST /api/quotes/recalculate`.
-- **FR-004**: Cada jugador registrado DEBE contar con exactamente 100 tokens emitidos en el sistema, con valor inicial de 1 crédito por token, inicialmente en poder del superusuario.
-- **FR-005**: El sistema DEBE procesar compras de tokens mediante `POST /api/orders/buy`, debitando créditos, transfiriendo tokens del pool al comprador y actualizando el precio promedio de compra de forma transaccional.
-- **FR-006**: El sistema DEBE procesar ventas de tokens mediante `POST /api/orders/sell`, validando tenencia previa, acreditando créditos a cotización vigente y reintegrando los tokens al pool de forma transaccional.
-- **FR-007**: El sistema DEBE registrar un historial inmutable y auditable de cada transacción financiera (`GET /api/users/{id}/transactions`).
-- **FR-008**: El sistema DEBE calcular y exponer el portfolio de inversiones del usuario (`GET /api/users/{id}/portfolio`), reportando cantidad de tokens, precio promedio de compra, cotización actual, valor total y ganancia/pérdida (PnL).
-- **FR-009**: El sistema DEBE permitir consultar la cotización de un jugador en una fecha histórica determinada (`GET /api/players/{id}/quotes?date=YYYY-MM-DD`).
-- **FR-010**: El sistema DEBE exponer el ranking de jugadores ordenado descendentemente por cotización bajo la estrategia activa (`GET /api/players/ranking`).
-- **FR-011**: El sistema DEBE contar con un proceso programado (Spring Scheduler semanal) para la actualización periódica de cotizaciones.
-- **FR-012**: El sistema DEBE unificar los datos de WhoScored y Football-Data.org bajo una estructura simplificada en la base de datos, implementando fallback a datos locales ante fallas del proveedor externo.
-- **FR-013**: Todos los endpoints REST de la aplicación DEBEN prescindir del prefijo `/v1`, estandarizándose bajo `/api/...` (e.g. `/api/players`, `/api/quotes`, `/api/orders`, `/api/users`, `/api/alerts`).
-- **FR-014**: El sistema DEBE incorporar el feature adicional de "Alertas de Cotización de Jugadores", permitiendo crear (`POST /api/alerts`), listar (`GET /api/alerts`) y disparar notificaciones cuando un jugador alcance un precio umbral.
-- **FR-015**: El sistema DEBE soportar perfiles independientes de ejecución para testing con persistencia en memoria (HSQLDB o H2) para perfiles `unit` y `e2e`, incluyendo carga automática de datos iniciales en startup.
-- **FR-016**: La interfaz web en React DEBE incluir componentes con gráficos de cotización temporal, botones de compra y venta con validación, y visualización de métricas de cartera y transacciones.
-- **FR-017**: Todos los mensajes de error y validación DEBEN estructurarse de forma consistente y redactarse en **español**, utilizando `ProblemDetail` (RFC 7807) sin exponer detalles técnicos internos.
+- **FR-001**: El sistema DEBE soportar al menos dos estrategias de valoración configurables con pesos asignables por métrica deportiva (goles, asistencias, minutos, tiros, pases, intercepciones, tarjetas, posición, rating).
+- **FR-002**: Cada cotización generada DEBE persistirse en el historial conservando fecha, valor, estrategia utilizada y su versión.
+- **FR-003**: El sistema DEBE exponer `POST /quotes/recalculate` para recalcular cotizaciones con la estrategia activa.
+- **FR-004**: Cada jugador DEBE tener exactamente 100 tokens emitidos con valor inicial de 1 crédito en posesión inicial del superusuario.
+- **FR-005**: El sistema DEBE procesar compras (`POST /orders/buy`) y ventas (`POST /orders/sell`) de forma transaccional, validando saldo de créditos, disponibilidad de tokens y tenencia del usuario.
+- **FR-006**: El sistema DEBE permitir consultar el historial de cotizaciones y la cotización de un jugador para una fecha dada (`GET /players/{id}/quotes?date=YYYY-MM-DD`).
+- **FR-007**: El sistema DEBE exponer el portfolio del usuario (`GET /users/{id}/portfolio`) con cantidad de tokens, precio promedio ponderado de compra, valor actual y ganancia/pérdida (PnL).
+- **FR-008**: El sistema DEBE exponer el historial inmutable de transacciones financieras del usuario (`GET /users/{id}/transactions`).
+- **FR-009**: El sistema DEBE exponer el ranking de jugadores (`GET /players/ranking`) según la estrategia de valoración activa.
+- **FR-010**: El sistema DEBE ejecutar un job programado semanal (`Spring Scheduler`) para recalcular cotizaciones automáticamente.
+- **FR-011**: El Frontend DEBE implementar visualización de datos de usuario mediante 3 gráficos interactivos: (1) Serie temporal de cotización histórica del jugador, (2) Gráfico de distribución de cartera de tokens del usuario, y (3) Gráfico de evolución del patrimonio y saldo del usuario.
+- **FR-012**: El sistema DEBE implementar como **Feature Adicional** un sistema de **Alertas de Precios con Notificaciones en Tiempo Real** (vía WebSockets o SSE), permitiendo configurar umbrales (`POST /alerts`, `GET /alerts`), recibir avisos push instantáneos en el frontend cuando el precio cruza el umbral y ejecutar la compra/venta en tiempo real desde la notificación.
+- **FR-013**: El proyecto DEBE separar los perfiles de testing en `unit` y `e2e` como único requerimiento Core de infraestructura de la Entrega 2, operando sobre PostgreSQL sin requerir HSQLDB/H2.
+- **FR-014**: El sistema DEBE simplificar la sincronización entre WhoScored y Football-Data.org unificando los datos en el modelo de jugador y garantizando fallback local si los proveedores fallan.
+- **FR-015**: Todos los endpoints DEBEN prescindir del segmento `/v1` y devolver errores de validación y negocio en **español** bajo el estándar `ProblemDetail` (RFC 7807).
 
 ### Key Entities
 
-- **Player**: Futbolista perteneciente a una de las 5 ligas principales, con metadatos base y estadísticas deportivas consolidadas de Football-Data y WhoScored.
-- **ValuationStrategy**: Estrategia de ponderación deportiva con pesos asignados a cada métrica futbolística y estado activo/inactivo.
-- **PlayerQuote**: Registro histórico de cotización que vincula a un jugador con una fecha, un valor en créditos y la versión de la estrategia utilizada.
-- **TokenPool / PlayerToken**: Control de emisión de los 100 tokens por jugador, distinguiendo tokens en posesión de usuarios vs. tokens en el pool del superusuario.
-- **Order / Transaction**: Registro transaccional inmutable de una operación de compra o venta con usuario, jugador, cantidad de tokens, precio unitario, monto total, fecha y estado.
-- **UserPortfolio / Position**: Posición del usuario sobre un jugador, conteniendo cantidad de tokens acumulados y precio promedio ponderado de compra.
-- **PriceAlert**: Alerta configurada por un usuario para un jugador con tipo de condición (mayor/menor que), precio objetivo y estado (ACTIVA/DISPARADA).
+- **Player**: Jugador de una de las 5 ligas con datos unificados de Football-Data y estadísticas de WhoScored.
+- **ValuationStrategy**: Estrategia configurable con pesos por métrica, versión y bandera de estrategia activa.
+- **PlayerQuote**: Cotización histórica de un jugador en una fecha con el valor calculado y versión de estrategia.
+- **Order / Transaction**: Operación auditable de compra o venta de tokens con usuario, jugador, cantidad, precio unitario, total y fecha.
+- **PortfolioPosition**: Posición activa de un usuario sobre un jugador (cantidad de tokens y precio promedio de compra).
+- **PriceAlert**: Alerta configurada por un usuario con jugador, condición (`MAYOR_IGUAL` / `MENOR_IGUAL`), precio objetivo, estado (`ACTIVA` / `DISPARADA`) y fecha de disparo.
 
 ---
 
@@ -288,19 +294,16 @@ Como usuario del cliente web en React, quiero ver gráficos interactivos de la e
 
 ### Measurable Outcomes
 
-- **SC-001**: El 100% de las operaciones de compra y venta se ejecutan de manera atómica/transaccional, garantizando que el total de tokens por jugador permanezca exactamente en 100 sin sobreemisión ni inconsistencia de saldo.
-- **SC-002**: El recálculo masivo de cotizaciones para todos los jugadores del catálogo se completa en menos de 5 segundos en ambiente local.
-- **SC-003**: La consulta de cotización histórica por fecha devuelve el valor correspondiente con precisión del 100% frente a la serie temporal registrada.
-- **SC-004**: En caso de indisponibilidad total o timeout del scraper de WhoScored, el 100% de los endpoints de consulta y mercado continúan respondiendo con éxito utilizando la información local persistida.
-- **SC-005**: La suite de tests unitarios y de integración cubre todas las reglas de negocio de la Entrega 2, manteniendo el pipeline de CI en estado SUCCESS con SonarCloud < 10 issues.
-- **SC-006**: La interfaz web permite a un usuario autenticado consultar el detalle de un jugador, ver su gráfico histórico y ejecutar una orden de compra o venta en menos de 3 pasos interactivos.
+- **SC-001**: El 100% de las órdenes de compra y venta se ejecutan de manera transaccional, manteniendo invariante el suministro de 100 tokens por jugador y la exactitud de saldos.
+- **SC-002**: Cuando una cotización se actualiza y cruza el umbral de una alerta activa, la notificación en tiempo real llega al cliente web en menos de 2 segundos sin necesidad de refrescar el navegador.
+- **SC-003**: Los 3 gráficos financieros del frontend (evolución de cotización, distribución de cartera y evolución patrimonial) se renderizan y actualizan dinámicamente tras cada operación de compra o venta.
+- **SC-004**: Los suites de pruebas pueden ejecutarse de forma independiente mediante los perfiles `unit` y `e2e`, manteniendo el build en verde y SonarCloud con menos de 10 issues.
+- **SC-005**: Ante la caída simulada del scraper de WhoScored, el 100% de las funcionalidades de consulta, cotización y mercado siguen operando con datos locales.
 
 ---
 
 ## Assumptions
 
-- **Unidad monetaria:** La plataforma opera con créditos virtuales internos; no se requiere integración con pasarelas de pago reales (Stripe, MercadoPago, etc.).
-- **Distribución inicial:** Al inicializarse el sistema, el 100% de los tokens de cada jugador (100 tokens) pertenecen a la cuenta del superusuario/mercado a un valor nominal de 1 crédito cada uno.
-- **Frecuencia del Scheduler:** El scheduler semanal se configura mediante una expresión cron en `application.yml`, permitiendo además la ejecución bajo demanda mediante el endpoint de recálculo para fines de demostración y pruebas.
-- **Feature Adicional seleccionado:** Se adopta formalmente el "Sistema de Alertas de Precios de Jugadores (Price Alerts)" como el feature adicional requerido para la Entrega 2, al integrarse de forma natural con el recálculo de cotizaciones y aportar alto valor funcional al usuario inversor.
-- **Normalización de rutas:** De acuerdo con los issues del TP1, se elimina el prefijo `/v1` en todos los endpoints, manteniendo `/api/...` como raíz común.
+- **Persistencia unificada en PostgreSQL:** Conforme a la aclaración de la cátedra, se descarta HSQLDB/H2 y la carga de datos asociada a bases en memoria.
+- **Rutas alineadas a la Consigna Oficial:** Se remueve `/v1` de las rutas REST para coincidir con la tabla de endpoints del Documento de Visión (`/players`, `/quotes/recalculate`, `/orders/buy`, `/orders/sell`, `/users/{id}/portfolio`, `/users/{id}/transactions`).
+- **Canal de Tiempo Real:** Se utilizará Server-Sent Events (SSE) o WebSockets (STOMP) nativos de Spring Boot para empujar las notificaciones de alertas de precios en vivo hacia el cliente React.

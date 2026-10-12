@@ -1,10 +1,14 @@
 # Contexto y Apuntes de Cátedra - UNQ Desarrollo de Aplicaciones
 
 > [!IMPORTANT]
-> **Documento Oficial en Google Docs:** [Google Docs - UNQ Desarrollo de Aplicaciones](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?usp=drivesdk)  
-> **Document ID:** `1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us`  
+> **FUENTE DE VERDAD DEL PROYECTO (CORAZÓN DEL TP):**  
+> Cualquier cambio pensado, diseñado, especificado, implementado y testeado en este repositorio **DEBE alinearse obligatoriamente** con los principios y reglas de los **3 documentos centrales**:
+> 1. **Consigna Oficial del TP (Docentes - Solo Lectura):** [`docs/consigna-tp.md`](./consigna-tp.md) — [Google Doc Oficial](https://docs.google.com/document/d/12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8/edit?usp=sharing) (ID: `12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8`).
+> 2. **Constitución del Proyecto (Contrato SDD):** [`.specify/memory/constitucion.md`](../.specify/memory/constitucion.md).
+> 3. **Contexto y Decisiones del Grupo (este archivo):** [`docs/contexto-catedra.md`](./contexto-catedra.md) — [Google Doc Sincronizado](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?usp=drivesdk) (ID: `1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us`).  
+>
 > **Web de la materia:** https://sites.google.com/view/unq-desarrollo-de-aplicaciones/  
-> **Instrucción para Agentes de IA:** Este archivo local es la copia y réplica de contexto del Google Doc oficial del proyecto. Cualquier nuevo agente o sesión de trabajo DEBE consultar y utilizar este enlace y Document ID para sincronizar cambios remotos sin necesidad de volver a solicitar el link al usuario.
+> **Instrucción para Agentes de IA:** Cualquier nuevo agente o sesión de trabajo DEBE consultar estos 3 archivos y utilizar los enlaces y Document IDs para sincronizar cambios remotos sin necesidad de solicitar los links al usuario.
 
 ### Mapeo de Pestañas Remotas de Google Docs
 | Tab ID | Título | Jerarquía | Enlace Directo |

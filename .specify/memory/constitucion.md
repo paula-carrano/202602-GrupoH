@@ -1,5 +1,12 @@
 CONSTITUCIÓN DEL PROYECTO & CONTRATO DE DESARROLLO (Spec Kit)
 
+> [!IMPORTANT]
+> **FUENTES DE VERDAD DEL PROYECTO (CORAZÓN DEL TP):**  
+> Cualquier cambio pensado, diseñado, especificado, implementado y testeado **DEBE alinearse obligatoriamente** con los principios de los 3 documentos centrales:
+> 1. **Consigna Oficial del TP (Docentes - Solo Lectura):** [`docs/consigna-tp.md`](../../docs/consigna-tp.md) — [Google Doc Oficial](https://docs.google.com/document/d/12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8/edit?usp=sharing) (ID: `12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8`). *Versión final inmutable, no editar.*
+> 2. **Constitución del Proyecto (este archivo):** [`.specify/memory/constitucion.md`](./constitucion.md).
+> 3. **Contexto y Decisiones del Grupo:** [`docs/contexto-catedra.md`](../../docs/contexto-catedra.md) — [Google Doc del Grupo](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?usp=drivesdk) (ID: `1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us`).
+
 &nbsp;
 
 **1\. Misión y Visión General**

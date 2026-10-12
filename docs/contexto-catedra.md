@@ -141,32 +141,28 @@
 * Mostrar la cotización de un jugador
 * Opción de ver historial de operaciones
 
-#### Pestaña SDD — Especificación Funcional de Entrega 2 (Spec Kit)
-* **Archivo de especificación formal:** [`specs/004-entrega2-core/spec.md`](../specs/004-entrega2-core/spec.md)
-* **Checklist de calidad de requisitos:** [`specs/004-entrega2-core/checklists/requirements.md`](../specs/004-entrega2-core/checklists/requirements.md)
+#### Pestaña SDD — Especificaciones Funcionales Atómicas de Entrega 2 (Spec Kit)
+Para minimizar alucinaciones y acotar el contexto de ejecución de los agentes, la Entrega 2 se divide en **dos especificaciones atómicas separadas (Backend y Frontend)**:
 
-##### Resumen de Requisitos y Contrato SDD:
-1. **Cálculo y Recálculo de Cotizaciones (P1):**
-   - Mínimo 2 estrategias configurables (pesos por goles, asistencias, minutos, rating, etc.).
-   - Versionado histórico en `PlayerQuote` (fecha, valor, estrategia, versión).
-   - Recálculo bajo demanda: `POST /quotes/recalculate`.
-2. **Mercado de Tokens (P1):**
-   - Máximo estricto de 100 tokens emitidos por jugador, valor inicial de 1 crédito en posesión del superusuario.
-   - Compra transaccional: `POST /orders/buy`.
-   - Venta transaccional: `POST /orders/sell`.
-3. **Cotización Histórica y por Fecha (P1):**
-   - Consulta a fecha determinada: `GET /players/{id}/quotes?date=YYYY-MM-DD`.
-   - Serie temporal para gráficos: `GET /players/{id}/quotes`.
-4. **Visualización de Datos de Usuario con Gráficos en el Front (P1):**
-   - Serie temporal de cotización del jugador, distribución de cartera (dona/torta) y evolución del patrimonio/saldo.
-5. **Feature Adicional — Alertas con Notificaciones en Tiempo Real y Compra Directa (P1):**
-   - Configuración de umbrales (`POST /alerts`, `GET /alerts`), evaluación reactiva post-recálculo y envío push por WebSockets/SSE al navegador para operar al instante.
-6. **Portfolio e Historial de Operaciones (P2):**
-   - `GET /users/{id}/portfolio` y `GET /users/{id}/transactions`.
-7. **Ranking y Scheduler Semanal (P2):**
-   - `GET /players/ranking` según estrategia activa y job periódico `@Scheduled`.
-8. **Separación de Profiles (`unit` y `e2e`) y Estandarización sin `/v1` (P2):**
-   - Único punto Core vigente (`unit` vs `e2e` sobre PostgreSQL) y remoción de `/v1`.
+1. **Spec 004 — Entrega 2 Backend (`004-entrega2-core`):**
+   * **Especificación formal:** [`specs/004-entrega2-core/spec.md`](../specs/004-entrega2-core/spec.md)
+   * **Checklist de calidad:** [`specs/004-entrega2-core/checklists/requirements.md`](../specs/004-entrega2-core/checklists/requirements.md)
+   * **Alcance exclusivo Backend:**
+     - **Cálculo y Recálculo de Cotizaciones (P1):** Mínimo 2 estrategias configurables, versionado en `PlayerQuote` y `POST /quotes/recalculate`.
+     - **Mercado de Tokens Transaccional (P1):** Límite de 100 tokens por jugador, `POST /orders/buy` y `POST /orders/sell`.
+     - **Cotización Histórica y por Fecha (P1):** `GET /players/{id}/quotes` y `GET /players/{id}/quotes?date=YYYY-MM-DD`.
+     - **Feature Adicional en Backend (P1):** Motor de Alertas de Precios (`POST /alerts`, `GET /alerts`, `DELETE /alerts/{id}`) y stream push en tiempo real (`GET /alerts/stream` vía SSE/WebSocket).
+     - **Portfolio, Historial, Ranking y Scheduler (P2):** `GET /users/{id}/portfolio`, `GET /users/{id}/transactions`, `GET /players/ranking` y job semanal `@Scheduled`.
+     - **Infraestructura y Saneamiento (P2):** Separación de profiles `unit` y `e2e` sobre PostgreSQL, unificación de sync WhoScored + Football-Data con fallback local y rutas sin `/v1`.
+
+2. **Spec 005 — Entrega 2 Frontend (`005-entrega2-frontend`):**
+   * **Especificación formal:** [`specs/005-entrega2-frontend/spec.md`](../specs/005-entrega2-frontend/spec.md)
+   * **Checklist de calidad:** [`specs/005-entrega2-frontend/checklists/requirements.md`](../specs/005-entrega2-frontend/checklists/requirements.md)
+   * **Alcance exclusivo Frontend:**
+     - **Visualización con 3 Gráficos Interactivos (P1):** (1) Serie temporal de cotización histórica del jugador, (2) Gráfico de dona/torta de distribución de cartera, y (3) Gráfico de evolución del patrimonio y saldo del usuario.
+     - **Operación de Compra y Venta en Interfaz (P1):** Botones y modales interactivos con validación previa y manejo de errores en español por código estable.
+     - **Feature Adicional en Frontend (P1):** Creación de alertas de precio y recepción de notificaciones push en vivo con botón de acción rápida (*One-Click Trade*) para comprar/vender al instante.
+     - **Vistas de Portfolio, Historial, Ranking y Servicios sin `/v1` (P2):** Tablas detalladas con PnL coloreado, cliente HTTP actualizado sin `/v1` y suite de pruebas en Vitest.
 
 ---
 

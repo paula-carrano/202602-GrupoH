@@ -6,6 +6,18 @@
 > **Web de la materia:** https://sites.google.com/view/unq-desarrollo-de-aplicaciones/  
 > **Instrucción para Agentes de IA:** Este archivo local es la copia y réplica de contexto del Google Doc oficial del proyecto. Cualquier nuevo agente o sesión de trabajo DEBE consultar y utilizar este enlace y Document ID para sincronizar cambios remotos sin necesidad de volver a solicitar el link al usuario.
 
+### Mapeo de Pestañas Remotas de Google Docs
+| Tab ID | Título | Jerarquía | Enlace Directo |
+| :--- | :--- | :--- | :--- |
+| `t.0` | Clases teóricas | Nivel 0 (Raíz) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.0) |
+| `t.pfjv1vy78qk1` | TP ENTREGAS | Nivel 0 (Raíz) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.pfjv1vy78qk1) |
+| `t.kvuepdrwc712` | Entrega 1 | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.kvuepdrwc712) |
+| `t.d331zkte96hk` | Entrega 2 | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.d331zkte96hk) |
+| `t.w8nwnbazlabd` | SDD | Nivel 2 (en Entrega 2) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.w8nwnbazlabd) |
+| `t.9uroiun40e1f` | Entrega 3 | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.9uroiun40e1f) |
+| `t.s14ggccmsq7s` | Constitucion | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.s14ggccmsq7s) |
+| `t.9xlnb57rx6se` | Scrapper | Nivel 2 (en Constitucion) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.9xlnb57rx6se) |
+
 ---
 
 ## Apuntes de Clases

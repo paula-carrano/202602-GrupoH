@@ -17,7 +17,8 @@
 | `t.pfjv1vy78qk1` | TP ENTREGAS | Nivel 0 (Raíz) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.pfjv1vy78qk1) |
 | `t.kvuepdrwc712` | Entrega 1 | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.kvuepdrwc712) |
 | `t.d331zkte96hk` | Entrega 2 | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.d331zkte96hk) |
-| `t.w8nwnbazlabd` | SDD | Nivel 2 (en Entrega 2) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.w8nwnbazlabd) |
+| `t.w8nwnbazlabd` | SDD - Back | Nivel 2 (en Entrega 2) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.w8nwnbazlabd) |
+| `t.ssq4mlbnha65` | SDD - Front | Nivel 2 (en Entrega 2) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.ssq4mlbnha65) |
 | `t.9uroiun40e1f` | Entrega 3 | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.9uroiun40e1f) |
 | `t.s14ggccmsq7s` | Constitucion | Nivel 1 (en TP ENTREGAS) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.s14ggccmsq7s) |
 | `t.9xlnb57rx6se` | Scrapper | Nivel 2 (en Constitucion) | [Ver pestaña](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.9xlnb57rx6se) |
@@ -141,10 +142,10 @@
 * Mostrar la cotización de un jugador
 * Opción de ver historial de operaciones
 
-#### Pestaña SDD — Especificaciones Funcionales Atómicas de Entrega 2 (Spec Kit)
-Para minimizar alucinaciones y acotar el contexto de ejecución de los agentes, la Entrega 2 se divide en **dos especificaciones atómicas separadas (Backend y Frontend)**:
+#### Pestañas SDD (`SDD - Back` y `SDD - Front`) — Especificaciones Funcionales Atómicas de Entrega 2 (Spec Kit)
+Para minimizar alucinaciones, permitir trabajo en paralelo dentro del equipo y acotar el contexto de ejecución de los agentes, la Entrega 2 se divide en **dos especificaciones atómicas separadas (Backend y Frontend)** sincronizadas en dos sub-pestañas independientes dentro de `Entrega 2`:
 
-1. **Spec 004 — Entrega 2 Backend (`004-entrega2-core`):**
+1. **Spec 004 — Entrega 2 Backend (`004-entrega2-core`) — Pestaña Remota: [`SDD - Back` (`t.w8nwnbazlabd`)](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.w8nwnbazlabd):**
    * **Especificación formal:** [`specs/004-entrega2-core/spec.md`](../specs/004-entrega2-core/spec.md)
    * **Checklist de calidad:** [`specs/004-entrega2-core/checklists/requirements.md`](../specs/004-entrega2-core/checklists/requirements.md)
    * **Alcance exclusivo Backend:**
@@ -155,7 +156,7 @@ Para minimizar alucinaciones y acotar el contexto de ejecución de los agentes, 
      - **Portfolio, Historial, Ranking y Scheduler (P2):** `GET /users/{id}/portfolio`, `GET /users/{id}/transactions`, `GET /players/ranking` y job semanal `@Scheduled`.
      - **Infraestructura y Saneamiento (P2):** Separación de profiles `unit` y `e2e` sobre PostgreSQL, unificación de sync WhoScored + Football-Data con fallback local y rutas sin `/v1`.
 
-2. **Spec 005 — Entrega 2 Frontend (`005-entrega2-frontend`):**
+2. **Spec 005 — Entrega 2 Frontend (`005-entrega2-frontend`) — Pestaña Remota: [`SDD - Front` (`t.ssq4mlbnha65`)](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?tab=t.ssq4mlbnha65):**
    * **Especificación formal:** [`specs/005-entrega2-frontend/spec.md`](../specs/005-entrega2-frontend/spec.md)
    * **Checklist de calidad:** [`specs/005-entrega2-frontend/checklists/requirements.md`](../specs/005-entrega2-frontend/checklists/requirements.md)
    * **Alcance exclusivo Frontend:**

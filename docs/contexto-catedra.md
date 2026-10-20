@@ -104,7 +104,7 @@
 #### ISSUES DEL TP1:
 * [x] Revisar issues pendientes de Sonar (Resuelto / Hecho)
 * [x] Borrar la carpeta `tp-desarrollo` (Resuelto / Hecho)
-* [ ] Sacar lo de `/v1`
+* [x] Sacar lo de `/v1` (Resuelto en Entrega 2 — ver `specs/004-entrega2-core/spec.md` FR-013 / User Story 7)
 * [ ] Reveer la estructura de sync de WhoScored y la DB. Fijarse si se puede simplificar un poco la obtención del ID y que se guarde la data junto con lo de Football-Data
 
 #### CORE — Aclaración Oficial de Cátedra (Discord):
@@ -220,7 +220,7 @@ El sistema deberá mantener separación de responsabilidades, seguridad, trazabi
 - Spring Data JPA
 - Hibernate
 - PostgreSQL como base de datos principal
-- HSQLDB o H2 para los perfiles de pruebas definidos en la Entrega 2
+- ~~HSQLDB o H2 para los perfiles de pruebas definidos en la Entrega 2~~ → Descartado. Aclaración oficial de cátedra (Discord, Entrega 2): los perfiles `unit`/`e2e` deben operar sobre PostgreSQL, no sobre bases embebidas.
 - Spring Security
 - JWT
 - API Keys
@@ -341,7 +341,7 @@ Las credenciales deberán gestionarse mediante variables de entorno o mecanismos
 ---
 
 ### 7. Entrega 2 — Funcionalidad Core
-* **Persistencia para testing:** HSQLDB o H2 con perfiles independientes `unit` y `e2e`. PostgreSQL en producción.
+* **Persistencia para testing:** ~~HSQLDB o H2 con perfiles independientes `unit` y `e2e`. PostgreSQL en producción.~~ → Descartado. Aclaración oficial de cátedra (Discord, Entrega 2): los perfiles `unit`/`e2e` deben operar sobre PostgreSQL, no sobre bases embebidas.
 * **Datos iniciales:** Población automática al iniciar en los perfiles correspondientes.
 * **Integración de jugadores:** 5 ligas principales. Fuentes previstas: WhoScored (scraping) y Football-Data.org (API oficial). Uso de adapters, tolerancia a fallos y respaldo con datos locales.
 * **Estrategias de valoración:** Al menos 2 estrategias configurables (minutos, goles, asistencias, tiros, pases, intercepciones, tarjetas, posición, rating) con pesos configurables y trazabilidad histórica de versión de estrategia.

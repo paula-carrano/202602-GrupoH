@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { LoginPage } from '../pages/LoginPage'
@@ -20,7 +20,7 @@ describe('autenticación', () => {
   beforeEach(() => { localStorage.clear(); sessionStorage.clear() })
   afterEach(() => vi.restoreAllMocks())
 
-  it('envía usuario y contraseña, guarda la sesión y abre Home', async () => {
+  it('envía credenciales, guarda la sesión y redirige al destino /home', async () => {
     const user = userEvent.setup()
     const onLogin = vi.fn()
     const post = vi.spyOn(api, 'post').mockResolvedValue({ data: { accessToken: 'token-de-prueba', expiresInSeconds: 3600 } })

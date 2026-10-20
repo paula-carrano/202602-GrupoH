@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import { Home } from '../pages/Home'
+import { PlayersPage as Home } from '../pages/PlayersPage'
 import { api } from '../services/api'
 import { saveSession } from '../services/session'
 

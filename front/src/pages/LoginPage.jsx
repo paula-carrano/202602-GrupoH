@@ -19,7 +19,7 @@ export const LoginPage = ({ onLogin }) => {
 		return run(async () => {
 			const session = await login(username.trim(), password, remember);
 			onLogin(session);
-			void navigate(location.state?.from?.pathname || "/home", {
+			void navigate("/home", {
 				replace: true,
 			});
 		});

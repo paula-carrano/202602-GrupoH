@@ -1,5 +1,9 @@
 import { useSessionRequest } from "../hooks/useSessionRequest";
 import { getPlayer } from "../services/players";
+import { useDialogFocus } from '../hooks/useDialogFocus';
+import { PlayerInvestmentSummary } from './PlayerInvestmentSummary';
+import { QuoteHistoryChart } from './charts/QuoteHistoryChart';
+import { financialValue } from './FinancialPanel';
 
 const metrics = [
     { key: "goals", label: "Goles" },
@@ -9,8 +13,9 @@ const metrics = [
     { key: "minutesPlayed", label: "Minutos jugados" },
 ];
 
-export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }) => {
-    const { data: detail, loading, error } = useSessionRequest({
+export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, investment, marketQuote, quotes }) => {
+    const dialogRef = useDialogFocus(Boolean(player), onClose);
+    const { data: detail, loading, error, retry } = useSessionRequest({
         session,
         requestKey: player?.id,
         enabled: Boolean(player),
@@ -29,6 +34,9 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }
             <div className="modal-backdrop fade show" />
 
             <dialog
+                ref={dialogRef}
+                tabIndex={-1}
+                aria-modal="true"
                 open
                 className="modal fade show d-block player-profile-modal"
                 aria-labelledby="player-profile-title"
@@ -63,6 +71,9 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }
                             </button>
                         </header>
 
+                        <section aria-label="Mercado">
+                        <h3 className="h5 px-4">Mercado</h3>
+                        <p className="px-4">Cotización actual (créditos): {financialValue(marketQuote)}</p>
                         <div className="player-profile-metrics">
                             <section className="player-profile-metric">
                                 <span>Liga</span>
@@ -91,6 +102,8 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }
                             ))}
                         </div>
 
+                        <div className="px-3 pb-3"><QuoteHistoryChart playerLabel={`${profile.firstName} ${profile.lastName}`} {...quotes} /></div>
+                        </section>
                         {loading && (
                             <output className="player-profile-status mb-0">
                                 <span
@@ -104,6 +117,7 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }
                         {error && (
                             <output className="player-profile-status player-profile-status--error mb-0">
                                 {error}
+                                <button className="btn btn-outline-light ms-2" onClick={retry}>Reintentar perfil</button>
                             </output>
                         )}
 
@@ -112,6 +126,7 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }
                                 Estadísticas todavía no disponibles.
                             </output>
                         )}
+                        <div className="p-3"><PlayerInvestmentSummary {...investment} /></div>
                     </article>
                 </div>
             </dialog>

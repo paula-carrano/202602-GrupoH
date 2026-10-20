@@ -5,7 +5,7 @@ export const PlayerTable = ({ players, hasResults, rankingOffset = 0, onPlayerSe
         <table className="table players-table mb-0">
             <thead>
                 <tr>
-                    <th scope="col" className="text-center">Ranking</th>
+                    <th scope="col" className="text-center">N.º de fila</th>
                     <th scope="col">Nombre completo</th>
                     <th scope="col" className="text-center">Nacimiento</th>
                     <th scope="col" className="text-center">Nacionalidad</th>

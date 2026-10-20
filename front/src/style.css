@@ -1,4 +1,9 @@
 :root { font-family: Arial, Helvetica, sans-serif; color: #102f55; background: #f6faff; }
+.financial-panel { min-width: 0; color: #102f55; }
+.financial-panel .table-responsive { max-width: 100%; }
+.financial-panel th, .financial-panel td { min-width: 7rem; }
+.dashboard :focus-visible, .player-profile-modal :focus-visible { outline: 3px solid #e09a00; outline-offset: 3px; }
+.player-profile-modal .financial-panel { background: #fff; }
 body { min-width: 320px; }
 .btn-primary { --bs-btn-bg: #0865ec; --bs-btn-border-color: #0865ec; --bs-btn-hover-bg: #0058d4; --bs-btn-hover-border-color: #0058d4; }
 

@@ -6,6 +6,9 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { Home } from "./pages/Home";
 import { PlayersPage } from "./pages/PlayersPage";
 import { ErrorPage } from "./pages/ErrorPage";
+import { PortfolioPage } from './pages/PortfolioPage';
+import { TransactionsPage } from './pages/TransactionsPage';
+import { RankingPage } from './pages/RankingPage';
 import { clearSession, getSession, subscribeSession } from "./services/session";
 
 const UnavailablePage = ({ title }) => (
@@ -55,11 +58,11 @@ export const App = () => {
                     ? <MarketWorkspace key={`${sessionGeneration}:${session.token}`} session={session} onLogout={signOut} />
                     : <Navigate to="/login" replace />}
             >
-                <Route path="/home" element={<Home />} />
+                <Route path="/home" element={<Home session={session} onLogout={signOut} />} />
                 <Route path="/players" element={<PlayersPage session={session} onLogout={signOut} />} />
-                <Route path="/portfolio" element={<UnavailablePage title="Mi portfolio" />} />
-                <Route path="/transactions" element={<UnavailablePage title="Historial" />} />
-                <Route path="/ranking" element={<UnavailablePage title="Ranking" />} />
+                <Route path="/portfolio" element={<PortfolioPage />} />
+                <Route path="/transactions" element={<TransactionsPage />} />
+                <Route path="/ranking" element={<RankingPage />} />
                 <Route path="/alerts" element={<UnavailablePage title="Alertas" />} />
             </Route>
             <Route path="/error" element={<ErrorPage />} />

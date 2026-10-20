@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { MarketWorkspace } from "./components/MarketWorkspace";
 import { LoginPage } from "./pages/LoginPage";
@@ -6,7 +6,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { Home } from "./pages/Home";
 import { PlayersPage } from "./pages/PlayersPage";
 import { ErrorPage } from "./pages/ErrorPage";
-import { clearSession, getSession } from "./services/session";
+import { clearSession, getSession, subscribeSession } from "./services/session";
 
 const UnavailablePage = ({ title }) => (
     <>
@@ -17,6 +17,20 @@ const UnavailablePage = ({ title }) => (
 
 export const App = () => {
     const [session, setSession] = useState(getSession);
+    const [sessionGeneration, setSessionGeneration] = useState(0);
+
+    useEffect(() => subscribeSession(() => {
+        setSession(getSession());
+        setSessionGeneration(value => value + 1);
+    }), []);
+    useEffect(() => {
+        if (!session) return;
+        const timer = setTimeout(() => {
+            if (session.expiresAt <= Date.now() && (!getSession() || getSession()?.token === session.token)) clearSession();
+            setSession(getSession());
+        }, Math.max(0, Math.min(session.expiresAt - Date.now(), 2147483647)));
+        return () => clearTimeout(timer);
+    }, [session]);
 
     const signOut = () => {
         clearSession();
@@ -38,7 +52,7 @@ export const App = () => {
             />
             <Route
                 element={session
-                    ? <MarketWorkspace session={session} onLogout={signOut} />
+                    ? <MarketWorkspace key={`${sessionGeneration}:${session.token}`} session={session} onLogout={signOut} />
                     : <Navigate to="/login" replace />}
             >
                 <Route path="/home" element={<Home />} />

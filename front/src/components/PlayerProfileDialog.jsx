@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { getApiError } from "../services/api";
+import { useSessionRequest } from "../hooks/useSessionRequest";
 import { getPlayer } from "../services/players";
 
 const metrics = [
@@ -10,39 +9,14 @@ const metrics = [
     { key: "minutesPlayed", label: "Minutos jugados" },
 ];
 
-export const PlayerProfileDialog = ({ player, onClose }) => {
-    const [detail, setDetail] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-
-    useEffect(() => {
-        if (!player) {
-            setDetail(null);
-            setError("");
-            return;
-        }
-
-        const controller = new AbortController();
-
-        setDetail(null);
-        setError("");
-        setLoading(true);
-
-        getPlayer(player.id, { signal: controller.signal })
-            .then(({ data }) => setDetail(data))
-            .catch((requestError) => {
-                if (requestError.code !== "ERR_CANCELED") {
-                    setError(getApiError(requestError));
-                }
-            })
-            .finally(() => {
-                if (!controller.signal.aborted) {
-                    setLoading(false);
-                }
-            });
-
-        return () => controller.abort();
-    }, [player?.id]);
+export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized }) => {
+    const { data: detail, loading, error } = useSessionRequest({
+        session,
+        requestKey: player?.id,
+        enabled: Boolean(player),
+        request: ({ signal }) => getPlayer(player.id, { signal }),
+        onUnauthorized,
+    });
 
     if (!player) return null;
 

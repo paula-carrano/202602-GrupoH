@@ -43,16 +43,16 @@ describe('catálogo de jugadores', () => {
 
   it('muestra el error y permite reintentar después de cerrar el aviso', async () => {
     const user = userEvent.setup()
-    const get = vi.spyOn(api, 'get').mockRejectedValue({ response: { status: 500, data: { detail: 'Servicio no disponible' } } })
+    const get = vi.spyOn(api, 'get').mockRejectedValue({ response: { status: 500, data: { errorCode: 'INTERNAL_SERVER_ERROR', detail: 'Technical details' } } })
     const session = { token: 'jwt-prueba', username: 'jugador', expiresAt: Date.now() + 60_000 }
     saveSession(session, false)
     renderPlayers(session)
 
-    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Servicio no disponible')
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('Ocurrió un error en el servidor.')
     expect(get).toHaveBeenCalledWith('/players', expect.objectContaining({ signal: expect.any(AbortSignal) }))
     await user.click(screen.getByRole('button', { name: 'Cerrar aviso' }))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument())
-    expect(screen.getByRole('alert')).toHaveTextContent('Servicio no disponible')
+    expect(screen.getByRole('alert')).toHaveTextContent('Ocurrió un error en el servidor.')
     get.mockResolvedValueOnce({ data: makePlayers() })
     await user.click(screen.getByRole('button', { name: 'Reintentar' }))
     expect(await screen.findByText('Lionel Messi')).toBeInTheDocument()

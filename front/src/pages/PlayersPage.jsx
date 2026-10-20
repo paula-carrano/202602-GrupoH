@@ -9,7 +9,11 @@ import {
 } from "../components";
 import { usePlayerCatalog } from "../hooks/usePlayerCatalog";
 
-export const PlayersPage = ({ session, onLogout }) => {
+export const PlayersPage = ({ session, onLogout }) => (
+    <SessionPlayersPage key={session?.token} session={session} onLogout={onLogout} />
+);
+
+const SessionPlayersPage = ({ session, onLogout }) => {
     const catalog = usePlayerCatalog({ session, onLogout });
     const [selectedPlayer, setSelectedPlayer] = useState(null);
 
@@ -82,6 +86,8 @@ export const PlayersPage = ({ session, onLogout }) => {
                 {catalogContent}
 
             <PlayerProfileDialog
+                session={session}
+                onUnauthorized={onLogout}
                 player={selectedPlayer}
                 onClose={() => setSelectedPlayer(null)}
             />

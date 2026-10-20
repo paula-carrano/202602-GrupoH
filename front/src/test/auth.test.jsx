@@ -38,7 +38,7 @@ describe('autenticación', () => {
 
   it('muestra el error de credenciales que devuelve la API', async () => {
     const user = userEvent.setup()
-    vi.spyOn(api, 'post').mockRejectedValue({ response: { data: { detail: 'Credenciales inválidas' } } })
+    vi.spyOn(api, 'post').mockRejectedValue({ response: { status: 401, data: { errorCode: 'INVALID_CREDENTIALS', detail: 'Bad credentials' } } })
     renderRoute('/login', <LoginPage onLogin={vi.fn()} />)
 
     await user.type(screen.getByRole('textbox', { name: 'Usuario' }), 'messi')

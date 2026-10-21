@@ -61,6 +61,7 @@ describe('navegación integrada de App', () => {
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/players')
     expect(nav.getByRole('link', { current: 'page' })).toBe(players)
     expect(players).toHaveClass('active')
+    expect(screen.getByRole('heading', { name: 'CATÁLOGO DE JUGADORES' })).toHaveFocus()
     expect(home).not.toHaveClass('active')
     expect(screen.queryByRole('heading', { name: 'Inicio financiero' })).not.toBeInTheDocument()
     await user.click(home)
@@ -86,6 +87,7 @@ describe('navegación integrada de App', () => {
     renderApp('/players')
     expect(await screen.findByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
     expect(localStorage.getItem(sessionKey)).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Iniciar sesión' })).toHaveFocus()
     expect(get).not.toHaveBeenCalled()
   })
 

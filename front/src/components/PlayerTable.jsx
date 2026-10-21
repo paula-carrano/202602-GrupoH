@@ -1,8 +1,9 @@
 import { formatBirthDate } from '../utils/date'
 
 export const PlayerTable = ({ players, hasResults, rankingOffset = 0, onPlayerSelect }) => (
-    <div className="table-responsive catalog-table-scroll">
+    <div className="table-responsive catalog-table-scroll" tabIndex={0} role="region" aria-label="Catálogo de jugadores">
         <table className="table players-table mb-0">
+            <caption className="visually-hidden">Catálogo de jugadores</caption>
             <thead>
                 <tr>
                     <th scope="col" className="text-center">N.º de fila</th>
@@ -38,7 +39,7 @@ export const PlayerTable = ({ players, hasResults, rankingOffset = 0, onPlayerSe
             </tbody>
         </table>
         {!hasResults && (
-            <p className="empty-results text-center p-4 mb-0">
+            <p role="status" className="empty-results text-center p-4 mb-0">
                 No se encontraron jugadores.
             </p>
         )}

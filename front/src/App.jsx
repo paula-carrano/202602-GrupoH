@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { MarketWorkspace } from "./components/MarketWorkspace";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
@@ -19,6 +19,14 @@ const UnavailablePage = ({ title }) => (
 );
 
 export const App = () => {
+    const { pathname } = useLocation();
+    useEffect(() => {
+        const heading = document.querySelector('h1');
+        if (heading) {
+            heading.setAttribute('tabindex', '-1');
+            heading.focus();
+        }
+    }, [pathname]);
     const [session, setSession] = useState(getSession);
     const [sessionGeneration, setSessionGeneration] = useState(0);
 

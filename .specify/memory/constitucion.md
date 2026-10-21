@@ -1,4 +1,26 @@
+<!--
+SYNC IMPACT REPORT
+- Version Change: 1.0.0 -> 1.1.0 (MINOR: directiva de cátedra sobre prefijo API y persistencia testing)
+- Date: 2026-10-20
+- Reason: Directiva verbal de cátedra sobre prefijo de API (rutas sin /v1) y persistencia de testing (PostgreSQL para unit y e2e con Testcontainers, descarte de HSQLDB/H2)
+- Modified Sections:
+  * Sección 2: Stack Tecnológico (Backend)
+  * Sección 11: API REST
+  * Sección 16: Roadmap de Entregas (Entrega 2)
+- Added Sections:
+  * Sección 18: Registro de Enmiendas (Sync Impact Report)
+- Removed Sections: Ninguna
+- Follow-up TODOs: Ninguno
+-->
+
 CONSTITUCIÓN DEL PROYECTO & CONTRATO DE DESARROLLO (Spec Kit)
+
+> [!IMPORTANT]
+> **FUENTES DE VERDAD DEL PROYECTO (CORAZÓN DEL TP):**  
+> Cualquier cambio pensado, diseñado, especificado, implementado y testeado **DEBE alinearse obligatoriamente** con los principios de los 3 documentos centrales:
+> 1. **Consigna Oficial del TP (Docentes - Solo Lectura):** [`docs/consigna-tp.md`](../../docs/consigna-tp.md) — [Google Doc Oficial](https://docs.google.com/document/d/12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8/edit?usp=sharing) (ID: `12zE46_K98iAfxZiJKpyJeko_F7HHjIDUKw6-9FB0zV8`). *Versión final inmutable, no editar.*
+> 2. **Constitución del Proyecto (este archivo):** [`.specify/memory/constitucion.md`](./constitucion.md).
+> 3. **Contexto y Decisiones del Grupo:** [`docs/contexto-catedra.md`](../../docs/contexto-catedra.md) — [Google Doc del Grupo](https://docs.google.com/document/d/1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us/edit?usp=drivesdk) (ID: `1oHy24FY3dOft9mu7OTGj6ndklDz9e2yVK6YZ0w3P0us`).
 
 &nbsp;
 
@@ -86,7 +108,7 @@ Backend
 
 \- PostgreSQL como base de datos principal
 
-\- HSQLDB o H2 para los perfiles de pruebas definidos en la Entrega 2
+\- PostgreSQL para perfiles de pruebas (descartada la alternativa de HSQLDB o H2 por directiva verbal de cátedra en Entrega 2; los perfiles `unit` y `e2e` operan sobre PostgreSQL, especificando que `e2e` requiere una instancia de PostgreSQL dedicada — por ejemplo vía Testcontainers — en lugar de una base embebida)
 
 \- Spring Security
 
@@ -592,27 +614,22 @@ La cobertura deberá respetar los criterios definidos por la materia.
 
 # **7\. Entrega 2 — Funcionalidad Core**
 
-## **7.1 Persistencia para testing**
+## **7.1 Perfiles de testing (`unit` y `e2e`)**
 
-La aplicación deberá soportar un perfil específico de pruebas utilizando:
-
-* HSQLDB o H2.
+*(Aclaración oficial de cátedra: Se descarta HSQLDB/H2 ya que el proyecto opera directamente sobre PostgreSQL. El único requerimiento core técnico para la Entrega 2 es la separación de perfiles de testing).*
 
 Se deberán definir perfiles independientes para:
 
-unit
+* `unit` (pruebas unitarias aisladas)
+* `e2e` (pruebas de extremo a extremo)
 
-e2e
-
-La base de datos principal de producción continuará siendo PostgreSQL.
+La base de datos principal del sistema continuará siendo PostgreSQL.
 
 ---
 
-## **7.2 Datos iniciales**
+## **7.2 Datos iniciales (Descartado por cátedra)**
 
-La aplicación deberá poder crear datos de prueba automáticamente al iniciar en los perfiles correspondientes.
-
-Estos datos deberán permitir ejecutar y demostrar las funcionalidades de la Entrega 2\.
+*(Descartado por cátedra al estar vinculado originalmente al uso de H2 en memoria).*
 
 ---
 
@@ -771,9 +788,25 @@ El ranking deberá calcularse utilizando la estrategia de valoración activa.
 
 ---
 
-## **7.11 Coverage Job**
+## **7.11 Coverage Job (Cubierto en Entrega 1 con SonarCloud)**
 
-GitHub Actions deberá contar con un job específico para ejecutar y/o verificar la cobertura de tests de acuerdo con los criterios establecidos por la materia.
+*(Aclaración oficial de cátedra: Ya cubierto mediante la integración de SonarCloud en la Entrega 1).*
+
+---
+
+## **7.12 Visualización de Datos de Usuario con Gráficos en el Frontend**
+
+El frontend deberá implementar gráficos interactivos para visualizar los datos financieros del usuario y del mercado:
+
+* Gráfico de serie temporal de cotización histórica del jugador.
+* Gráfico de distribución de cartera (dona/torta de tokens poseídos por jugador).
+* Gráfico de evolución del patrimonio y saldo del usuario.
+
+---
+
+## **7.13 Feature Adicional — Alertas de Precios y Notificaciones en Tiempo Real**
+
+El sistema deberá implementar como feature adicional propio de la Entrega 2 un mecanismo de **Alertas de Precios con Notificaciones en Tiempo Real (WebSockets / Server-Sent Events)** hacia el frontend, permitiendo que el usuario reciba una notificación instantánea cuando un jugador alcance el umbral configurado y pueda ejecutar una compra/venta en tiempo real.
 
 ---
 
@@ -923,9 +956,7 @@ Se deberá evitar que los tests dependan de servicios externos reales cuando est
 
 # **11\. API REST**
 
-Todos los endpoints deberán utilizar el prefijo:
-
-/api/v1
+Todos los endpoints deberán exponerse sin el prefijo `/v1` (las rutas operan directamente a partir de la raíz `/`, conforme a la Consigna Oficial y la directiva de cátedra en Entrega 2; resuelto en `specs/004-entrega2-core/spec.md` FR-013).
 
 Los contratos REST deberán definir:
 
@@ -941,37 +972,37 @@ Los contratos REST deberán definir:
 
 Endpoints principales previstos:
 
-POST   /api/v1/auth/register
+POST   /auth/register
 
-POST   /api/v1/auth/login
+POST   /auth/login
 
-POST   /api/v1/auth/api-keys
-
-&nbsp;
-
-GET    /api/v1/players
-
-GET    /api/v1/players/{id}
-
-GET    /api/v1/players/{id}/quotes
-
-GET    /api/v1/players/ranking
+POST   /auth/api-keys
 
 &nbsp;
 
-POST   /api/v1/quotes/recalculate
+GET    /players
+
+GET    /players/{id}
+
+GET    /players/{id}/quotes
+
+GET    /players/ranking
 
 &nbsp;
 
-POST   /api/v1/orders/buy
-
-POST   /api/v1/orders/sell
+POST   /quotes/recalculate
 
 &nbsp;
 
-GET    /api/v1/users/{id}/portfolio
+POST   /orders/buy
 
-GET    /api/v1/users/{id}/transactions
+POST   /orders/sell
+
+&nbsp;
+
+GET    /users/{id}/portfolio
+
+GET    /users/{id}/transactions
 
 Los endpoints definitivos podrán ajustarse durante la fase de Specification siempre que se mantengan los requerimientos funcionales del proyecto.
 
@@ -1133,7 +1164,7 @@ Una funcionalidad se considerará terminada cuando:
 
 ## **Entrega 2 — Core Functionality**
 
-* HSQLDB/H2 para testing.  
+* Perfiles unit/e2e separados, ambos sobre PostgreSQL (Testcontainers en CI).  
 * Perfiles Unit y E2E.  
 * Datos iniciales de prueba.  
 * Integración de datos de jugadores.  
@@ -1178,6 +1209,17 @@ Cualquier modificación de las reglas establecidas deberá ser acordada por el e
 
 La Constitución funciona como contrato técnico y funcional del proyecto y será la referencia principal para evaluar si una implementación respeta la arquitectura, los requisitos y los criterios de calidad establecidos.
 
-**Versión: 1.0.0**
+**Versión: 1.1.0**
+
+&nbsp;
+
+---
+
+# **18\. Registro de Enmiendas (Sync Impact Report)**
+
+| Versión | Fecha | Motivo de la Enmienda | Secciones Modificadas | Tipo de Enmienda (SemVer) |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.0.0** | 2026-09-21 | Adopción y ratificación inicial de la Constitución del Proyecto (Entrega 1). | Todas (Adopción inicial) | Initial Ratification |
+| **1.1.0** | 2026-10-20 | Directiva verbal de cátedra sobre prefijo de API (rutas expuestas sin `/v1`) y persistencia de testing (descarte de HSQLDB/H2; perfiles `unit` y `e2e` operan sobre PostgreSQL, requiriendo `e2e` instancia dedicada con Testcontainers). | Sección 2 (Stack Tecnológico - Backend), Sección 11 (API REST), Sección 16 (Roadmap de Entregas → Entrega 2) | MINOR (1.0.0 → 1.1.0: clarificaciones y correcciones normativas sin ruptura de arquitectura retroactiva) |
 
 &nbsp;

@@ -1,100 +1,42 @@
-import { useState } from "react";
-import { FaMagnifyingGlass, FaUserGroup } from "react-icons/fa6";
-import {
-    DashboardLayout,
-    ErrorDialog,
-    FeedbackAlert,
-    Pagination,
-    PlayerProfileDialog,
-    PlayerTable,
-} from "../components";
-import { usePlayerCatalog } from "../hooks/usePlayerCatalog";
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useSessionRequest } from '../hooks/useSessionRequest'
+import { getPlayers } from '../services/players'
+import { FinancialSummary } from '../components/FinancialSummary'
+import { QuoteHistoryChart } from '../components/charts/QuoteHistoryChart'
+import { PortfolioAllocationChart } from '../components/charts/PortfolioAllocationChart'
+import { WealthHistoryChart } from '../components/charts/WealthHistoryChart'
+import { PlayerProfileDialog } from '../components/PlayerProfileDialog'
+
+export const DashboardPresentation = ({ summary, quotes, allocation, wealth }) => <div className="row g-3">
+  <div className="col-12"><FinancialSummary {...summary} /></div>
+  <div className="col-12"><QuoteHistoryChart {...quotes} /></div>
+  <div className="col-12 col-xl-6"><PortfolioAllocationChart {...allocation} /></div>
+  <div className="col-12 col-xl-6"><WealthHistoryChart {...wealth} /></div>
+</div>
 
 export const Home = ({ session, onLogout }) => {
-    const catalog = usePlayerCatalog({ session, onLogout });
-    const [selectedPlayer, setSelectedPlayer] = useState(null);
-
-    let catalogContent;
-
-    if (catalog.loading) {
-        catalogContent = (
-            <output className="catalog-state d-flex align-items-center justify-content-center gap-2">
-                <span
-                    className="spinner-border spinner-border-sm"
-                    aria-hidden="true"
-                />{" "}
-                Cargando jugadores…
-            </output>
-        );
-    } else if (catalog.error) {
-        catalogContent = (
-            <div className="catalog-state d-flex flex-column align-items-center justify-content-center gap-2">
-                <FeedbackAlert message={catalog.error} />
-                <button className="btn btn-primary" onClick={catalog.retry}>
-                    Reintentar
-                </button>
-            </div>
-        );
-    } else {
-        catalogContent = (
-            <>
-                <PlayerTable
-                    players={catalog.visible}
-                    hasResults={catalog.filteredCount > 0}
-                    rankingOffset={(catalog.page - 1) * catalog.pageSize}
-                    onPlayerSelect={setSelectedPlayer}
-                />
-                <Pagination
-                    page={catalog.page}
-                    pageSize={catalog.pageSize}
-                    total={catalog.filteredCount}
-                    onPageChange={catalog.setPage}
-                />
-            </>
-        );
-    }
-
-    return (
-        <>
-            <DashboardLayout session={session} onLogout={onLogout}>
-                <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                    <h1 className="catalog-title d-flex align-items-center gap-2 mb-0 fs-5 fw-bold">
-                        <span className="catalog-icon d-inline-flex align-items-center justify-content-center rounded-circle">
-                            <FaUserGroup aria-hidden="true" />
-                        </span>
-                        <span>CATÁLOGO DE JUGADORES</span>
-                    </h1>
-
-                    <label className="input-group catalog-search">
-                        <span className="input-group-text bg-white">
-                            <FaMagnifyingGlass aria-hidden="true" />
-                        </span>
-                        <input
-                            className="form-control border-start-0"
-                            aria-label="Buscar jugador por nombre"
-                            placeholder="Buscar por nombre…"
-                            value={catalog.query}
-                            onChange={(event) =>
-                                catalog.setQuery(event.target.value)
-                            }
-                        />
-                    </label>
-                </div>
-
-                {catalogContent}
-            </DashboardLayout>
-
-            <PlayerProfileDialog
-                player={selectedPlayer}
-                onClose={() => setSelectedPlayer(null)}
-            />
-
-            {catalog.modalError && (
-                <ErrorDialog
-                    message={catalog.modalError}
-                    onClose={catalog.closeModalError}
-                />
-            )}
-        </>
-    );
-};
+  const [loadPlayers, setLoadPlayers] = useState(false)
+  const [selectedId, setSelectedId] = useState('')
+  const [showDetail, setShowDetail] = useState(false)
+  const catalog = useSessionRequest({ session, requestKey: 'dashboard-players', request: getPlayers, enabled: loadPlayers, onUnauthorized: onLogout })
+  const selected = catalog.data?.find(player => String(player.id) === selectedId)
+  return <>
+    <h1 className="fs-5 fw-bold mb-3">Inicio financiero</h1>
+    <p role="status">El resumen financiero todavía no está disponible.</p>
+    <Link className="btn btn-outline-primary mb-3" to="/players">Explorar jugadores</Link>
+    <section className="mb-3" aria-label="Selección de jugador">
+      {!loadPlayers && <button className="btn btn-primary" onClick={() => setLoadPlayers(true)}>Elegir jugador para cotizaciones</button>}
+      {catalog.loading && <p role="status">Cargando jugadores…</p>}
+      {catalog.error && <div role="alert">{catalog.error} <button className="btn btn-outline-primary" onClick={catalog.retry}>Reintentar catálogo</button></div>}
+      {loadPlayers && !catalog.loading && !catalog.error && catalog.data?.length === 0 && <p role="status">No hay jugadores disponibles.</p>}
+      {catalog.data?.length > 0 && <label>Jugador<select className="form-select" value={selectedId} onChange={event => { setSelectedId(event.target.value); setShowDetail(false) }}>
+        <option value="">Seleccioná un jugador</option>
+        {catalog.data.map(player => <option key={player.id} value={player.id}>{player.firstName} {player.lastName}</option>)}
+      </select></label>}
+      {selected ? <div className="mt-2"><p>Cotizaciones de {selected.firstName} {selected.lastName}: pendientes de integración.</p><button className="btn btn-outline-primary" onClick={() => setShowDetail(true)}>Ver detalle del jugador</button></div> : <p className="mt-2">Seleccioná un jugador para consultar sus cotizaciones cuando estén disponibles.</p>}
+    </section>
+    <DashboardPresentation quotes={{ playerLabel: selected ? `${selected.firstName} ${selected.lastName}` : undefined }} />
+    <PlayerProfileDialog player={showDetail ? selected : null} session={session} onUnauthorized={onLogout} onClose={() => setShowDetail(false)} />
+  </>
+}

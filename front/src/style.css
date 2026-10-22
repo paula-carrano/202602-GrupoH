@@ -1,4 +1,9 @@
 :root { font-family: Arial, Helvetica, sans-serif; color: #102f55; background: #f6faff; }
+.financial-panel { min-width: 0; color: #102f55; }
+.financial-panel .table-responsive { max-width: 100%; }
+.financial-panel th, .financial-panel td { min-width: 7rem; }
+.dashboard :focus-visible, .modal :focus-visible, .auth-page :focus-visible { outline: 3px solid #102f55; outline-offset: 0; box-shadow: 0 0 0 6px #fff; }
+.player-profile-modal .financial-panel { background: #fff; }
 body { min-width: 320px; }
 .btn-primary { --bs-btn-bg: #0865ec; --bs-btn-border-color: #0865ec; --bs-btn-hover-bg: #0058d4; --bs-btn-hover-border-color: #0058d4; }
 
@@ -18,7 +23,7 @@ body { min-width: 320px; }
 .field-group { flex-wrap: nowrap; }
 .field-group .input-group-text { width: 44px; justify-content: center; color: #174879; border-color: #cbdbef; }
 .field-group .form-control { min-width: 0; height: 44px; border-color: #cbdbef; font-size: 13px; color: #12365d; }
-.field-group .form-control::placeholder { color: #6d87a7; }
+.field-group .form-control::placeholder { color: #526b89; }
 .field-toggle { border-color: #cbdbef; }
 .auth-form-panel .form-check { font-size: 13px; }
 
@@ -48,7 +53,7 @@ body { min-width: 320px; }
 .players-table th:last-child, .players-table td:last-child { border-right: 0; }
 .player-name-button { padding: 0; border: 0; background: transparent; color: #0865ec; font: inherit; font-weight: 600; text-align: left; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 3px; }
 .player-name-button:hover, .player-name-button:focus-visible { color: #064eaf; text-decoration-color: currentColor; }
-.player-profile-modal { overflow-y: auto; }
+.player-profile-modal { overflow-y: auto; background: transparent; border: 0; padding: 0; }
 .player-profile-card { overflow: hidden; border: 1px solid #23496e; border-radius: 14px; background: #102f50; color: #fff; box-shadow: 0 20px 60px rgb(4 24 47 / 35%); }
 .player-profile-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 22px 24px 18px; background: linear-gradient(110deg, #123a64, #0a2746); }
 .player-profile-eyebrow { color: #b8d5f5; font-size: 13px; }
@@ -73,6 +78,7 @@ body { min-width: 320px; }
 .error-page__card h1 { color: #0c305a; }
 
 @media (max-width: 991.98px) {
+  .dashboard > .row { align-content: flex-start; }
   .dashboard-sidebar { min-height: auto; overflow-x: auto; }
 }
 @media (max-width: 767.98px) {

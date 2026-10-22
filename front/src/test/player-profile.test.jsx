@@ -36,9 +36,9 @@ describe('perfil del jugador', () => {
   })
 
   it('muestra el error de la consulta', async () => {
-    vi.spyOn(api, 'get').mockRejectedValue({ response: { data: { detail: 'Perfil no disponible' } } })
+    vi.spyOn(api, 'get').mockRejectedValue({ response: { status: 404, data: { errorCode: 'PLAYER_NOT_FOUND', detail: 'Player missing' } } })
     render(<PlayerProfileDialog player={player} onClose={vi.fn()} />)
-    expect(await screen.findByText('Perfil no disponible')).toBeInTheDocument()
+    expect(await screen.findByText('No se encontró el jugador.')).toBeInTheDocument()
     expect(screen.queryByText('Estadísticas todavía no disponibles.')).not.toBeInTheDocument()
   })
 

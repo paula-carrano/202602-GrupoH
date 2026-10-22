@@ -1,11 +1,24 @@
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import {
     FaFileLines,
     FaFutbol,
     FaHouse,
     FaRightFromBracket,
     FaUser,
+    FaWallet,
+    FaClockRotateLeft,
+    FaRankingStar,
+    FaBell,
 } from "react-icons/fa6";
+
+const navigation = [
+    { to: "/home", label: "Inicio", icon: FaHouse },
+    { to: "/players", label: "Jugadores", icon: FaFutbol },
+    { to: "/portfolio", label: "Portfolio", icon: FaWallet },
+    { to: "/transactions", label: "Historial", icon: FaClockRotateLeft },
+    { to: "/ranking", label: "Ranking", icon: FaRankingStar },
+    { to: "/alerts", label: "Alertas", icon: FaBell },
+];
 
 export const DashboardLayout = ({ session, preview, onLogout, children }) => (
     <main className="dashboard-page container-fluid p-2 p-md-4 min-vh-100">
@@ -42,19 +55,18 @@ export const DashboardLayout = ({ session, preview, onLogout, children }) => (
                     className="dashboard-sidebar col-lg-2 d-flex flex-lg-column gap-1 p-2"
                     aria-label="Navegación principal"
                 >
-                    <Link
-                        className="d-inline-flex align-items-center gap-2 text-white text-decoration-none rounded px-3 py-2"
-                        to="/home"
-                    >
-                        <FaHouse aria-hidden="true" /> Inicio
-                    </Link>
-                    <Link
-                        className="active d-inline-flex align-items-center gap-2 text-white text-decoration-none rounded px-3 py-2"
-                        to="/home"
-                        aria-current="page"
-                    >
-                        <FaFutbol aria-hidden="true" /> Jugadores
-                    </Link>
+                    {navigation.map(({ to, label, icon: Icon }) => (
+                        <NavLink
+                            key={to}
+                            to={to}
+                            end
+                            className={({ isActive }) =>
+                                `d-inline-flex align-items-center gap-2 text-white text-decoration-none rounded px-3 py-2${isActive ? " active" : ""}`
+                            }
+                        >
+                            <Icon aria-hidden="true" /> {label}
+                        </NavLink>
+                    ))}
                     <a
                         className="d-inline-flex align-items-center gap-2 text-white text-decoration-none rounded px-3 py-2"
                         href="http://localhost:8080/swagger-ui/index.html"

@@ -95,18 +95,18 @@
 **Independent Test**: Top-up 100 credits for a user with balance 0; buy 4 tokens of a player and verify balance decreases by cost, superuser pool has 96 tokens, and transaction is logged; sell 2 tokens and verify balance increases and superuser pool has 98 tokens; attempt buying with insufficient credits or selling without tokens and verify 400 Bad Request.
 
 ### Tests for User Story 2
-- [ ] T031 [P] [US2] Unit test for order validation and PnL average cost calculation in `back/src/test/java/com/cbo/players/unit/OrderServiceTest.java`
-- [ ] T032 [P] [US2] Concurrency test verifying 100-token invariant under parallel buy requests in `back/src/test/java/com/cbo/players/e2e/OrderConcurrencyE2ETest.java`
-- [ ] T033 [P] [US2] Integration test for credit top-up and validation rules in `back/src/test/java/com/cbo/players/e2e/CreditsTopupE2ETest.java`
+- [X] T031 [P] [US2] Unit test for order validation and PnL average cost calculation in `back/src/test/java/com/cbo/players/unit/OrderServiceTest.java`
+- [X] T032 [P] [US2] Concurrency test verifying 100-token invariant under parallel buy requests in `back/src/test/java/com/cbo/players/e2e/OrderConcurrencyE2ETest.java`
+- [X] T033 [P] [US2] Integration test for credit top-up and validation rules in `back/src/test/java/com/cbo/players/e2e/CreditsTopupE2ETest.java`
 
 ### Implementation for User Story 2
-- [ ] T034 [P] [US2] Create `PortfolioPosition` entity representing `(user_id, player_id)` token holdings in `back/src/main/java/com/cbo/players/model/PortfolioPosition.java`
-- [ ] T035 [P] [US2] Create `PortfolioPositionRepository` with pessimistic write lock query in `back/src/main/java/com/cbo/players/repository/PortfolioPositionRepository.java`
-- [ ] T036 [P] [US2] Create request and response DTOs for orders and top-up in `back/src/main/java/com/cbo/players/dto/request/OrderRequestDto.java`, `CreditsTopupRequestDto.java`, and `back/src/main/java/com/cbo/players/dto/response/OrderResponseDto.java`, `CreditsTopupResponseDto.java`
-- [ ] T037 [US2] Implement `WalletService` for balance operations and top-up logging in `back/src/main/java/com/cbo/players/service/WalletService.java`
-- [ ] T038 [US2] Implement `OrderService` for atomic buy/sell operations and immutable `Transaction` generation in `back/src/main/java/com/cbo/players/service/OrderService.java`
-- [ ] T039 [US2] Implement `OrderController` exposing `POST /api/orders/buy` and `POST /api/orders/sell` in `back/src/main/java/com/cbo/players/controller/OrderController.java`
-- [ ] T040 [US2] Implement credit top-up endpoint `POST /api/users/{id}/credits/topup` in `back/src/main/java/com/cbo/players/controller/UserController.java`
+- [X] T034 [P] [US2] Create `PortfolioPosition` entity representing `(user_id, player_id)` token holdings in `back/src/main/java/com/cbo/players/model/PortfolioPosition.java`
+- [X] T035 [P] [US2] Create `PortfolioPositionRepository` with pessimistic write lock query in `back/src/main/java/com/cbo/players/repository/PortfolioPositionRepository.java`
+- [X] T036 [P] [US2] Create request and response DTOs for orders and top-up in `back/src/main/java/com/cbo/players/dto/request/OrderRequestDto.java`, `CreditsTopupRequestDto.java`, and `back/src/main/java/com/cbo/players/dto/response/OrderResponseDto.java`, `CreditsTopupResponseDto.java`
+- [X] T037 [US2] Implement `WalletService` for balance operations and top-up logging in `back/src/main/java/com/cbo/players/service/WalletService.java`
+- [X] T038 [US2] Implement `OrderService` for atomic buy/sell operations and immutable `Transaction` generation in `back/src/main/java/com/cbo/players/service/OrderService.java`
+- [X] T039 [US2] Implement `OrderController` exposing `POST /api/orders/buy` and `POST /api/orders/sell` in `back/src/main/java/com/cbo/players/controller/OrderController.java`
+- [X] T040 [US2] Implement credit top-up endpoint `POST /api/users/{id}/credits/topup` in `back/src/main/java/com/cbo/players/controller/UserController.java`
 
 **Checkpoint**: User Story 2 complete and independently testable.
 
@@ -119,14 +119,14 @@
 **Independent Test**: Seed multiple historical quotes for a player; query `GET /api/players/{id}/quotes` with `page=0&size=20` and verify pagination metadata; query with `?date=YYYY-MM-DD` and verify it returns the single quote effective at that date without pagination.
 
 ### Tests for User Story 3
-- [ ] T041 [P] [US3] Unit test for date-effective quote search in `back/src/test/java/com/cbo/players/unit/PlayerQuoteServiceTest.java`
-- [ ] T042 [P] [US3] Integration test for paginated quotes and date query in `back/src/test/java/com/cbo/players/e2e/PlayerQuotesPaginationE2ETest.java`
+- [X] T041 [P] [US3] Unit test for date-effective quote search in `back/src/test/java/com/cbo/players/unit/PlayerQuoteServiceTest.java`
+- [X] T042 [P] [US3] Integration test for paginated quotes and date query in `back/src/test/java/com/cbo/players/e2e/PlayerQuotesPaginationE2ETest.java`
 
 ### Implementation for User Story 3
-- [ ] T043 [P] [US3] Add paginated and date-effective queries to `PlayerQuoteRepository` in `back/src/main/java/com/cbo/players/repository/PlayerQuoteRepository.java`
-- [ ] T044 [P] [US3] Create response DTOs for historical and date-effective quotes in `back/src/main/java/com/cbo/players/dto/response/PlayerQuoteResponseDto.java` and `PagedResponseDto.java`
-- [ ] T045 [US3] Implement quote query logic in `back/src/main/java/com/cbo/players/service/PlayerQuoteService.java`
-- [ ] T046 [US3] Expose `GET /api/players/{id}/quotes` handling both pagination and `date` parameter in `back/src/main/java/com/cbo/players/controller/PlayerController.java`
+- [X] T043 [P] [US3] Add paginated and date-effective queries to `PlayerQuoteRepository` in `back/src/main/java/com/cbo/players/repository/PlayerQuoteRepository.java`
+- [X] T044 [P] [US3] Create response DTOs for historical and date-effective quotes in `back/src/main/java/com/cbo/players/dto/response/PlayerQuoteResponseDto.java` and `PagedResponseDto.java`
+- [X] T045 [US3] Implement quote query logic in `back/src/main/java/com/cbo/players/service/PlayerQuoteService.java`
+- [X] T046 [US3] Expose `GET /api/players/{id}/quotes` handling both pagination and `date` parameter in `back/src/main/java/com/cbo/players/controller/PlayerController.java`
 
 **Checkpoint**: User Story 3 complete and independently testable.
 
@@ -139,16 +139,16 @@
 **Independent Test**: Connect to `GET /api/alerts/stream` with client; create an alert for player quote `ABOVE` threshold; run recalculation to exceed threshold; verify SSE client receives `price-alert` event payload within 2 seconds and alert status transitions to `DISPARADA`.
 
 ### Tests for User Story 4
-- [ ] T047 [P] [US4] Unit test for price alert condition evaluator in `back/src/test/java/com/cbo/players/unit/AlertServiceTest.java`
-- [ ] T048 [P] [US4] E2E integration test for SSE streaming connection and event dispatch in `back/src/test/java/com/cbo/players/e2e/AlertSseStreamE2ETest.java`
+- [X] T047 [P] [US4] Unit test for price alert condition evaluator in `back/src/test/java/com/cbo/players/unit/AlertServiceTest.java`
+- [X] T048 [P] [US4] E2E integration test for SSE streaming connection and event dispatch in `back/src/test/java/com/cbo/players/e2e/AlertSseStreamE2ETest.java`
 
 ### Implementation for User Story 4
-- [ ] T049 [P] [US4] Create `PriceAlert` entity and enums `AlertCondition` (`ABOVE`, `BELOW`) and `AlertStatus` (`ACTIVA`, `DISPARADA`, `CANCELADA`) in `back/src/main/java/com/cbo/players/model/PriceAlert.java`
-- [ ] T050 [P] [US4] Create `PriceAlertRepository` in `back/src/main/java/com/cbo/players/repository/PriceAlertRepository.java`
-- [ ] T051 [P] [US4] Create request and response DTOs for alerts in `back/src/main/java/com/cbo/players/dto/request/CreateAlertRequestDto.java` and `back/src/main/java/com/cbo/players/dto/response/PriceAlertResponseDto.java`
-- [ ] T052 [US4] Implement `AlertStreamService` managing active `SseEmitter` subscriptions, heartbeat pings, and cleanup in `back/src/main/java/com/cbo/players/service/AlertStreamService.java`
-- [ ] T053 [US4] Implement `AlertService` with `@EventListener` on `QuotesRecalculatedEvent` evaluating conditions and dispatching SSE events in `back/src/main/java/com/cbo/players/service/AlertService.java`
-- [ ] T054 [US4] Implement `AlertController` exposing `/api/alerts` and `/api/alerts/stream` in `back/src/main/java/com/cbo/players/controller/AlertController.java`
+- [X] T049 [P] [US4] Create `PriceAlert` entity and enums `AlertCondition` (`ABOVE`, `BELOW`) and `AlertStatus` (`ACTIVA`, `DISPARADA`, `CANCELADA`) in `back/src/main/java/com/cbo/players/model/PriceAlert.java`
+- [X] T050 [P] [US4] Create `PriceAlertRepository` in `back/src/main/java/com/cbo/players/repository/PriceAlertRepository.java`
+- [X] T051 [P] [US4] Create request and response DTOs for alerts in `back/src/main/java/com/cbo/players/dto/request/CreateAlertRequestDto.java` and `back/src/main/java/com/cbo/players/dto/response/PriceAlertResponseDto.java`
+- [X] T052 [US4] Implement `AlertStreamService` managing active `SseEmitter` subscriptions, heartbeat pings, and cleanup in `back/src/main/java/com/cbo/players/service/AlertStreamService.java`
+- [X] T053 [US4] Implement `AlertService` with `@EventListener` on `QuotesRecalculatedEvent` evaluating conditions and dispatching SSE events in `back/src/main/java/com/cbo/players/service/AlertService.java`
+- [X] T054 [US4] Implement `AlertController` exposing `/api/alerts` and `/api/alerts/stream` in `back/src/main/java/com/cbo/players/controller/AlertController.java`
 
 **Checkpoint**: User Story 4 complete and independently testable.
 
@@ -161,14 +161,14 @@
 **Independent Test**: Perform top-up, buy, and sell operations; query `GET /api/users/{id}/portfolio` and verify tokens quantity, average buy price, current valuation, and PnL; query `GET /api/users/{id}/transactions` and verify complete chronologically ordered ledger.
 
 ### Tests for User Story 5
-- [ ] T055 [P] [US5] Unit test for portfolio PnL and valuation aggregation in `back/src/test/java/com/cbo/players/unit/PortfolioServiceTest.java`
-- [ ] T056 [P] [US5] Integration test for portfolio and transaction ledger endpoints in `back/src/test/java/com/cbo/players/e2e/PortfolioTransactionsE2ETest.java`
+- [X] T055 [P] [US5] Unit test for portfolio PnL and valuation aggregation in `back/src/test/java/com/cbo/players/unit/PortfolioServiceTest.java`
+- [X] T056 [P] [US5] Integration test for portfolio and transaction ledger endpoints in `back/src/test/java/com/cbo/players/e2e/PortfolioTransactionsE2ETest.java`
 
 ### Implementation for User Story 5
-- [ ] T057 [P] [US5] Create DTOs for portfolio positions and transaction history in `back/src/main/java/com/cbo/players/dto/response/PortfolioResponseDto.java` and `TransactionResponseDto.java`
-- [ ] T058 [US5] Implement `PortfolioService` calculating total invested, current valuation, and nominal/percentage PnL in `back/src/main/java/com/cbo/players/service/PortfolioService.java`
-- [ ] T059 [US5] Implement transaction query service in `back/src/main/java/com/cbo/players/service/TransactionService.java`
-- [ ] T060 [US5] Expose `GET /api/users/{id}/portfolio` and `GET /api/users/{id}/transactions` in `back/src/main/java/com/cbo/players/controller/UserController.java`
+- [X] T057 [P] [US5] Create DTOs for portfolio positions and transaction history in `back/src/main/java/com/cbo/players/dto/response/PortfolioResponseDto.java` and `TransactionResponseDto.java`
+- [X] T058 [US5] Implement `PortfolioService` calculating total invested, current valuation, and nominal/percentage PnL in `back/src/main/java/com/cbo/players/service/PortfolioService.java`
+- [X] T059 [US5] Implement transaction query service in `back/src/main/java/com/cbo/players/service/TransactionService.java`
+- [X] T060 [US5] Expose `GET /api/users/{id}/portfolio` and `GET /api/users/{id}/transactions` in `back/src/main/java/com/cbo/players/controller/UserController.java`
 
 **Checkpoint**: User Story 5 complete and independently testable.
 
@@ -181,15 +181,15 @@
 **Independent Test**: Query `GET /api/players/ranking` and verify response is ordered descending by quote and stored in Redis; recalculate quotes and verify Redis cache is evicted; verify weekly `@Scheduled` cron job triggers quote recalculation.
 
 ### Tests for User Story 6
-- [ ] T061 [P] [US6] Unit test for ranking service sorting and cache eviction in `back/src/test/java/com/cbo/players/unit/RankingServiceTest.java`
-- [ ] T062 [P] [US6] Integration test for Redis cache hit and invalidation on recalculation in `back/src/test/java/com/cbo/players/e2e/RankingRedisCacheE2ETest.java`
+- [X] T061 [P] [US6] Unit test for ranking service sorting and cache eviction in `back/src/test/java/com/cbo/players/unit/RankingServiceTest.java`
+- [X] T062 [P] [US6] Integration test for Redis cache hit and invalidation on recalculation in `back/src/test/java/com/cbo/players/e2e/RankingRedisCacheE2ETest.java`
 
 ### Implementation for User Story 6
-- [ ] T063 [P] [US6] Create DTO for ranking items in `back/src/main/java/com/cbo/players/dto/response/PlayerRankingResponseDto.java`
-- [ ] T064 [US6] Implement `RankingService` with `@Cacheable(cacheNames = "players::ranking")` in `back/src/main/java/com/cbo/players/service/RankingService.java`
-- [ ] T065 [US6] Configure `@CacheEvict(cacheNames = {"players::catalog", "players::ranking"}, allEntries = true)` in `QuoteCalculationService.java`
-- [ ] T066 [US6] Update `CatalogScheduler` to trigger weekly quote recalculation and external stats sync in `back/src/main/java/com/cbo/players/service/CatalogScheduler.java`
-- [ ] T067 [US6] Expose `GET /api/players/ranking` in `back/src/main/java/com/cbo/players/controller/PlayerController.java`
+- [X] T063 [P] [US6] Create DTO for ranking items in `back/src/main/java/com/cbo/players/dto/response/PlayerRankingResponseDto.java`
+- [X] T064 [US6] Implement `RankingService` with `@Cacheable(cacheNames = "players::ranking")` in `back/src/main/java/com/cbo/players/service/RankingService.java`
+- [X] T065 [US6] Configure `@CacheEvict(cacheNames = {"players::catalog", "players::ranking"}, allEntries = true)` in `QuoteCalculationService.java`
+- [X] T066 [US6] Update `CatalogScheduler` to trigger weekly quote recalculation and external stats sync in `back/src/main/java/com/cbo/players/service/CatalogScheduler.java`
+- [X] T067 [US6] Expose `GET /api/players/ranking` in `back/src/main/java/com/cbo/players/controller/PlayerController.java`
 
 **Checkpoint**: User Story 6 complete and independently testable.
 
@@ -199,9 +199,9 @@
 
 **Purpose**: System verification, API documentation validation, and code quality hardening.
 
-- [ ] T068 [P] Update OpenAPI documentation with new schemas and endpoints in `back/src/main/java/com/cbo/players/config/OpenApiConfig.java`
-- [ ] T069 [P] Verify SonarCloud compliance and clean up code smells/unused imports across all modified classes in `back/`
-- [ ] T070 Execute complete validation run following `quickstart.md` (`./mvnw test -Punit` and `./mvnw verify -Pe2e`)
+- [X] T068 [P] Update OpenAPI documentation with new schemas and endpoints in `back/src/main/java/com/cbo/players/config/OpenApiConfig.java`
+- [X] T069 [P] Verify SonarCloud compliance and clean up code smells/unused imports across all modified classes in `back/`
+- [X] T070 Execute complete validation run following `quickstart.md` (`./mvnw test -Punit` and `./mvnw verify -Pe2e`)
 
 ---
 

@@ -15,5 +15,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
     List<Transaction> findByActorUserIdOrderByTimestampDesc(Long actorUserId);
 
+    List<Transaction> findByActorUserId(Long actorUserId);
+
     List<Transaction> findByPlayerIdOrderByTimestampDesc(Long playerId);
 }

@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -59,6 +61,10 @@ public class QuoteCalculationService {
     }
 
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "players::catalog", allEntries = true),
+            @CacheEvict(cacheNames = "players::ranking", allEntries = true)
+    })
     public QuoteRecalculateResponseDto recalculateAllQuotes() {
         long startTime = System.currentTimeMillis();
         ValuationStrategy activeStrategy = valuationStrategyService.getActiveStrategy();

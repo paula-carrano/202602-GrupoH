@@ -28,8 +28,8 @@ class OpenApiDocsTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("openapi")))
                 .andExpect(content().string(containsString("Football Players Valuation & Market Platform API")))
-                .andExpect(content().string(containsString("/api/v1/auth/register")))
-                .andExpect(content().string(containsString("/api/v1/players")));
+                .andExpect(content().string(containsString("/api/auth/register")))
+                .andExpect(content().string(containsString("/api/players")));
     }
 
     @Test

@@ -12,8 +12,10 @@ import org.springframework.http.MediaType;
 import org.springframework.util.StringUtils;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
@@ -52,8 +54,11 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.ignoringRequestMatchers(SecurityConfig::usesExplicitCredentials,
                         SecurityConfig::isJsonAuthentication))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
+                        .requestMatchers("/api/admin/strategies/**").hasRole("SUPERUSER")
                         .requestMatchers("/actuator/health", "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**")
                         .permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
@@ -72,9 +77,9 @@ public class SecurityConfig {
     }
 
     private static boolean isJsonAuthentication(HttpServletRequest request) {
-        String path = request.getServletPath();
-        if (!"POST".equals(request.getMethod()) || !("/api/v1/auth/login".equals(path)
-                || "/api/v1/auth/register".equals(path)))
+        String path = StringUtils.hasText(request.getServletPath()) ? request.getServletPath() : request.getRequestURI();
+        if (!"POST".equals(request.getMethod()) || !("/api/auth/login".equals(path)
+                || "/api/auth/register".equals(path)))
             return false;
         try {
             return request.getContentType() != null && MediaType.APPLICATION_JSON

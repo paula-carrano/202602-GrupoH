@@ -180,6 +180,12 @@
                                 <exclude>**/ScrapingContextTest.java</exclude>
                             </excludes>
                             <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+                            <environmentVariables>
+                                <DOCKER_API_VERSION>1.44</DOCKER_API_VERSION>
+                            </environmentVariables>
+                            <systemPropertyVariables>
+                                <api.version>1.44</api.version>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -201,6 +207,12 @@
                                 <include>**/ScrapingContextTest.java</include>
                             </includes>
                             <argLine>@{argLine} -XX:+EnableDynamicAgentLoading -Xshare:off</argLine>
+                            <environmentVariables>
+                                <DOCKER_API_VERSION>1.44</DOCKER_API_VERSION>
+                            </environmentVariables>
+                            <systemPropertyVariables>
+                                <api.version>1.44</api.version>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>

@@ -20,6 +20,11 @@ spring:
       host: localhost
       port: 6379
 
+management:
+  health:
+    redis:
+      enabled: false
+
 app:
   catalog-sync:
     enabled: false

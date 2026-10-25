@@ -50,13 +50,13 @@
 **Independent Test**: Run `./mvnw test -Punit` to verify pure mocked unit tests pass without starting containers; run `./mvnw verify -Pe2e` to verify Testcontainers PostgreSQL starts and runs integration tests; verify all existing endpoint paths respond without `/v1`.
 
 ### Tests for User Story 7
-- [ ] T014 [P] [US7] Create unit suite validation test in `back/src/test/java/com/cbo/players/unit/TestingProfileUnitTest.java`
-- [ ] T015 [P] [US7] Create E2E route sanitation test extending `AbstractE2ETest` in `back/src/test/java/com/cbo/players/e2e/RouteSanitationE2ETest.java`
+- [X] T014 [P] [US7] Create unit suite validation test in `back/src/test/java/com/cbo/players/unit/TestingProfileUnitTest.java`
+- [X] T015 [P] [US7] Create E2E route sanitation test extending `AbstractE2ETest` in `back/src/test/java/com/cbo/players/e2e/RouteSanitationE2ETest.java`
 
 ### Implementation for User Story 7
-- [ ] T016 [US7] Update `SecurityConfig.java` to secure routes under `/api/**` without `/v1` in `back/src/main/java/com/cbo/players/security/SecurityConfig.java`
-- [ ] T017 [US7] Update OpenApi documentation configuration paths to remove `/v1` in `back/src/main/java/com/cbo/players/config/OpenApiConfig.java`
-- [ ] T018 [US7] Refactor existing unit tests to align with sanitized `/api/**` paths in `back/src/test/java/com/cbo/players/controller/AuthControllerTest.java` and `PlayerControllerTest.java`
+- [X] T016 [US7] Update `SecurityConfig.java` to secure routes under `/api/**` without `/v1` in `back/src/main/java/com/cbo/players/security/SecurityConfig.java`
+- [X] T017 [US7] Update OpenApi documentation configuration paths to remove `/v1` in `back/src/main/java/com/cbo/players/config/OpenApiConfig.java`
+- [X] T018 [US7] Refactor existing unit tests to align with sanitized `/api/**` paths in `back/src/test/java/com/cbo/players/controller/AuthControllerTest.java` and `PlayerControllerTest.java`
 
 **Checkpoint**: User Story 7 complete and validated.
 

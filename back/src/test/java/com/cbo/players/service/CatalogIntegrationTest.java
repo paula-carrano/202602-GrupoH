@@ -184,10 +184,10 @@ class CatalogIntegrationTest {
         mvc.perform(put("/api/admin/players/"+id+"/whoscored").with(csrf()).with(user("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.whoscoredId").value(123));
-        mvc.perform(get("/api/v1/players/"+id+"/stats").with(csrf()).with(user("regular").roles("USER")))
+        mvc.perform(get("/api/players/"+id+"/stats").with(csrf()).with(user("regular").roles("USER")))
                 .andExpect(status().isNotFound());
         catalog.saveStatistics(new CatalogPersistenceService.LinkedPlayer(id,123L),METRICS);
-        mvc.perform(get("/api/v1/players/"+id+"/stats").with(csrf()).with(user("regular").roles("USER")))
+        mvc.perform(get("/api/players/"+id+"/stats").with(csrf()).with(user("regular").roles("USER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.metrics.rating").value(7.65));
         mvc.perform(get("/api/admin/catalog-sync/999").with(csrf()).with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
@@ -228,29 +228,29 @@ class CatalogIntegrationTest {
                 .header("Authorization", "Bearer ").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"whoscoredId\":123}"))
                 .andExpect(status().isForbidden());
-        mvc.perform(post("/api/v1/auth/login").servletPath("/api/v1/auth/login")
+        mvc.perform(post("/api/auth/login").servletPath("/api/auth/login")
                 .contentType(MediaType.APPLICATION_FORM_URLENCODED).content("username=x&password=y"))
                 .andExpect(status().isForbidden());
         assertNull(players.findById(id).orElseThrow().getWhoscoredId());
     }
 
     @Test void jsonLoginRemainsUsableWithoutCsrfAndInvalidCredentialsDoNotAuthorizeWrites() throws Exception {
-        mvc.perform(post("/api/v1/auth/login").servletPath("/api/v1/auth/login")
+        mvc.perform(post("/api/auth/login").servletPath("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isBadRequest());
         mvc.perform(put("/api/admin/players/1/whoscored").header("Authorization", "Bearer invalid")
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
         mvc.perform(put("/api/admin/players/1/whoscored").header("X-API-Key", "invalid")
                 .contentType(MediaType.APPLICATION_JSON).content("{\"whoscoredId\":123}"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test void playerDetailIncludesPersistedStatistics() throws Exception {
         Long id = importedPlayer();
         catalog.link(id, 123L);
         catalog.saveStatistics(new CatalogPersistenceService.LinkedPlayer(id,123L),METRICS);
-        mvc.perform(get("/api/v1/players/" + id).with(user("reader").roles("USER")))
+        mvc.perform(get("/api/players/" + id).with(user("reader").roles("USER")))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.statistics.rating").value(7.65))
                 .andExpect(jsonPath("$.statistics.minutesPlayed").value(800));
     }

@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/players")
+@RequestMapping("/api/players")
 @Tag(name = "Jugadores", description = "Catálogo de jugadores de fútbol")
 public class PlayerController {
 

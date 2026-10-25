@@ -51,7 +51,7 @@ class PlayerControllerTest {
 
         when(playerService.getAllPlayers()).thenReturn(List.of(player1, player2));
 
-        mockMvc.perform(get("/api/v1/players")
+        mockMvc.perform(get("/api/players")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
@@ -66,7 +66,7 @@ class PlayerControllerTest {
 
         when(playerService.getPlayerById(1L)).thenReturn(player);
 
-        mockMvc.perform(get("/api/v1/players/1")
+        mockMvc.perform(get("/api/players/1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1))
@@ -79,7 +79,7 @@ class PlayerControllerTest {
                 new ResourceNotFoundException("No se encontró ningún jugador con el identificador especificado.", ErrorCode.PLAYER_NOT_FOUND)
         );
 
-        mockMvc.perform(get("/api/v1/players/999")
+        mockMvc.perform(get("/api/players/999")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))

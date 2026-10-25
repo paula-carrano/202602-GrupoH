@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: players-market-e2e
+  datasource:
+    url: jdbc:tc:postgresql:15-alpine:///testdb
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+  sql:
+    init:
+      mode: never
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+app:
+  catalog-sync:
+    enabled: false
+  security:
+    jwt:
+      secret: dGhpc19pc19hX3Zlcnlfc2VjdXJlX2tleV9mb3Jfand0X3NpZ25pbmdfMjU2X2JpdHNfc2VjcmV0
+      expiration-ms: 86400000

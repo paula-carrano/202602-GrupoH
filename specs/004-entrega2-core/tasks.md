@@ -18,12 +18,12 @@
 
 **Purpose**: Project dependency configuration, testing profile isolation, and Redis cache setup.
 
-- [ ] T001 Add Testcontainers PostgreSQL and Spring Data Redis dependencies in `back/pom.xml`, and remove H2 dependency
-- [ ] T002 Configure Maven profiles `unit` (surefire, mocks) and `e2e` (failsafe, Testcontainers) in `back/pom.xml`
-- [ ] T003 [P] Create Redis cache configuration and connection bean in `back/src/main/java/com/cbo/players/config/RedisCacheConfig.java`
-- [ ] T004 [P] Configure asynchronous task execution and thread pool for SSE/events in `back/src/main/java/com/cbo/players/config/AsyncConfig.java`
-- [ ] T005 [P] Setup profile-specific properties in `back/src/main/resources/application.yml`, `back/src/test/resources/application-unit.yml`, and `back/src/test/resources/application-e2e.yml`
-- [ ] T006 Create base reusable Testcontainers test harness in `back/src/test/java/com/cbo/players/e2e/AbstractE2ETest.java`
+- [X] T001 Add Testcontainers PostgreSQL and Spring Data Redis dependencies in `back/pom.xml`, and remove H2 dependency
+- [X] T002 Configure Maven profiles `unit` (surefire, mocks) and `e2e` (failsafe, Testcontainers) in `back/pom.xml`
+- [X] T003 [P] Create Redis cache configuration and connection bean in `back/src/main/java/com/cbo/players/config/RedisCacheConfig.java`
+- [X] T004 [P] Configure asynchronous task execution and thread pool for SSE/events in `back/src/main/java/com/cbo/players/config/AsyncConfig.java`
+- [X] T005 [P] Setup profile-specific properties in `back/src/main/resources/application.yml`, `back/src/test/resources/application-unit.yml`, and `back/src/test/resources/application-e2e.yml`
+- [X] T006 Create base reusable Testcontainers test harness in `back/src/test/java/com/cbo/players/e2e/AbstractE2ETest.java`
 
 ---
 
@@ -31,13 +31,13 @@
 
 **Purpose**: Core model extensions, routing sanitation, error codes, and audit entities required by all user stories.
 
-- [ ] T007 Sanitize existing controllers to eliminate `/v1` prefix in `back/src/main/java/com/cbo/players/controller/AuthController.java` and `back/src/main/java/com/cbo/players/controller/PlayerController.java`
-- [ ] T008 [P] Extend `UserRole` enum with `ROLE_SUPERUSER` in `back/src/main/java/com/cbo/players/model/UserRole.java`
-- [ ] T009 [P] Extend `User` entity with `creditsBalance` (default 0.0) and role helper methods in `back/src/main/java/com/cbo/players/model/User.java`
-- [ ] T010 [P] Define functional error codes (`INSUFFICIENT_FUNDS`, `INSUFFICIENT_TOKENS_AVAILABLE`, `INSUFFICIENT_TOKEN_BALANCE`, `INVALID_AMOUNT`, `STRATEGY_NOT_FOUND`, `ACCESS_DENIED`) in `back/src/main/java/com/cbo/players/exception/ErrorCode.java`
-- [ ] T011 Update `GlobalExceptionHandler` to produce RFC 7807 `ProblemDetail` responses in Spanish in `back/src/main/java/com/cbo/players/exception/GlobalExceptionHandler.java`
-- [ ] T012 Create immutable audit entity `Transaction` with operation types (`COMPRA`, `VENTA`, `RECARGA`, `CAMBIO_ESTRATEGIA`) and audit fields in `back/src/main/java/com/cbo/players/model/Transaction.java`
-- [ ] T013 Create read/insert repository for audit transactions in `back/src/main/java/com/cbo/players/repository/TransactionRepository.java`
+- [X] T007 Sanitize existing controllers to eliminate `/v1` prefix in `back/src/main/java/com/cbo/players/controller/AuthController.java` and `back/src/main/java/com/cbo/players/controller/PlayerController.java`
+- [X] T008 [P] Extend `UserRole` enum with `ROLE_SUPERUSER` in `back/src/main/java/com/cbo/players/model/UserRole.java`
+- [X] T009 [P] Extend `User` entity with `creditsBalance` (default 0.0) and role helper methods in `back/src/main/java/com/cbo/players/model/User.java`
+- [X] T010 [P] Define functional error codes (`INSUFFICIENT_FUNDS`, `INSUFFICIENT_TOKENS_AVAILABLE`, `INSUFFICIENT_TOKEN_BALANCE`, `INVALID_AMOUNT`, `STRATEGY_NOT_FOUND`, `ACCESS_DENIED`) in `back/src/main/java/com/cbo/players/exception/ErrorCode.java`
+- [X] T011 Update `GlobalExceptionHandler` to produce RFC 7807 `ProblemDetail` responses in Spanish in `back/src/main/java/com/cbo/players/exception/GlobalExceptionHandler.java`
+- [X] T012 Create immutable audit entity `Transaction` with operation types (`COMPRA`, `VENTA`, `RECARGA`, `CAMBIO_ESTRATEGIA`) and audit fields in `back/src/main/java/com/cbo/players/model/Transaction.java`
+- [X] T013 Create read/insert repository for audit transactions in `back/src/main/java/com/cbo/players/repository/TransactionRepository.java`
 
 **Checkpoint**: Foundation ready — User story implementation can now begin.
 

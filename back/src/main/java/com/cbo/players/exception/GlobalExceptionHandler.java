@@ -103,9 +103,13 @@ public class GlobalExceptionHandler {
         String correlationId = UUID.randomUUID().toString();
         log.warn("Acceso denegado [{}]: {}", correlationId, ex.getMessage());
 
+        String detail = request.getRequestURI().startsWith("/api/admin/strategies")
+                ? "Acceso denegado: se requieren permisos exclusivos de superusuario para activar estrategias de mercado."
+                : "Acceso denegado: se requieren permisos exclusivos para realizar esta operación.";
+
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.FORBIDDEN,
-                "Acceso denegado: se requieren permisos exclusivos para realizar esta operación."
+                detail
         );
         enrichProblemDetail(problem, ErrorCode.ACCESS_DENIED.name(), request.getRequestURI(), correlationId, null);
 

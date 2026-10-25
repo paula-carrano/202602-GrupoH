@@ -26,6 +26,12 @@ public class PlayerQuote {
     @Column(nullable = false, length = 3)
     private String currency = "CRD";
 
+    @Column(name = "strategy_name", nullable = false, length = 100)
+    private String strategyName = "Rendimiento Ofensivo";
+
+    @Column(name = "strategy_version", nullable = false)
+    private Integer strategyVersion = 1;
+
     @Column(nullable = false)
     private LocalDateTime timestamp;
 
@@ -33,10 +39,17 @@ public class PlayerQuote {
     }
 
     public PlayerQuote(Player player, BigDecimal price, String currency, LocalDateTime timestamp) {
+        this(player, price, currency, timestamp, "Rendimiento Ofensivo", 1);
+    }
+
+    public PlayerQuote(Player player, BigDecimal price, String currency, LocalDateTime timestamp,
+                       String strategyName, Integer strategyVersion) {
         this.player = player;
         this.price = price;
         this.currency = currency != null ? currency : "CRD";
         this.timestamp = timestamp != null ? timestamp : LocalDateTime.now(ZoneOffset.UTC);
+        this.strategyName = strategyName != null ? strategyName : "Rendimiento Ofensivo";
+        this.strategyVersion = strategyVersion != null ? strategyVersion : 1;
     }
 
     public Long getId() {
@@ -69,6 +82,22 @@ public class PlayerQuote {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public String getStrategyName() {
+        return strategyName;
+    }
+
+    public void setStrategyName(String strategyName) {
+        this.strategyName = strategyName;
+    }
+
+    public Integer getStrategyVersion() {
+        return strategyVersion;
+    }
+
+    public void setStrategyVersion(Integer strategyVersion) {
+        this.strategyVersion = strategyVersion;
     }
 
     public LocalDateTime getTimestamp() {

@@ -69,20 +69,20 @@
 **Independent Test**: Authenticate as superuser and regular user; verify `PATCH /api/admin/strategies/{id}/activate` returns 200 for superuser and 403 for regular user; invoke `POST /api/quotes/recalculate` and verify all active players receive a new `PlayerQuote` record with the active strategy and version.
 
 ### Tests for User Story 1
-- [ ] T019 [P] [US1] Unit test for valuation formulas (`OffensiveValuationFormula`, `BalancedValuationFormula`) in `back/src/test/java/com/cbo/players/unit/ValuationFormulaTest.java`
-- [ ] T020 [P] [US1] Integration test for superuser strategy activation and recalculation in `back/src/test/java/com/cbo/players/e2e/AdminStrategyRecalculationE2ETest.java`
+- [X] T019 [P] [US1] Unit test for valuation formulas (`OffensiveValuationFormula`, `BalancedValuationFormula`) in `back/src/test/java/com/cbo/players/unit/ValuationFormulaTest.java`
+- [X] T020 [P] [US1] Integration test for superuser strategy activation and recalculation in `back/src/test/java/com/cbo/players/e2e/AdminStrategyRecalculationE2ETest.java`
 
 ### Implementation for User Story 1
-- [ ] T021 [P] [US1] Create `ValuationStrategy` entity with dynamic weights in `back/src/main/java/com/cbo/players/model/ValuationStrategy.java`
-- [ ] T022 [P] [US1] Extend `PlayerQuote` entity with `strategyName` and `strategyVersion` in `back/src/main/java/com/cbo/players/model/PlayerQuote.java`
-- [ ] T023 [P] [US1] Create `ValuationStrategyRepository` in `back/src/main/java/com/cbo/players/repository/ValuationStrategyRepository.java`
-- [ ] T024 [P] [US1] Implement `ValuationFormula` interface and implementations in `back/src/main/java/com/cbo/players/service/formula/ValuationFormula.java`, `OffensiveValuationFormula.java`, and `BalancedValuationFormula.java`
-- [ ] T025 [US1] Implement `ValuationStrategyService` for strategy registration, activation, and weight management in `back/src/main/java/com/cbo/players/service/ValuationStrategyService.java`
-- [ ] T026 [US1] Create domain event `QuotesRecalculatedEvent` in `back/src/main/java/com/cbo/players/event/QuotesRecalculatedEvent.java`
-- [ ] T027 [US1] Implement `QuoteCalculationService` to compute quotes for all active players and publish `QuotesRecalculatedEvent` in `back/src/main/java/com/cbo/players/service/QuoteCalculationService.java`
-- [ ] T028 [US1] Create DTOs for strategy activation and quote recalculation in `back/src/main/java/com/cbo/players/dto/response/StrategyResponseDto.java` and `QuoteRecalculateResponseDto.java`
-- [ ] T029 [US1] Implement `AdminStrategyController` exposing `PATCH /api/admin/strategies/{id}/activate` with superuser security in `back/src/main/java/com/cbo/players/controller/AdminStrategyController.java`
-- [ ] T030 [US1] Implement `QuoteController` exposing `POST /api/quotes/recalculate` in `back/src/main/java/com/cbo/players/controller/QuoteController.java`
+- [X] T021 [P] [US1] Create `ValuationStrategy` entity with dynamic weights in `back/src/main/java/com/cbo/players/model/ValuationStrategy.java`
+- [X] T022 [P] [US1] Extend `PlayerQuote` entity with `strategyName` and `strategyVersion` in `back/src/main/java/com/cbo/players/model/PlayerQuote.java`
+- [X] T023 [P] [US1] Create `ValuationStrategyRepository` in `back/src/main/java/com/cbo/players/repository/ValuationStrategyRepository.java`
+- [X] T024 [P] [US1] Implement `ValuationFormula` interface and implementations in `back/src/main/java/com/cbo/players/service/formula/ValuationFormula.java`, `OffensiveValuationFormula.java`, and `BalancedValuationFormula.java`
+- [X] T025 [US1] Implement `ValuationStrategyService` for strategy registration, activation, and weight management in `back/src/main/java/com/cbo/players/service/ValuationStrategyService.java`
+- [X] T026 [US1] Create domain event `QuotesRecalculatedEvent` in `back/src/main/java/com/cbo/players/event/QuotesRecalculatedEvent.java`
+- [X] T027 [US1] Implement `QuoteCalculationService` to compute quotes for all active players and publish `QuotesRecalculatedEvent` in `back/src/main/java/com/cbo/players/service/QuoteCalculationService.java`
+- [X] T028 [US1] Create DTOs for strategy activation and quote recalculation in `back/src/main/java/com/cbo/players/dto/response/StrategyResponseDto.java` and `QuoteRecalculateResponseDto.java`
+- [X] T029 [US1] Implement `AdminStrategyController` exposing `PATCH /api/admin/strategies/{id}/activate` with superuser security in `back/src/main/java/com/cbo/players/controller/AdminStrategyController.java`
+- [X] T030 [US1] Implement `QuoteController` exposing `POST /api/quotes/recalculate` in `back/src/main/java/com/cbo/players/controller/QuoteController.java`
 
 **Checkpoint**: User Story 1 complete and independently testable.
 

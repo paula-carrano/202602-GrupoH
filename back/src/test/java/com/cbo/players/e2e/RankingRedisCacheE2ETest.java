@@ -67,7 +67,7 @@ class RankingRedisCacheE2ETest extends AbstractE2ETest {
 
         userToken = jwtTokenProvider.generateToken(user.getUsername(), user.getId(), "ROLE_USER");
 
-        ValuationStrategy balanced = valuationStrategyRepository.findByCode("BALANCED")
+        valuationStrategyRepository.findByCode("BALANCED")
                 .orElseGet(() -> valuationStrategyRepository.save(new ValuationStrategy(
                         "BALANCED",
                         "Rendimiento Global Equilibrado",

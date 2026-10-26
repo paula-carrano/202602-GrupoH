@@ -164,7 +164,7 @@ class PortfolioServiceTest {
 
         assertThat(portfolio.positions()).hasSize(1);
         PortfolioPositionDto dto = portfolio.positions().get(0);
-        assertThat(dto.position()).isEqualTo("");
+        assertThat(dto.position()).isEmpty();
         assertThat(dto.currentQuote()).isEqualByComparingTo("1.0000");
         assertThat(dto.pnlPercentage()).isEqualByComparingTo("0.0000");
     }

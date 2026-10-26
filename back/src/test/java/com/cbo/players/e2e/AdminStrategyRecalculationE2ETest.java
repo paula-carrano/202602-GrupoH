@@ -52,7 +52,6 @@ class AdminStrategyRecalculationE2ETest extends AbstractE2ETest {
 
     private String superuserToken;
     private String regularUserToken;
-    private String adminToken;
 
     private ValuationStrategy offensiveStrategy;
     private ValuationStrategy balancedStrategy;
@@ -91,7 +90,6 @@ class AdminStrategyRecalculationE2ETest extends AbstractE2ETest {
 
         superuserToken = jwtTokenProvider.generateToken(superuser.getUsername(), superuser.getId(), "ROLE_SUPERUSER");
         regularUserToken = jwtTokenProvider.generateToken(regularUser.getUsername(), regularUser.getId(), "ROLE_USER");
-        adminToken = jwtTokenProvider.generateToken(adminUser.getUsername(), adminUser.getId(), "ROLE_ADMIN");
 
         // 2. Setup Strategies
         valuationStrategyRepository.deleteAllInBatch();

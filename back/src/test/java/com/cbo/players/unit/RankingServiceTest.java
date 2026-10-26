@@ -137,7 +137,7 @@ class RankingServiceTest {
         assertThat(resultNoStrategy.strategyCode()).isEqualTo("BALANCED");
         assertThat(resultNoStrategy.strategyVersion()).isEqualTo(1);
         assertThat(resultNoStrategy.ranking()).hasSize(1);
-        assertThat(resultNoStrategy.ranking().get(0).position()).isEqualTo("");
+        assertThat(resultNoStrategy.ranking().get(0).position()).isEmpty();
 
         // Estrategia activa con versión nula
         ValuationStrategy strategyNullVersion = mock(ValuationStrategy.class);

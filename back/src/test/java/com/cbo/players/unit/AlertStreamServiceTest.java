@@ -34,7 +34,7 @@ class AlertStreamServiceTest {
     @Test
     @DisplayName("subscribe registra el emitter y aumenta la cuenta de suscriptores activos")
     void subscribe_addsEmitterAndSendsInit() {
-        assertThat(alertStreamService.getActiveSubscribersCount()).isEqualTo(0);
+        assertThat(alertStreamService.getActiveSubscribersCount()).isZero();
 
         SseEmitter emitter = alertStreamService.subscribe(10L);
 
@@ -74,7 +74,7 @@ class AlertStreamServiceTest {
         Runnable completionCallback = (Runnable) completionField.get(emitter3);
         assertThat(completionCallback).isNotNull();
         completionCallback.run();
-        assertThat(alertStreamService.getActiveSubscribersCount()).isEqualTo(0);
+        assertThat(alertStreamService.getActiveSubscribersCount()).isZero();
     }
 
     @Test
@@ -88,7 +88,7 @@ class AlertStreamServiceTest {
 
         // No debe lanzar excepción
         alertStreamService.sendAlert(99L, event);
-        assertThat(alertStreamService.getActiveSubscribersCount()).isEqualTo(0);
+        assertThat(alertStreamService.getActiveSubscribersCount()).isZero();
     }
 
     @Test

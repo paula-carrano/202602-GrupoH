@@ -86,10 +86,7 @@ class OrderServiceTest {
         when(playerQuoteRepository.findFirstByPlayerIdOrderByTimestampDesc(45L)).thenReturn(Optional.of(quote));
         when(portfolioPositionRepository.findByUserIdAndPlayerIdWithLock(1L, 45L)).thenReturn(Optional.of(superuserPosition));
         when(portfolioPositionRepository.findByUserIdAndPlayerId(10L, 45L)).thenReturn(Optional.empty());
-        when(transactionRepository.save(any(Transaction.class))).thenAnswer(invocation -> {
-            Transaction t = invocation.getArgument(0);
-            return t;
-        });
+        when(transactionRepository.save(any(Transaction.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         OrderResponseDto response = orderService.executeBuyOrder(10L, 45L, 4);
 
@@ -101,7 +98,7 @@ class OrderServiceTest {
         assertThat(response.totalAmount()).isEqualByComparingTo("109.6000"); // 4 * 27.40
         assertThat(response.balanceBefore()).isEqualByComparingTo("200.0000");
         assertThat(response.balanceAfter()).isEqualByComparingTo("90.4000"); // 200 - 109.60
-        assertThat(response.tokensBefore()).isEqualTo(0);
+        assertThat(response.tokensBefore()).isZero();
         assertThat(response.tokensAfter()).isEqualTo(4);
         assertThat(response.averageBuyPrice()).isEqualByComparingTo("27.4000");
 

@@ -159,7 +159,7 @@ class QuoteCalculationServiceTest {
 
         QuoteRecalculateResponseDto response = service.recalculateAllQuotes();
 
-        assertThat(response.recalculatedPlayersCount()).isEqualTo(0);
+        assertThat(response.recalculatedPlayersCount()).isZero();
         verify(playerQuoteRepository, never()).saveAll(anyList());
         verify(eventPublisher).publishEvent(any(QuotesRecalculatedEvent.class));
     }

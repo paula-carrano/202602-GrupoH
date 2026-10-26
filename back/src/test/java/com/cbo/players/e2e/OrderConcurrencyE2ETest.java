@@ -51,12 +51,9 @@ class OrderConcurrencyE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        transactionRepository.deleteAllInBatch();
-        portfolioPositionRepository.deleteAllInBatch();
-        playerQuoteRepository.deleteAllInBatch();
-        playerRepository.deleteAllInBatch();
+        cleanupDatabase();
 
-        superuser = userRepository.findByUsername("super_admin_concurrency")
+        superuser = userRepository.findFirstByRole(UserRole.ROLE_SUPERUSER)
                 .orElseGet(() -> userRepository.save(new User(
                         "super_admin_concurrency",
                         "superuser_concurrency@test.com",

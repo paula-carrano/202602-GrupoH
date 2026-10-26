@@ -57,9 +57,7 @@ class AlertSseStreamE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        priceAlertRepository.deleteAllInBatch();
-        playerQuoteRepository.deleteAllInBatch();
-        playerRepository.deleteAllInBatch();
+        cleanupDatabase();
 
         user = userRepository.findByUsername("user_sse_test")
                 .orElseGet(() -> userRepository.save(new User(

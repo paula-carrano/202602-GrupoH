@@ -47,10 +47,7 @@ class PortfolioTransactionsE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        transactionRepository.deleteAllInBatch();
-        portfolioPositionRepository.deleteAllInBatch();
-        playerQuoteRepository.deleteAllInBatch();
-        playerRepository.deleteAllInBatch();
+        cleanupDatabase();
 
         user = userRepository.findByUsername("user_portfolio_test")
                 .orElseGet(() -> userRepository.save(new User(

@@ -9,21 +9,22 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("e2e")
-@Testcontainers
 @Tag("e2e")
 public abstract class AbstractE2ETest {
 
-    @Container
-    protected static final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15-alpine")
-            .withDatabaseName("testdb")
-            .withUsername("postgres")
-            .withPassword("postgres");
+    protected static final PostgreSQLContainer<?> postgres;
+
+    static {
+        postgres = new PostgreSQLContainer<>("postgres:15-alpine")
+                .withDatabaseName("testdb")
+                .withUsername("postgres")
+                .withPassword("postgres");
+        postgres.start();
+    }
 
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
@@ -35,4 +36,11 @@ public abstract class AbstractE2ETest {
 
     @Autowired
     protected MockMvc mockMvc;
+
+    @Autowired
+    protected org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
+    protected void cleanupDatabase() {
+        jdbcTemplate.execute("TRUNCATE TABLE transactions, price_alerts, portfolio_positions, player_quotes, player_statistics, catalog_sync_runs, players CASCADE");
+    }
 }

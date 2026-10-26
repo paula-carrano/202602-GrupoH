@@ -62,10 +62,7 @@ class AdminStrategyRecalculationE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        playerQuoteRepository.deleteAllInBatch();
-        playerStatisticsRepository.deleteAllInBatch();
-        playerRepository.deleteAllInBatch();
-        transactionRepository.deleteAllInBatch();
+        cleanupDatabase();
 
         // 1. Setup Users
         User superuser = userRepository.findByUsername("super_admin_test")

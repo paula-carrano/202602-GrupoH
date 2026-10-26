@@ -47,7 +47,7 @@ class CreditsTopupE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        transactionRepository.deleteAllInBatch();
+        cleanupDatabase();
 
         userA = userRepository.findByUsername("user_topup_a")
                 .orElseGet(() -> userRepository.save(new User(

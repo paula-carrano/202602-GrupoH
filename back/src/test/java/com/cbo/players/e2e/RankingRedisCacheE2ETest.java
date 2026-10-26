@@ -55,9 +55,7 @@ class RankingRedisCacheE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        playerQuoteRepository.deleteAllInBatch();
-        playerRepository.deleteAllInBatch();
-        valuationStrategyRepository.deleteAllInBatch();
+        cleanupDatabase();
 
         user = userRepository.findByUsername("user_ranking_test")
                 .orElseGet(() -> userRepository.save(new User(
@@ -69,15 +67,20 @@ class RankingRedisCacheE2ETest extends AbstractE2ETest {
 
         userToken = jwtTokenProvider.generateToken(user.getUsername(), user.getId(), "ROLE_USER");
 
-        valuationStrategyRepository.save(new ValuationStrategy(
-                "BALANCED",
-                "Rendimiento Global Equilibrado",
-                "Estrategia balanceada",
-                1,
-                true,
-                new BigDecimal("1.0000"),
-                1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
-        ));
+        ValuationStrategy balanced = valuationStrategyRepository.findByCode("BALANCED")
+                .orElseGet(() -> valuationStrategyRepository.save(new ValuationStrategy(
+                        "BALANCED",
+                        "Rendimiento Global Equilibrado",
+                        "Estrategia balanceada",
+                        1,
+                        true,
+                        new BigDecimal("1.0000"),
+                        1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
+                )));
+        for (ValuationStrategy s : valuationStrategyRepository.findAll()) {
+            s.setActive(s.getCode().equalsIgnoreCase("BALANCED"));
+            valuationStrategyRepository.save(s);
+        }
 
         player1 = playerRepository.save(new Player(
                 "Erling",

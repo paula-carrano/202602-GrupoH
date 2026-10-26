@@ -46,8 +46,7 @@ class PlayerQuotesPaginationE2ETest extends AbstractE2ETest {
 
     @BeforeEach
     void setUp() {
-        playerQuoteRepository.deleteAllInBatch();
-        playerRepository.deleteAllInBatch();
+        cleanupDatabase();
 
         testUser = userRepository.findByUsername("user_quotes_test")
                 .orElseGet(() -> userRepository.save(new User(

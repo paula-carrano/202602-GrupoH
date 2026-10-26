@@ -28,11 +28,14 @@ public class ValuationStrategy {
     @Column(nullable = false)
     private Integer version = 1;
 
+    public static final String DEFAULT_MIN_QUOTE_STRING = "1.0000";
+    public static final BigDecimal DEFAULT_MIN_QUOTE = new BigDecimal(DEFAULT_MIN_QUOTE_STRING);
+
     @Column(nullable = false)
     private boolean active = false;
 
     @Column(name = "min_quote", nullable = false, precision = 14, scale = 4)
-    private BigDecimal minQuote = new BigDecimal("1.0000");
+    private BigDecimal minQuote = DEFAULT_MIN_QUOTE;
 
     @Column(name = "weight_goals", nullable = false)
     private Double weightGoals = 1.0;
@@ -69,7 +72,7 @@ public class ValuationStrategy {
         this.description = description;
         this.version = version != null ? version : 1;
         this.active = active;
-        this.minQuote = minQuote != null ? minQuote.setScale(4, RoundingMode.HALF_UP) : new BigDecimal("1.0000");
+        this.minQuote = minQuote != null ? minQuote.setScale(4, RoundingMode.HALF_UP) : DEFAULT_MIN_QUOTE;
         this.weightGoals = weightGoals != null ? weightGoals : 1.0;
         this.weightAssists = weightAssists != null ? weightAssists : 0.8;
         this.weightMinutes = weightMinutes != null ? weightMinutes : 0.01;
@@ -86,7 +89,7 @@ public class ValuationStrategy {
             this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
         }
         if (this.minQuote == null) {
-            this.minQuote = new BigDecimal("1.0000");
+            this.minQuote = DEFAULT_MIN_QUOTE;
         }
     }
 
@@ -160,7 +163,7 @@ public class ValuationStrategy {
     }
 
     public void setMinQuote(BigDecimal minQuote) {
-        this.minQuote = minQuote != null ? minQuote.setScale(4, RoundingMode.HALF_UP) : new BigDecimal("1.0000");
+        this.minQuote = minQuote != null ? minQuote.setScale(4, RoundingMode.HALF_UP) : DEFAULT_MIN_QUOTE;
     }
 
     public Double getWeightGoals() {

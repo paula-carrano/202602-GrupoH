@@ -10,8 +10,8 @@ import java.util.List;
 
 public class QuotesRecalculatedEvent extends ApplicationEvent {
 
-    private final List<PlayerQuote> quotes;
-    private final ValuationStrategy strategy;
+    private final transient List<PlayerQuote> quotes;
+    private final transient ValuationStrategy strategy;
     private final LocalDateTime calculationTimestamp;
 
     public QuotesRecalculatedEvent(Object source, List<PlayerQuote> quotes, ValuationStrategy strategy, LocalDateTime calculationTimestamp) {

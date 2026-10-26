@@ -81,7 +81,7 @@ public class PlayerController {
     @ApiResponse(responseCode = "200", description = "Cotización o listado paginado obtenido exitosamente")
     @ApiResponse(responseCode = "401", description = "No autenticado")
     @ApiResponse(responseCode = "404", description = "Jugador no encontrado")
-    public ResponseEntity<?> getPlayerQuotes(
+    public ResponseEntity<Object> getPlayerQuotes(
             @Parameter(description = "Identificador único del jugador", example = "45") @PathVariable Long id,
             @Parameter(description = "Fecha específica (YYYY-MM-DD) para consultar la cotización vigente a esa fecha", example = "2026-10-20")
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,

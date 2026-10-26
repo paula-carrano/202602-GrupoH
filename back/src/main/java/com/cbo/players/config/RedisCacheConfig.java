@@ -22,6 +22,7 @@ import java.time.Duration;
 public class RedisCacheConfig implements CachingConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(RedisCacheConfig.class);
+    private static final String UNKNOWN_CACHE_NAME = "desconocido";
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory connectionFactory) {
@@ -44,25 +45,25 @@ public class RedisCacheConfig implements CachingConfigurer {
             @Override
             public void handleCacheGetError(RuntimeException exception, Cache cache, Object key) {
                 log.warn("Error leyendo de cache [{}], key [{}]: {}. Continuando con ejecucion.",
-                        cache != null ? cache.getName() : "desconocido", key, exception.getMessage());
+                        cache != null ? cache.getName() : UNKNOWN_CACHE_NAME, key, exception.getMessage());
             }
 
             @Override
             public void handleCachePutError(RuntimeException exception, Cache cache, Object key, Object value) {
                 log.warn("Error escribiendo en cache [{}], key [{}]: {}. Continuando con ejecucion.",
-                        cache != null ? cache.getName() : "desconocido", key, exception.getMessage());
+                        cache != null ? cache.getName() : UNKNOWN_CACHE_NAME, key, exception.getMessage());
             }
 
             @Override
             public void handleCacheEvictError(RuntimeException exception, Cache cache, Object key) {
                 log.warn("Error invalidando key [{}] de cache [{}]: {}.",
-                        key, cache != null ? cache.getName() : "desconocido", exception.getMessage());
+                        key, cache != null ? cache.getName() : UNKNOWN_CACHE_NAME, exception.getMessage());
             }
 
             @Override
             public void handleCacheClearError(RuntimeException exception, Cache cache) {
                 log.warn("Error limpiando cache [{}]: {}.",
-                        cache != null ? cache.getName() : "desconocido", exception.getMessage());
+                        cache != null ? cache.getName() : UNKNOWN_CACHE_NAME, exception.getMessage());
             }
         };
     }

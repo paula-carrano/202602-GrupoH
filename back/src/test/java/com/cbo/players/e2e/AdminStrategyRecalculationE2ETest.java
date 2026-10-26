@@ -80,14 +80,6 @@ class AdminStrategyRecalculationE2ETest extends AbstractE2ETest {
                         UserRole.ROLE_USER
                 )));
 
-        User adminUser = userRepository.findByUsername("admin_user_test")
-                .orElseGet(() -> userRepository.save(new User(
-                        "admin_user_test",
-                        "admin@test.com",
-                        passwordEncoder.encode("Pass123!"),
-                        UserRole.ROLE_ADMIN
-                )));
-
         superuserToken = jwtTokenProvider.generateToken(superuser.getUsername(), superuser.getId(), "ROLE_SUPERUSER");
         regularUserToken = jwtTokenProvider.generateToken(regularUser.getUsername(), regularUser.getId(), "ROLE_USER");
 

@@ -6,15 +6,22 @@ import com.cbo.players.model.PlayerStatistics;
 import com.cbo.players.model.ValuationStrategy;
 import com.cbo.players.service.formula.BalancedValuationFormula;
 import com.cbo.players.service.formula.OffensiveValuationFormula;
+import com.cbo.players.service.formula.ValuationFormula;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ValuationFormulaTest {
 
@@ -192,5 +199,116 @@ class ValuationFormulaTest {
         BigDecimal quoteModified = offensiveFormula.calculate(stats, offensiveStrategy);
 
         assertThat(quoteModified).isGreaterThan(quoteInitial);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideFormulas")
+    @DisplayName("Fórmulas retornan minQuote cuando minutos son nulos, cero o negativos")
+    void formulasReturnMinQuoteOnInvalidMinutes(String formulaName, ValuationFormula formula) {
+        ValuationStrategy customMinStrategy = new ValuationStrategy(
+                "TEST", "Test Strategy", "Desc", 1, true, new BigDecimal("2.5000"),
+                1.0, 1.0, 0.01, 0.1, 0.1, 1.0, -0.5
+        );
+
+        // Stats con minutos nulos
+        PlayerStatistics statsNullMinutes = mock(PlayerStatistics.class);
+        when(statsNullMinutes.getMinutosJugados()).thenReturn(null);
+        assertThat(formula.calculate(statsNullMinutes, customMinStrategy)).isEqualByComparingTo(new BigDecimal("2.5000"));
+
+        // Stats con minutos negativos
+        PlayerStatistics statsNegativeMinutes = mock(PlayerStatistics.class);
+        when(statsNegativeMinutes.getMinutosJugados()).thenReturn(-15);
+        assertThat(formula.calculate(statsNegativeMinutes, customMinStrategy)).isEqualByComparingTo(new BigDecimal("2.5000"));
+
+        // Stats nulos con estrategia nula (usa minQuote por defecto 1.0000)
+        assertThat(formula.calculate(null, null)).isEqualByComparingTo(new BigDecimal("1.0000"));
+
+        // Stats nulos con estrategia que tiene minQuote nulo (usa fallback 1.0000)
+        customMinStrategy.setMinQuote(null);
+        assertThat(formula.calculate(null, customMinStrategy)).isEqualByComparingTo(new BigDecimal("1.0000"));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideFormulasWithExpectedNullStrategyQuote")
+    @DisplayName("Cálculo con estrategia nula utiliza ponderadores y minQuote por defecto")
+    void formulasUseDefaultWeightsWhenStrategyIsNull(String formulaName, ValuationFormula formula, BigDecimal expectedQuote) {
+        PlayerStatistics stats = new PlayerStatistics(
+                samplePlayer, 100L,
+                4,   // goals
+                3,   // assists
+                10,  // shots
+                8,   // key passes
+                6,   // dribbles
+                12,  // tackles
+                7.0, // rating
+                900, // minutes
+                1,   // yellow cards
+                0    // red cards
+        );
+
+        BigDecimal quote = formula.calculate(stats, null);
+        assertThat(quote).isNotNull();
+        assertThat(quote.scale()).isEqualTo(4);
+        assertThat(quote).isEqualByComparingTo(expectedQuote);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("provideFormulasWithExpectedNullMetricsQuote")
+    @DisplayName("Fórmulas manejan métricas nulas en PlayerStatistics sustituyéndolas por cero de forma segura")
+    void formulasHandleNullMetricsInStatisticsGracefully(String formulaName, ValuationFormula formula, BigDecimal expectedQuote) {
+        PlayerStatistics mockStats = mock(PlayerStatistics.class);
+        when(mockStats.getMinutosJugados()).thenReturn(1000);
+        when(mockStats.getGoals()).thenReturn(null);
+        when(mockStats.getAssists()).thenReturn(null);
+        when(mockStats.getShots()).thenReturn(null);
+        when(mockStats.getKeyPasses()).thenReturn(null);
+        when(mockStats.getDribbles()).thenReturn(null);
+        when(mockStats.getTackles()).thenReturn(null);
+        when(mockStats.getRating()).thenReturn(null);
+        when(mockStats.getTarjetasAmarillas()).thenReturn(null);
+        when(mockStats.getTarjetasRojas()).thenReturn(null);
+
+        BigDecimal quote = formula.calculate(mockStats, null);
+        assertThat(quote).isNotNull();
+        assertThat(quote.scale()).isEqualTo(4);
+        assertThat(quote).isEqualByComparingTo(expectedQuote);
+    }
+
+    static Stream<Arguments> provideFormulas() {
+        return Stream.of(
+                Arguments.of("BalancedValuationFormula", new BalancedValuationFormula()),
+                Arguments.of("OffensiveValuationFormula", new OffensiveValuationFormula())
+        );
+    }
+
+    static Stream<Arguments> provideFormulasWithExpectedNullStrategyQuote() {
+        // Balanced defaults:
+        // goals: 4*1.0=4, assists: 3*0.8=2.4, shots: 10*0.1=1.0, keyPasses: 8*0.2=1.6
+        // dribbles: 6*0.05=0.3, tackles: 12*0.05=0.6, minutes: 900*0.01=9.0, rating: 7.0*1.5=10.5
+        // cards: 1*(-0.5)=-0.5
+        // sum = 4 + 2.4 + 1.0 + 1.6 + 0.3 + 0.6 + 9.0 + 10.5 - 0.5 = 28.9000
+        BigDecimal expectedBalanced = new BigDecimal("28.9000");
+
+        // Offensive defaults:
+        // goals: 4*1.5=6.0, assists: 3*1.0=3.0, shots: 10*0.2=2.0, keyPasses: 8*0.3=2.4
+        // dribbles: 6*0.1=0.6, minutes: 900*0.005=4.5, rating: 7.0*1.2=8.4
+        // cards: 1*(-0.3)=-0.3
+        // sum = 6.0 + 3.0 + 2.0 + 2.4 + 0.6 + 4.5 + 8.4 - 0.3 = 26.6000
+        BigDecimal expectedOffensive = new BigDecimal("26.6000");
+
+        return Stream.of(
+                Arguments.of("BalancedValuationFormula", new BalancedValuationFormula(), expectedBalanced),
+                Arguments.of("OffensiveValuationFormula", new OffensiveValuationFormula(), expectedOffensive)
+        );
+    }
+
+    static Stream<Arguments> provideFormulasWithExpectedNullMetricsQuote() {
+        // Con solo 1000 minutos y métricas nulas (evaluadas a 0):
+        // Balanced default: minutes * 0.01 = 10.0000
+        // Offensive default: minutes * 0.005 = 5.0000
+        return Stream.of(
+                Arguments.of("BalancedValuationFormula", new BalancedValuationFormula(), new BigDecimal("10.0000")),
+                Arguments.of("OffensiveValuationFormula", new OffensiveValuationFormula(), new BigDecimal("5.0000"))
+        );
     }
 }

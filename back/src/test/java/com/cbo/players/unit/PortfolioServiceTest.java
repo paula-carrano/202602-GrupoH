@@ -128,4 +128,44 @@ class PortfolioServiceTest {
                     assertThat(apiEx.getErrorCode()).isEqualTo(ErrorCode.USER_NOT_FOUND);
                 });
     }
+
+    @Test
+    @DisplayName("US5 - Portfolio vacío con saldo nulo retorna totales en cero sin errores")
+    void getUserPortfolio_emptyPositionsWithNullBalance() {
+        user.setCreditsBalance(null);
+        when(userRepository.findById(12L)).thenReturn(Optional.of(user));
+        when(portfolioPositionRepository.findByUserIdAndTokensQuantityGreaterThan(12L, 0)).thenReturn(List.of());
+
+        // Acceso permitido para usuario privilegiado sobre otro target
+        PortfolioResponseDto portfolio = portfolioService.getUserPortfolio(12L, 99L, true);
+
+        assertThat(portfolio).isNotNull();
+        assertThat(portfolio.creditsBalance()).isEqualByComparingTo("0.0000");
+        assertThat(portfolio.totalInvestedCost()).isEqualByComparingTo("0.0000");
+        assertThat(portfolio.totalCurrentValue()).isEqualByComparingTo("0.0000");
+        assertThat(portfolio.totalPnLNominal()).isEqualByComparingTo("0.0000");
+        assertThat(portfolio.totalPnLPercentage()).isEqualByComparingTo("0.0000");
+        assertThat(portfolio.positions()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("US5 - Posición con jugador sin posición definida y sin cotización previa utiliza fallback de 1.0000")
+    void getUserPortfolio_playerWithNullPositionAndNoQuote() {
+        Player playerWithoutPosition = new Player("Mystery", "Player", LocalDate.of(1995, 5, 5),
+                "Unknown", null, "Free Agent", "None");
+        playerWithoutPosition.setId(88L);
+
+        PortfolioPosition pos = new PortfolioPosition(user, playerWithoutPosition, 5, BigDecimal.ZERO);
+        when(userRepository.findById(12L)).thenReturn(Optional.of(user));
+        when(portfolioPositionRepository.findByUserIdAndTokensQuantityGreaterThan(12L, 0)).thenReturn(List.of(pos));
+        when(playerQuoteRepository.findFirstByPlayerIdOrderByTimestampDesc(88L)).thenReturn(Optional.empty());
+
+        PortfolioResponseDto portfolio = portfolioService.getUserPortfolio(12L, 12L, false);
+
+        assertThat(portfolio.positions()).hasSize(1);
+        PortfolioPositionDto dto = portfolio.positions().get(0);
+        assertThat(dto.position()).isEqualTo("");
+        assertThat(dto.currentQuote()).isEqualByComparingTo("1.0000");
+        assertThat(dto.pnlPercentage()).isEqualByComparingTo("0.0000");
+    }
 }

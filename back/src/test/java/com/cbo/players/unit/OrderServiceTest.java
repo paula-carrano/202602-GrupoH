@@ -225,7 +225,7 @@ class OrderServiceTest {
     }
 
     @Test
-    @DisplayName("US2 - Orden rechazada si la cantidad de tokens es menor o igual a cero")
+    @DisplayName("US2 - Orden rechazada si la cantidad de tokens es menor o igual a cero o nula")
     void executeOrder_invalidQuantity() {
         assertThatThrownBy(() -> orderService.executeBuyOrder(10L, 45L, 0))
                 .isInstanceOf(ApiException.class)
@@ -235,5 +235,97 @@ class OrderServiceTest {
                     assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(apiEx.getErrorCode()).isEqualTo(ErrorCode.INVALID_AMOUNT);
                 });
+
+        assertThatThrownBy(() -> orderService.executeBuyOrder(10L, 45L, null))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("La cantidad de tokens debe ser mayor a 0");
+
+        assertThatThrownBy(() -> orderService.executeSellOrder(10L, 45L, -1))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("La cantidad de tokens debe ser mayor a 0");
+    }
+
+    @Test
+    @DisplayName("US2 - Compra exitosa cuando no existe cotización previa utiliza precio y versión por defecto")
+    void executeBuyOrder_usesDefaultQuoteWhenNoQuoteExists() {
+        when(playerRepository.findById(45L)).thenReturn(Optional.of(player));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(buyer));
+        when(userRepository.findFirstByRole(UserRole.ROLE_SUPERUSER)).thenReturn(Optional.of(superuser));
+        when(playerQuoteRepository.findFirstByPlayerIdOrderByTimestampDesc(45L)).thenReturn(Optional.empty());
+
+        when(portfolioPositionRepository.findByUserIdAndPlayerIdWithLock(1L, 45L)).thenReturn(Optional.of(superuserPosition));
+        when(portfolioPositionRepository.findByUserIdAndPlayerId(10L, 45L)).thenReturn(Optional.empty());
+        when(portfolioPositionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        OrderResponseDto response = orderService.executeBuyOrder(10L, 45L, 2);
+
+        // Con precio por defecto de 1.0000, 2 tokens cuestan 2.0000 CRD
+        assertThat(response.unitPrice()).isEqualByComparingTo("1.0000");
+        assertThat(response.totalAmount()).isEqualByComparingTo("2.0000");
+        assertThat(response.balanceAfter()).isEqualByComparingTo("198.0000");
+    }
+
+    @Test
+    @DisplayName("US2 - Compra rechazada si el comprador tiene saldo de créditos nulo")
+    void executeBuyOrder_failsWhenBuyerHasNullCredits() {
+        buyer.setCreditsBalance(null);
+        when(playerRepository.findById(45L)).thenReturn(Optional.of(player));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(buyer));
+        when(userRepository.findFirstByRole(UserRole.ROLE_SUPERUSER)).thenReturn(Optional.of(superuser));
+        when(playerQuoteRepository.findFirstByPlayerIdOrderByTimestampDesc(45L)).thenReturn(Optional.of(quote));
+
+        assertThatThrownBy(() -> orderService.executeBuyOrder(10L, 45L, 1))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("Saldo insuficiente")
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(apiEx.getErrorCode()).isEqualTo(ErrorCode.INSUFFICIENT_FUNDS);
+                });
+    }
+
+    @Test
+    @DisplayName("US2 - Venta rechazada si el usuario no tiene ninguna posición registrada en cartera")
+    void executeSellOrder_failsWhenSellerPositionDoesNotExist() {
+        when(playerRepository.findById(45L)).thenReturn(Optional.of(player));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(buyer));
+        when(userRepository.findFirstByRole(UserRole.ROLE_SUPERUSER)).thenReturn(Optional.of(superuser));
+        when(portfolioPositionRepository.findByUserIdAndPlayerId(10L, 45L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> orderService.executeSellOrder(10L, 45L, 1))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("Tenencia insuficiente")
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
+                    assertThat(apiEx.getErrorCode()).isEqualTo(ErrorCode.INSUFFICIENT_TOKEN_BALANCE);
+                });
+    }
+
+    @Test
+    @DisplayName("US2 - Venta exitosa con saldo de créditos nulo y cotización con versión nula")
+    void executeSellOrder_handlesNullBalanceAndNullStrategyVersion() {
+        buyer.setCreditsBalance(null);
+        PortfolioPosition sellerPosition = new PortfolioPosition(buyer, player, 5, new BigDecimal("20.0000"));
+
+        PlayerQuote quoteWithoutVersion = mock(PlayerQuote.class);
+        when(quoteWithoutVersion.getPrice()).thenReturn(new BigDecimal("15.0000"));
+        when(quoteWithoutVersion.getStrategyVersion()).thenReturn(null);
+
+        when(playerRepository.findById(45L)).thenReturn(Optional.of(player));
+        when(userRepository.findById(10L)).thenReturn(Optional.of(buyer));
+        when(userRepository.findFirstByRole(UserRole.ROLE_SUPERUSER)).thenReturn(Optional.of(superuser));
+        when(portfolioPositionRepository.findByUserIdAndPlayerId(10L, 45L)).thenReturn(Optional.of(sellerPosition));
+        when(portfolioPositionRepository.findByUserIdAndPlayerIdWithLock(1L, 45L)).thenReturn(Optional.of(superuserPosition));
+        when(playerQuoteRepository.findFirstByPlayerIdOrderByTimestampDesc(45L)).thenReturn(Optional.of(quoteWithoutVersion));
+        when(transactionRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        OrderResponseDto response = orderService.executeSellOrder(10L, 45L, 2);
+
+        // 2 tokens * 15.0000 = 30.0000
+        assertThat(response.balanceBefore()).isEqualByComparingTo("0.0000");
+        assertThat(response.balanceAfter()).isEqualByComparingTo("30.0000");
+        assertThat(response.unitPrice()).isEqualByComparingTo("15.0000");
     }
 }

@@ -104,11 +104,12 @@ class AlertServiceTest {
     }
 
     @Test
-    @DisplayName("US4 - Creación rechazada con precio objetivo menor o igual a cero")
+    @DisplayName("US4 - Creación rechazada con precio objetivo menor o igual a cero o nulo")
     void createAlert_invalidAmount() {
-        CreateAlertRequestDto request = new CreateAlertRequestDto(45L, AlertCondition.ABOVE, BigDecimal.ZERO);
+        CreateAlertRequestDto requestZero = new CreateAlertRequestDto(45L, AlertCondition.ABOVE, BigDecimal.ZERO);
+        CreateAlertRequestDto requestNull = new CreateAlertRequestDto(45L, AlertCondition.ABOVE, null);
 
-        assertThatThrownBy(() -> alertService.createAlert(12L, request))
+        assertThatThrownBy(() -> alertService.createAlert(12L, requestZero))
                 .isInstanceOf(ApiException.class)
                 .hasMessageContaining("mayor a cero")
                 .satisfies(ex -> {
@@ -116,6 +117,10 @@ class AlertServiceTest {
                     assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
                     assertThat(apiEx.getErrorCode()).isEqualTo(ErrorCode.INVALID_AMOUNT);
                 });
+
+        assertThatThrownBy(() -> alertService.createAlert(12L, requestNull))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("mayor a cero");
     }
 
     @Test
@@ -164,5 +169,103 @@ class AlertServiceTest {
                 });
 
         verify(priceAlertRepository, never()).delete(any());
+    }
+
+    @Test
+    @DisplayName("deleteAlert elimina la alerta cuando el usuario es dueño o posee rol privilegiado")
+    void deleteAlert_successWhenOwnerOrPrivileged() {
+        PriceAlert alert = new PriceAlert(user, player, AlertCondition.ABOVE, new BigDecimal("25.0000"));
+        alert.setId(14L);
+
+        when(priceAlertRepository.findById(14L)).thenReturn(Optional.of(alert));
+
+        // Dueño elimina su propia alerta
+        alertService.deleteAlert(14L, 12L, false);
+        verify(priceAlertRepository).delete(alert);
+
+        // Usuario privilegiado elimina alerta de otro usuario
+        alertService.deleteAlert(14L, 999L, true);
+        verify(priceAlertRepository, times(2)).delete(alert);
+    }
+
+    @Test
+    @DisplayName("deleteAlert lanza ApiException 404 si la alerta no existe")
+    void deleteAlert_throwsNotFound() {
+        when(priceAlertRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> alertService.deleteAlert(99L, 12L, false))
+                .isInstanceOf(ApiException.class)
+                .satisfies(ex -> {
+                    ApiException apiEx = (ApiException) ex;
+                    assertThat(apiEx.getStatus()).isEqualTo(HttpStatus.NOT_FOUND);
+                    assertThat(apiEx.getErrorCode()).isEqualTo(ErrorCode.ALERT_NOT_FOUND);
+                });
+    }
+
+    @Test
+    @DisplayName("getUserAlerts retorna listado mapeado a PriceAlertResponseDto")
+    void getUserAlerts_returnsMappedList() {
+        PriceAlert alert = new PriceAlert(user, player, AlertCondition.ABOVE, new BigDecimal("25.0000"));
+        alert.setId(14L);
+        when(priceAlertRepository.findByUserIdOrderByCreatedAtDesc(12L)).thenReturn(List.of(alert));
+
+        List<PriceAlertResponseDto> result = alertService.getUserAlerts(12L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).id()).isEqualTo(14L);
+    }
+
+    @Test
+    @DisplayName("onQuotesRecalculated no ejecuta acciones con eventos sin cotizaciones o sin alertas activas")
+    void onQuotesRecalculated_handlesEmptyScenarios() {
+        // Evento con cotizaciones nulas o vacías
+        QuotesRecalculatedEvent eventNull = mock(QuotesRecalculatedEvent.class);
+        when(eventNull.getQuotes()).thenReturn(null);
+        alertService.onQuotesRecalculated(eventNull);
+
+        QuotesRecalculatedEvent eventEmpty = mock(QuotesRecalculatedEvent.class);
+        when(eventEmpty.getQuotes()).thenReturn(List.of());
+        alertService.onQuotesRecalculated(eventEmpty);
+
+        verify(priceAlertRepository, never()).findByStatus(any());
+
+        // Evento con cotizaciones pero sin alertas activas en BD
+        PlayerQuote quote = new PlayerQuote(player, new BigDecimal("30.0000"), "CRD", LocalDateTime.now(), "B", 1);
+        QuotesRecalculatedEvent validEvent = new QuotesRecalculatedEvent(this, List.of(quote), null, LocalDateTime.now());
+        when(priceAlertRepository.findByStatus(AlertStatus.ACTIVA)).thenReturn(List.of());
+
+        alertService.onQuotesRecalculated(validEvent);
+        verify(alertStreamService, never()).sendAlert(any(), any());
+    }
+
+    @Test
+    @DisplayName("onQuotesRecalculated omite cotizaciones con jugador nulo y jugadores sin cotización nueva")
+    void onQuotesRecalculated_handlesNullPlayersAndConditionNotMet() {
+        PriceAlert alert = new PriceAlert(user, player, AlertCondition.ABOVE, new BigDecimal("50.0000"));
+        alert.setId(14L);
+        when(priceAlertRepository.findByStatus(AlertStatus.ACTIVA)).thenReturn(List.of(alert));
+
+        // Cotización con player nulo y cotización que no cumple la condición (30 < 50)
+        PlayerQuote quoteNullPlayer = mock(PlayerQuote.class);
+        when(quoteNullPlayer.getPlayer()).thenReturn(null);
+
+        PlayerQuote quoteLowPrice = new PlayerQuote(player, new BigDecimal("30.0000"), "CRD", LocalDateTime.now(), "B", 1);
+        PlayerQuote duplicateQuote = new PlayerQuote(player, new BigDecimal("30.0000"), "CRD", LocalDateTime.now(), "B", 1);
+
+        QuotesRecalculatedEvent event = new QuotesRecalculatedEvent(this, List.of(quoteNullPlayer, quoteLowPrice, duplicateQuote), null, LocalDateTime.now());
+
+        alertService.onQuotesRecalculated(event);
+
+        // La condición no se cumplió, por lo que la alerta no se dispara
+        assertThat(alert.getStatus()).isEqualTo(AlertStatus.ACTIVA);
+        verify(alertStreamService, never()).sendAlert(any(), any());
+    }
+
+    @Test
+    @DisplayName("evaluateCondition retorna false cuando los precios comparados son nulos")
+    void evaluateCondition_returnsFalseOnNullPrices() {
+        assertThat(alertService.evaluateCondition(AlertCondition.ABOVE, null, new BigDecimal("10.0000"))).isFalse();
+        assertThat(alertService.evaluateCondition(AlertCondition.ABOVE, new BigDecimal("10.0000"), null)).isFalse();
+        assertThat(alertService.evaluateCondition(AlertCondition.BELOW, null, null)).isFalse();
     }
 }

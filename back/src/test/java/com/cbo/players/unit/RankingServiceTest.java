@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -118,5 +119,34 @@ class RankingServiceTest {
 
         assertThat(result.ranking()).hasSize(1);
         assertThat(result.ranking().get(0).currentQuote()).isEqualByComparingTo("1.0000");
+    }
+
+    @Test
+    @DisplayName("US6 - Sin estrategia activa o con versión nula utiliza valores por defecto y maneja jugador sin posición")
+    void getRanking_defaultsWhenNoActiveStrategyOrNullVersion() {
+        when(valuationStrategyRepository.findByActiveTrue()).thenReturn(Optional.empty());
+
+        Player playerWithoutPosition = new Player("Mystery", "Player", LocalDate.of(1995, 5, 5),
+                "Unknown", null, "Free Agent", "None");
+        playerWithoutPosition.setId(99L);
+        when(playerRepository.findAll()).thenReturn(List.of(playerWithoutPosition));
+        when(playerQuoteRepository.findFirstByPlayerIdOrderByTimestampDesc(99L)).thenReturn(Optional.empty());
+
+        PlayerRankingResponseDto resultNoStrategy = rankingService.getRanking();
+
+        assertThat(resultNoStrategy.strategyCode()).isEqualTo("BALANCED");
+        assertThat(resultNoStrategy.strategyVersion()).isEqualTo(1);
+        assertThat(resultNoStrategy.ranking()).hasSize(1);
+        assertThat(resultNoStrategy.ranking().get(0).position()).isEqualTo("");
+
+        // Estrategia activa con versión nula
+        ValuationStrategy strategyNullVersion = mock(ValuationStrategy.class);
+        when(strategyNullVersion.getCode()).thenReturn("OFFENSIVE");
+        when(strategyNullVersion.getVersion()).thenReturn(null);
+        when(valuationStrategyRepository.findByActiveTrue()).thenReturn(Optional.of(strategyNullVersion));
+
+        PlayerRankingResponseDto resultNullVersion = rankingService.getRanking();
+        assertThat(resultNullVersion.strategyCode()).isEqualTo("OFFENSIVE");
+        assertThat(resultNullVersion.strategyVersion()).isEqualTo(1);
     }
 }

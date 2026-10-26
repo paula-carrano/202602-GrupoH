@@ -21,4 +21,29 @@ class CatalogSchedulerTest {
                 .when(sync).start(CatalogSyncRun.Origin.SCHEDULED);
         assertThrows(ApiException.class, scheduler::synchronize);
     }
+
+    @Test
+    void schedulesAndExecutesQuoteRecalculationWhenPresent() {
+        var sync = mock(CatalogSyncService.class);
+        var quoteCalc = mock(QuoteCalculationService.class);
+        var scheduler = new CatalogScheduler(sync, quoteCalc);
+
+        scheduler.synchronize();
+
+        verify(sync).start(CatalogSyncRun.Origin.SCHEDULED);
+        verify(quoteCalc).recalculateAllQuotes();
+    }
+
+    @Test
+    void schedulesCatchesAndLogsExceptionWhenQuoteRecalculationFails() {
+        var sync = mock(CatalogSyncService.class);
+        var quoteCalc = mock(QuoteCalculationService.class);
+        doThrow(new RuntimeException("Valuation formula calculation error")).when(quoteCalc).recalculateAllQuotes();
+
+        var scheduler = new CatalogScheduler(sync, quoteCalc);
+
+        assertDoesNotThrow(scheduler::synchronize);
+        verify(sync).start(CatalogSyncRun.Origin.SCHEDULED);
+        verify(quoteCalc).recalculateAllQuotes();
+    }
 }

@@ -1,5 +1,6 @@
 package com.cbo.players.unit;
 
+import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.exception.ApiException;
 import com.cbo.players.exception.ErrorCode;
 import com.cbo.players.model.OperationType;
@@ -47,16 +48,16 @@ class ValuationStrategyServiceTest {
     void setUp() {
         strategy1 = new ValuationStrategy(
                 "OFFENSIVE", "Rendimiento Ofensivo", "Desc 1",
-                1, true, new BigDecimal("1.0000"),
-                1.5, 1.0, 0.005, 0.2, 0.3, 1.2, -0.3
-        );
+                1, true, new BigDecimal("1.0000"), new ValuationWeights(
+                    1.5, 1.0, 0.005, 0.2, 0.3, 1.2, -0.3
+            ));
         strategy1.setId(1L);
 
         strategy2 = new ValuationStrategy(
                 "BALANCED", "Rendimiento Balanceado", "Desc 2",
-                1, false, new BigDecimal("1.0000"),
-                1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
-        );
+                1, false, new BigDecimal("1.0000"), new ValuationWeights(
+                    1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
+            ));
         strategy2.setId(2L);
     }
 

@@ -1,5 +1,6 @@
 package com.cbo.players.service;
 
+import com.cbo.players.model.records.TransactionData;
 import com.cbo.players.dto.response.CreditsTopupResponseDto;
 import com.cbo.players.exception.ApiException;
 import com.cbo.players.exception.ErrorCode;
@@ -70,19 +71,19 @@ public class WalletService {
         user.setCreditsBalance(balanceAfter);
         userRepository.save(user);
 
-        Transaction transaction = new Transaction(
-                actorUserId,
-                OperationType.RECARGA,
-                null,
-                null,
-                null,
-                amount.setScale(4, RoundingMode.HALF_UP),
-                balanceBefore,
-                balanceAfter,
-                null,
-                null,
-                strategyVersion
-        );
+        Transaction transaction = new Transaction(new TransactionData(
+                    actorUserId,
+                    OperationType.RECARGA,
+                    null,
+                    null,
+                    null,
+                    amount.setScale(4, RoundingMode.HALF_UP),
+                    balanceBefore,
+                    balanceAfter,
+                    null,
+                    null,
+                    strategyVersion
+            ));
         Transaction savedTx = transactionRepository.save(transaction);
 
         return new CreditsTopupResponseDto(

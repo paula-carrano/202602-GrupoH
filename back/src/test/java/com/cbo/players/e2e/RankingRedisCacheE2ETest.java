@@ -1,5 +1,6 @@
 package com.cbo.players.e2e;
 
+import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.model.*;
 import com.cbo.players.repository.*;
 import com.cbo.players.security.JwtTokenProvider;
@@ -74,9 +75,9 @@ class RankingRedisCacheE2ETest extends AbstractE2ETest {
                         "Estrategia balanceada",
                         1,
                         true,
-                        new BigDecimal("1.0000"),
-                        1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
-                )));
+                        new BigDecimal("1.0000"), new ValuationWeights(
+                            1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
+                    ))));
         for (ValuationStrategy s : valuationStrategyRepository.findAll()) {
             s.setActive(s.getCode().equalsIgnoreCase("BALANCED"));
             valuationStrategyRepository.save(s);

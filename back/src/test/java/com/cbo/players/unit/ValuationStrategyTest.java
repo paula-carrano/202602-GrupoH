@@ -1,5 +1,6 @@
 package com.cbo.players.unit;
 
+import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.model.ValuationStrategy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,14 +22,15 @@ class ValuationStrategyTest {
                 null, // version
                 true,
                 null, // minQuote
-                null, // weightGoals
-                null, // weightAssists
-                null, // weightMinutes
-                null, // weightShots
-                null, // weightKeyPasses
-                null, // weightRating
-                null  // weightCards
-        );
+                new ValuationWeights(
+                    null, // weightGoals
+                    null, // weightAssists
+                    null, // weightMinutes
+                    null, // weightShots
+                    null, // weightKeyPasses
+                    null, // weightRating
+                    null  // weightCards
+            ));
 
         assertThat(strategy.getCode()).isEqualTo("CUSTOM");
         assertThat(strategy.getName()).isEqualTo("Custom Strategy");
@@ -50,9 +52,9 @@ class ValuationStrategyTest {
     @DisplayName("getWeights devuelve el mapa con todas las ponderaciones en orden esperado")
     void getWeightsReturnsCorrectMap() {
         ValuationStrategy strategy = new ValuationStrategy(
-                "BALANCED", "Balanced", "Desc", 2, true, new BigDecimal("1.0000"),
-                1.1, 0.9, 0.02, 0.15, 0.25, 1.6, -0.4
-        );
+                "BALANCED", "Balanced", "Desc", 2, true, new BigDecimal("1.0000"), new ValuationWeights(
+                    1.1, 0.9, 0.02, 0.15, 0.25, 1.6, -0.4
+            ));
 
         Map<String, Double> weights = strategy.getWeights();
         assertThat(weights).containsEntry("goals", 1.1)

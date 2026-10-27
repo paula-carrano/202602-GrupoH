@@ -1,5 +1,6 @@
 package com.cbo.players.e2e;
 
+import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.model.*;
 import com.cbo.players.repository.*;
 import com.cbo.players.security.JwtTokenProvider;
@@ -92,9 +93,9 @@ class AdminStrategyRecalculationE2ETest extends AbstractE2ETest {
                 "Estrategia de ataque",
                 1,
                 true,
-                new BigDecimal("1.0000"),
-                1.5, 1.0, 0.005, 0.2, 0.3, 1.2, -0.3
-        ));
+                new BigDecimal("1.0000"), new ValuationWeights(
+                    1.5, 1.0, 0.005, 0.2, 0.3, 1.2, -0.3
+            )));
 
         balancedStrategy = valuationStrategyRepository.save(new ValuationStrategy(
                 "BALANCED",
@@ -102,9 +103,9 @@ class AdminStrategyRecalculationE2ETest extends AbstractE2ETest {
                 "Estrategia balanceada",
                 1,
                 false,
-                new BigDecimal("1.0000"),
-                1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
-        ));
+                new BigDecimal("1.0000"), new ValuationWeights(
+                    1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
+            )));
 
         // 3. Setup Players & Statistics
         Player haaland = new Player("Erling", "Haaland", LocalDate.of(2000, 7, 21), "Norway",

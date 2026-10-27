@@ -1,6 +1,8 @@
 package com.cbo.players.model;
 
+import com.cbo.players.model.records.TransactionData;
 import jakarta.persistence.*;
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -56,22 +58,20 @@ public class Transaction {
     public Transaction() {
     }
 
-    public Transaction(Long actorUserId, OperationType operationType, Long playerId, Integer quantity,
-                       BigDecimal unitPrice, BigDecimal totalAmount, BigDecimal balanceBefore,
-                       BigDecimal balanceAfter, Integer tokensBefore, Integer tokensAfter,
-                       Integer strategyVersion) {
+    public Transaction(TransactionData data) {
+        Objects.requireNonNull(data, "data");
         this.timestamp = LocalDateTime.now(ZoneOffset.UTC);
-        this.actorUserId = actorUserId;
-        this.operationType = operationType;
-        this.playerId = playerId;
-        this.quantity = quantity;
-        this.unitPrice = unitPrice;
-        this.totalAmount = totalAmount;
-        this.balanceBefore = balanceBefore;
-        this.balanceAfter = balanceAfter;
-        this.tokensBefore = tokensBefore;
-        this.tokensAfter = tokensAfter;
-        this.strategyVersion = strategyVersion != null ? strategyVersion : 1;
+        this.actorUserId = data.actorUserId();
+        this.operationType = data.operationType();
+        this.playerId = data.playerId();
+        this.quantity = data.quantity();
+        this.unitPrice = data.unitPrice();
+        this.totalAmount = data.totalAmount();
+        this.balanceBefore = data.balanceBefore();
+        this.balanceAfter = data.balanceAfter();
+        this.tokensBefore = data.tokensBefore();
+        this.tokensAfter = data.tokensAfter();
+        this.strategyVersion = data.strategyVersion() != null ? data.strategyVersion() : 1;
     }
 
     @PrePersist

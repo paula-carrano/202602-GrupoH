@@ -1,5 +1,7 @@
 package com.cbo.players.service;
 
+import com.cbo.players.model.records.ValuationWeights;
+import com.cbo.players.model.records.TransactionData;
 import com.cbo.players.exception.ApiException;
 import com.cbo.players.exception.ErrorCode;
 import com.cbo.players.model.OperationType;
@@ -46,15 +48,15 @@ public class ValuationStrategyService {
                     "Ponderación orientada al rendimiento ofensivo y definición",
                     1,
                     true,
-                    new BigDecimal("1.0000"),
-                    1.5,
-                    1.0,
-                    0.005,
-                    0.2,
-                    0.3,
-                    1.2,
-                    -0.3
-            );
+                    new BigDecimal("1.0000"), new ValuationWeights(
+                        1.5,
+                        1.0,
+                        0.005,
+                        0.2,
+                        0.3,
+                        1.2,
+                        -0.3
+                ));
 
             ValuationStrategy balanced = new ValuationStrategy(
                     "BALANCED",
@@ -62,15 +64,15 @@ public class ValuationStrategyService {
                     "Ponderación integral de estadísticas ofensivas, minutos y disciplina",
                     1,
                     false,
-                    new BigDecimal("1.0000"),
-                    1.0,
-                    0.8,
-                    0.01,
-                    0.1,
-                    0.2,
-                    1.5,
-                    -0.5
-            );
+                    new BigDecimal("1.0000"), new ValuationWeights(
+                        1.0,
+                        0.8,
+                        0.01,
+                        0.1,
+                        0.2,
+                        1.5,
+                        -0.5
+                ));
 
             valuationStrategyRepository.saveAll(List.of(offensive, balanced));
         }
@@ -125,19 +127,19 @@ public class ValuationStrategyService {
         valuationStrategyRepository.saveAll(allStrategies);
 
         // Registro auditable e inmutable de cambio de estrategia
-        Transaction tx = new Transaction(
-                actorUserId != null ? actorUserId : 1L,
-                OperationType.CAMBIO_ESTRATEGIA,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null,
-                target.getVersion()
-        );
+        Transaction tx = new Transaction(new TransactionData(
+                    actorUserId != null ? actorUserId : 1L,
+                    OperationType.CAMBIO_ESTRATEGIA,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    target.getVersion()
+            ));
         transactionRepository.save(tx);
 
         log.info("Estrategia [{}] (ID {}) activada por usuario {}", target.getCode(), target.getId(), actorUserId);

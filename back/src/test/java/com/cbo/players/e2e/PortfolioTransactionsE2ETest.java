@@ -1,5 +1,6 @@
 package com.cbo.players.e2e;
 
+import com.cbo.players.model.records.TransactionData;
 import com.cbo.players.model.*;
 import com.cbo.players.repository.*;
 import com.cbo.players.security.JwtTokenProvider;
@@ -89,19 +90,19 @@ class PortfolioTransactionsE2ETest extends AbstractE2ETest {
         ));
 
         // Add an audit transaction
-        transactionRepository.save(new Transaction(
-                user.getId(),
-                OperationType.COMPRA,
-                player.getId(),
-                5,
-                new BigDecimal("15.0000"),
-                new BigDecimal("75.0000"),
-                new BigDecimal("225.0000"),
-                new BigDecimal("150.0000"),
-                0,
-                5,
-                1
-        ));
+        transactionRepository.save(new Transaction(new TransactionData(
+                    user.getId(),
+                    OperationType.COMPRA,
+                    player.getId(),
+                    5,
+                    new BigDecimal("15.0000"),
+                    new BigDecimal("75.0000"),
+                    new BigDecimal("225.0000"),
+                    new BigDecimal("150.0000"),
+                    0,
+                    5,
+                    1
+            )));
     }
 
     @Test

@@ -1,6 +1,8 @@
 package com.cbo.players.model;
 
+import com.cbo.players.model.records.ValuationWeights;
 import jakarta.persistence.*;
+import java.util.Objects;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
@@ -65,21 +67,21 @@ public class ValuationStrategy {
     }
 
     public ValuationStrategy(String code, String name, String description, Integer version, boolean active,
-                             BigDecimal minQuote, Double weightGoals, Double weightAssists, Double weightMinutes,
-                             Double weightShots, Double weightKeyPasses, Double weightRating, Double weightCards) {
+                             BigDecimal minQuote, ValuationWeights weights) {
+        Objects.requireNonNull(weights, "weights");
         this.code = code;
         this.name = name;
         this.description = description;
         this.version = version != null ? version : 1;
         this.active = active;
         this.minQuote = minQuote != null ? minQuote.setScale(4, RoundingMode.HALF_UP) : DEFAULT_MIN_QUOTE;
-        this.weightGoals = weightGoals != null ? weightGoals : 1.0;
-        this.weightAssists = weightAssists != null ? weightAssists : 0.8;
-        this.weightMinutes = weightMinutes != null ? weightMinutes : 0.01;
-        this.weightShots = weightShots != null ? weightShots : 0.1;
-        this.weightKeyPasses = weightKeyPasses != null ? weightKeyPasses : 0.2;
-        this.weightRating = weightRating != null ? weightRating : 1.5;
-        this.weightCards = weightCards != null ? weightCards : -0.5;
+        this.weightGoals = weights.goals() != null ? weights.goals() : 1.0;
+        this.weightAssists = weights.assists() != null ? weights.assists() : 0.8;
+        this.weightMinutes = weights.minutes() != null ? weights.minutes() : 0.01;
+        this.weightShots = weights.shots() != null ? weights.shots() : 0.1;
+        this.weightKeyPasses = weights.keyPasses() != null ? weights.keyPasses() : 0.2;
+        this.weightRating = weights.rating() != null ? weights.rating() : 1.5;
+        this.weightCards = weights.cards() != null ? weights.cards() : -0.5;
         this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
     }
 

@@ -1,5 +1,6 @@
 package com.cbo.players.unit;
 
+import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.dto.response.QuoteRecalculateResponseDto;
 import com.cbo.players.event.QuotesRecalculatedEvent;
 import com.cbo.players.exception.ApiException;
@@ -70,9 +71,9 @@ class QuoteCalculationServiceTest {
     void setUp() {
         activeStrategy = new ValuationStrategy(
                 "BALANCED", "Rendimiento Equilibrado", "Desc",
-                1, true, new BigDecimal("1.0000"),
-                1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
-        );
+                1, true, new BigDecimal("1.0000"), new ValuationWeights(
+                    1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
+            ));
         activeStrategy.setId(1L);
 
         activePlayer = new Player("Erling", "Haaland", LocalDate.of(2000, 7, 21),

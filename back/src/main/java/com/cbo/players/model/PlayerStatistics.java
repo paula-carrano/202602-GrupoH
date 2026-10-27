@@ -2,6 +2,7 @@ package com.cbo.players.model;
 
 import com.cbo.players.adapter.dto.PlayerStatsDto;
 import jakarta.persistence.*;
+import java.util.Objects;
 import java.time.Instant;
 
 @Entity
@@ -59,22 +60,10 @@ public class PlayerStatistics {
         this.lastSuccessfulSyncAt = Instant.now();
     }
 
-    public PlayerStatistics(Player player, Long whoscoredId, Integer goals, Integer assists, Integer shots,
-                            Integer keyPasses, Integer dribbles, Integer tackles, Double rating,
-                            Integer minutosJugados, Integer tarjetasAmarillas, Integer tarjetasRojas) {
+    public PlayerStatistics(Player player, Long whoscoredId, PlayerStatsDto stats) {
+        Objects.requireNonNull(stats, "stats");
         this.player = player;
-        this.whoscoredId = whoscoredId != null ? whoscoredId : 0L;
-        this.lastSuccessfulSyncAt = Instant.now();
-        this.goals = goals != null ? goals : 0;
-        this.assists = assists != null ? assists : 0;
-        this.shots = shots != null ? shots : 0;
-        this.keyPasses = keyPasses != null ? keyPasses : 0;
-        this.dribbles = dribbles != null ? dribbles : 0;
-        this.tackles = tackles != null ? tackles : 0;
-        this.rating = rating != null ? rating : 0.0;
-        this.minutosJugados = minutosJugados != null ? minutosJugados : 0;
-        this.tarjetasAmarillas = tarjetasAmarillas != null ? tarjetasAmarillas : 0;
-        this.tarjetasRojas = tarjetasRojas != null ? tarjetasRojas : 0;
+        update(whoscoredId != null ? whoscoredId : 0L, stats);
     }
 
     public void update(Long sourceId, PlayerStatsDto stats) {

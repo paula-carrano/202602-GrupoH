@@ -1,5 +1,7 @@
 package com.cbo.players.unit;
 
+import com.cbo.players.model.records.ValuationWeights;
+import com.cbo.players.adapter.dto.PlayerStatsDto;
 import com.cbo.players.model.Player;
 import com.cbo.players.model.PlayerPosition;
 import com.cbo.players.model.PlayerStatistics;
@@ -42,15 +44,15 @@ class ValuationFormulaTest {
                 "Estrategia ofensiva",
                 1,
                 true,
-                new BigDecimal("1.0000"),
-                1.5,
-                1.0,
-                0.005,
-                0.2,
-                0.3,
-                1.2,
-                -0.3
-        );
+                new BigDecimal("1.0000"), new ValuationWeights(
+                    1.5,
+                    1.0,
+                    0.005,
+                    0.2,
+                    0.3,
+                    1.2,
+                    -0.3
+            ));
 
         balancedStrategy = new ValuationStrategy(
                 "BALANCED",
@@ -58,15 +60,15 @@ class ValuationFormulaTest {
                 "Estrategia balanceada",
                 1,
                 false,
-                new BigDecimal("1.0000"),
-                1.0,
-                0.8,
-                0.01,
-                0.1,
-                0.2,
-                1.5,
-                -0.5
-        );
+                new BigDecimal("1.0000"), new ValuationWeights(
+                    1.0,
+                    0.8,
+                    0.01,
+                    0.1,
+                    0.2,
+                    1.5,
+                    -0.5
+            ));
 
         samplePlayer = new Player("Lionel", "Messi", LocalDate.of(1987, 6, 24), "Argentina",
                 PlayerPosition.FORWARD, "Inter Miami", "MLS");
@@ -88,18 +90,18 @@ class ValuationFormulaTest {
     @DisplayName("Cálculo ofensivo con estadísticas válidas y escala de 4 decimales")
     void offensiveFormulaCalculatesExpectedQuote() {
         PlayerStatistics stats = new PlayerStatistics(
-                samplePlayer, 100L,
-                12, // goals
-                8,  // assists
-                30, // shots
-                20, // key passes
-                15, // dribbles
-                5,  // tackles
-                8.10, // rating
-                900,  // minutes
-                1,    // yellow cards
-                0     // red cards
-        );
+                samplePlayer, 100L, new PlayerStatsDto(
+                    12, // goals
+                    8,  // assists
+                    30, // shots
+                    20, // key passes
+                    15, // dribbles
+                    5,  // tackles
+                    8.10, // rating
+                    900,  // minutes
+                    1,    // yellow cards
+                    0     // red cards
+            ));
 
         BigDecimal quote = offensiveFormula.calculate(stats, offensiveStrategy);
 
@@ -122,18 +124,18 @@ class ValuationFormulaTest {
     @DisplayName("Cálculo balanceado con estadísticas válidas considerando tackles y minutos")
     void balancedFormulaCalculatesExpectedQuote() {
         PlayerStatistics stats = new PlayerStatistics(
-                samplePlayer, 100L,
-                5,   // goals
-                4,   // assists
-                15,  // shots
-                10,  // key passes
-                8,   // dribbles
-                20,  // tackles
-                7.50, // rating
-                1200, // minutes
-                2,    // yellow cards
-                0     // red cards
-        );
+                samplePlayer, 100L, new PlayerStatsDto(
+                    5,   // goals
+                    4,   // assists
+                    15,  // shots
+                    10,  // key passes
+                    8,   // dribbles
+                    20,  // tackles
+                    7.50, // rating
+                    1200, // minutes
+                    2,    // yellow cards
+                    0     // red cards
+            ));
 
         BigDecimal quote = balancedFormula.calculate(stats, balancedStrategy);
 
@@ -162,8 +164,8 @@ class ValuationFormulaTest {
         assertThat(balancedFormula.calculate(null, balancedStrategy)).isEqualByComparingTo(minQuote);
 
         PlayerStatistics zeroMinutes = new PlayerStatistics(
-                samplePlayer, 100L, 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0
-        );
+                samplePlayer, 100L, new PlayerStatsDto( 0, 0, 0, 0, 0, 0, 0.0, 0, 0, 0
+            ));
 
         assertThat(offensiveFormula.calculate(zeroMinutes, offensiveStrategy)).isEqualByComparingTo(minQuote);
         assertThat(balancedFormula.calculate(zeroMinutes, balancedStrategy)).isEqualByComparingTo(minQuote);
@@ -174,9 +176,9 @@ class ValuationFormulaTest {
     void formulasFloorAtMinQuoteWhenScoreIsNegativeOrBelowFloor() {
         // Player with many cards causing negative raw score
         PlayerStatistics negativeStats = new PlayerStatistics(
-                samplePlayer, 100L,
-                0, 0, 0, 0, 0, 0, 1.0, 10, 5, 3
-        );
+                samplePlayer, 100L, new PlayerStatsDto(
+                    0, 0, 0, 0, 0, 0, 1.0, 10, 5, 3
+            ));
 
         BigDecimal quoteOffensive = offensiveFormula.calculate(negativeStats, offensiveStrategy);
         BigDecimal quoteBalanced = balancedFormula.calculate(negativeStats, balancedStrategy);
@@ -189,8 +191,8 @@ class ValuationFormulaTest {
     @DisplayName("Modificación dinámica de pesos en la estrategia altera el resultado del cálculo")
     void dynamicWeightsChangeCalculatedQuote() {
         PlayerStatistics stats = new PlayerStatistics(
-                samplePlayer, 100L, 5, 0, 10, 0, 0, 0, 6.0, 500, 0, 0
-        );
+                samplePlayer, 100L, new PlayerStatsDto( 5, 0, 10, 0, 0, 0, 6.0, 500, 0, 0
+            ));
 
         BigDecimal quoteInitial = offensiveFormula.calculate(stats, offensiveStrategy);
 
@@ -206,9 +208,9 @@ class ValuationFormulaTest {
     @DisplayName("Fórmulas retornan minQuote cuando minutos son nulos, cero o negativos")
     void formulasReturnMinQuoteOnInvalidMinutes(String formulaName, ValuationFormula formula) {
         ValuationStrategy customMinStrategy = new ValuationStrategy(
-                "TEST", "Test Strategy", "Desc", 1, true, new BigDecimal("2.5000"),
-                1.0, 1.0, 0.01, 0.1, 0.1, 1.0, -0.5
-        );
+                "TEST", "Test Strategy", "Desc", 1, true, new BigDecimal("2.5000"), new ValuationWeights(
+                    1.0, 1.0, 0.01, 0.1, 0.1, 1.0, -0.5
+            ));
 
         // Stats con minutos nulos
         PlayerStatistics statsNullMinutes = mock(PlayerStatistics.class);
@@ -233,18 +235,18 @@ class ValuationFormulaTest {
     @DisplayName("Cálculo con estrategia nula utiliza ponderadores y minQuote por defecto")
     void formulasUseDefaultWeightsWhenStrategyIsNull(String formulaName, ValuationFormula formula, BigDecimal expectedQuote) {
         PlayerStatistics stats = new PlayerStatistics(
-                samplePlayer, 100L,
-                4,   // goals
-                3,   // assists
-                10,  // shots
-                8,   // key passes
-                6,   // dribbles
-                12,  // tackles
-                7.0, // rating
-                900, // minutes
-                1,   // yellow cards
-                0    // red cards
-        );
+                samplePlayer, 100L, new PlayerStatsDto(
+                    4,   // goals
+                    3,   // assists
+                    10,  // shots
+                    8,   // key passes
+                    6,   // dribbles
+                    12,  // tackles
+                    7.0, // rating
+                    900, // minutes
+                    1,   // yellow cards
+                    0    // red cards
+            ));
 
         BigDecimal quote = formula.calculate(stats, null);
         assertThat(quote).isNotNull();

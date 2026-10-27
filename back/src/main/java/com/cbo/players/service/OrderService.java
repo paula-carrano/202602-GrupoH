@@ -1,5 +1,6 @@
 package com.cbo.players.service;
 
+import com.cbo.players.model.records.TransactionData;
 import com.cbo.players.dto.response.OrderResponseDto;
 import com.cbo.players.exception.ApiException;
 import com.cbo.players.exception.ErrorCode;
@@ -96,19 +97,19 @@ public class OrderService {
         buyerPosition.setAverageBuyPrice(avgBuyPrice);
         portfolioPositionRepository.save(buyerPosition);
 
-        Transaction tx = new Transaction(
-                buyer.getId(),
-                OperationType.COMPRA,
-                player.getId(),
-                quantity,
-                unitPrice,
-                totalCost,
-                balanceBefore,
-                balanceAfter,
-                tokensBefore,
-                tokensAfter,
-                strategyVersion
-        );
+        Transaction tx = new Transaction(new TransactionData(
+                    buyer.getId(),
+                    OperationType.COMPRA,
+                    player.getId(),
+                    quantity,
+                    unitPrice,
+                    totalCost,
+                    balanceBefore,
+                    balanceAfter,
+                    tokensBefore,
+                    tokensAfter,
+                    strategyVersion
+            ));
         Transaction savedTx = transactionRepository.save(tx);
 
         String playerName = player.getFirstName() + " " + player.getLastName();
@@ -174,19 +175,19 @@ public class OrderService {
         superuserPosition.setTokensQuantity(superuserPosition.getTokensQuantity() + quantity);
         portfolioPositionRepository.save(superuserPosition);
 
-        Transaction tx = new Transaction(
-                seller.getId(),
-                OperationType.VENTA,
-                player.getId(),
-                quantity,
-                unitPrice,
-                proceeds,
-                balanceBefore,
-                balanceAfter,
-                tokensBefore,
-                tokensAfter,
-                strategyVersion
-        );
+        Transaction tx = new Transaction(new TransactionData(
+                    seller.getId(),
+                    OperationType.VENTA,
+                    player.getId(),
+                    quantity,
+                    unitPrice,
+                    proceeds,
+                    balanceBefore,
+                    balanceAfter,
+                    tokensBefore,
+                    tokensAfter,
+                    strategyVersion
+            ));
         Transaction savedTx = transactionRepository.save(tx);
 
         String playerName = player.getFirstName() + " " + player.getLastName();

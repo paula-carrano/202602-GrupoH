@@ -1,5 +1,6 @@
 package com.cbo.players.unit;
 
+import com.cbo.players.model.records.TransactionData;
 import com.cbo.players.dto.response.PagedResponseDto;
 import com.cbo.players.dto.response.TransactionResponseDto;
 import com.cbo.players.exception.ApiException;
@@ -96,26 +97,26 @@ class TransactionServiceTest {
     void getUserTransactions_mapsTransactionsWithAndWithoutPlayer() throws Exception {
         when(userRepository.findById(10L)).thenReturn(Optional.of(targetUser));
 
-        Transaction txWithPlayerFound = new Transaction(
-                10L, OperationType.COMPRA, 100L, 5,
-                new BigDecimal("25.0000"), new BigDecimal("125.0000"),
-                new BigDecimal("500.0000"), new BigDecimal("375.0000"),
-                0, 5, 1
-        );
+        Transaction txWithPlayerFound = new Transaction(new TransactionData(
+                    10L, OperationType.COMPRA, 100L, 5,
+                    new BigDecimal("25.0000"), new BigDecimal("125.0000"),
+                    new BigDecimal("500.0000"), new BigDecimal("375.0000"),
+                    0, 5, 1
+            ));
 
-        Transaction txWithPlayerNotFound = new Transaction(
-                10L, OperationType.VENTA, 999L, 2,
-                new BigDecimal("30.0000"), new BigDecimal("60.0000"),
-                new BigDecimal("375.0000"), new BigDecimal("435.0000"),
-                5, 3, 1
-        );
+        Transaction txWithPlayerNotFound = new Transaction(new TransactionData(
+                    10L, OperationType.VENTA, 999L, 2,
+                    new BigDecimal("30.0000"), new BigDecimal("60.0000"),
+                    new BigDecimal("375.0000"), new BigDecimal("435.0000"),
+                    5, 3, 1
+            ));
 
-        Transaction txWithoutPlayer = new Transaction(
-                10L, OperationType.RECARGA, null, null,
-                null, new BigDecimal("500.0000"),
-                BigDecimal.ZERO, new BigDecimal("500.0000"),
-                null, null, 1
-        );
+        Transaction txWithoutPlayer = new Transaction(new TransactionData(
+                    10L, OperationType.RECARGA, null, null,
+                    null, new BigDecimal("500.0000"),
+                    BigDecimal.ZERO, new BigDecimal("500.0000"),
+                    null, null, 1
+            ));
 
         java.lang.reflect.Field idField = Transaction.class.getDeclaredField("id");
         idField.setAccessible(true);

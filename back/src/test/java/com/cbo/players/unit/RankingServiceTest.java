@@ -1,5 +1,6 @@
 package com.cbo.players.unit;
 
+import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.dto.response.PlayerRankingResponseDto;
 import com.cbo.players.dto.response.RankingItemDto;
 import com.cbo.players.model.Player;
@@ -57,9 +58,9 @@ class RankingServiceTest {
                 "Estrategia balanceada",
                 1,
                 true,
-                new BigDecimal("1.0000"),
-                1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
-        );
+                new BigDecimal("1.0000"), new ValuationWeights(
+                    1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5
+            ));
 
         player1 = new Player("Erling", "Haaland", LocalDate.of(2000, 7, 21),
                 "Norwegian", PlayerPosition.FORWARD, "Manchester City", "Premier League");

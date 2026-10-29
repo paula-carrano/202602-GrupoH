@@ -18,7 +18,7 @@ class GlobalExceptionHandlerTest {
     void setUp() {
         exceptionHandler = new GlobalExceptionHandler();
         request = new MockHttpServletRequest();
-        request.setRequestURI("/api/v1/test");
+        request.setRequestURI("/api/test");
     }
 
     @Test

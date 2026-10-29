@@ -1,6 +1,8 @@
 package com.cbo.players.model;
 
 import jakarta.persistence.*;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 
@@ -25,6 +27,9 @@ public class User {
     @Column(nullable = false, length = 20)
     private UserRole role = UserRole.ROLE_USER;
 
+    @Column(name = "credits_balance", nullable = false, precision = 14, scale = 4)
+    private BigDecimal creditsBalance = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+
     @Column(nullable = false)
     private boolean enabled = true;
 
@@ -43,12 +48,16 @@ public class User {
         this.passwordHash = passwordHash;
         this.role = role != null ? role : UserRole.ROLE_USER;
         this.enabled = true;
+        this.creditsBalance = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
     }
 
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now(ZoneOffset.UTC);
         this.updatedAt = LocalDateTime.now(ZoneOffset.UTC);
+        if (this.creditsBalance == null) {
+            this.creditsBalance = BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+        }
     }
 
     @PreUpdate
@@ -94,6 +103,22 @@ public class User {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public BigDecimal getCreditsBalance() {
+        return creditsBalance;
+    }
+
+    public void setCreditsBalance(BigDecimal creditsBalance) {
+        this.creditsBalance = creditsBalance != null ? creditsBalance.setScale(4, RoundingMode.HALF_UP) : BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
+    }
+
+    public boolean isSuperuser() {
+        return this.role == UserRole.ROLE_SUPERUSER;
+    }
+
+    public boolean isAdmin() {
+        return this.role == UserRole.ROLE_ADMIN || this.role == UserRole.ROLE_SUPERUSER;
     }
 
     public boolean isEnabled() {

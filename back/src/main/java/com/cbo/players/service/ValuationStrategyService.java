@@ -137,7 +137,7 @@ public class ValuationStrategyService {
         transactionRepository.save(tx);
 
         log.info("Estrategia [{}] (ID {}) activada por usuario {}", sanitizeForLog(target.getCode()), target.getId(),
-                actorUserId);
+                sanitizeForLog(String.valueOf(actorUserId)));
         return target;
     }
 

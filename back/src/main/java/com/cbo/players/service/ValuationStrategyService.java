@@ -49,14 +49,13 @@ public class ValuationStrategyService {
                     1,
                     true,
                     new BigDecimal("1.0000"), new ValuationWeights(
-                        1.5,
-                        1.0,
-                        0.005,
-                        0.2,
-                        0.3,
-                        1.2,
-                        -0.3
-                ));
+                            1.5,
+                            1.0,
+                            0.005,
+                            0.2,
+                            0.3,
+                            1.2,
+                            -0.3));
 
             ValuationStrategy balanced = new ValuationStrategy(
                     "BALANCED",
@@ -65,14 +64,13 @@ public class ValuationStrategyService {
                     1,
                     false,
                     new BigDecimal("1.0000"), new ValuationWeights(
-                        1.0,
-                        0.8,
-                        0.01,
-                        0.1,
-                        0.2,
-                        1.5,
-                        -0.5
-                ));
+                            1.0,
+                            0.8,
+                            0.01,
+                            0.1,
+                            0.2,
+                            1.5,
+                            -0.5));
 
             valuationStrategyRepository.saveAll(List.of(offensive, balanced));
         }
@@ -84,8 +82,7 @@ public class ValuationStrategyService {
                 .orElseThrow(() -> new ApiException(
                         "No se encontró una estrategia de valoración activa configurada en el sistema.",
                         HttpStatus.NOT_FOUND,
-                        ErrorCode.STRATEGY_NOT_FOUND
-                ));
+                        ErrorCode.STRATEGY_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
@@ -94,8 +91,7 @@ public class ValuationStrategyService {
                 .orElseThrow(() -> new ApiException(
                         String.format("No se encontró la estrategia de valoración con ID %d.", id),
                         HttpStatus.NOT_FOUND,
-                        ErrorCode.STRATEGY_NOT_FOUND
-                ));
+                        ErrorCode.STRATEGY_NOT_FOUND));
     }
 
     @Transactional(readOnly = true)
@@ -109,8 +105,7 @@ public class ValuationStrategyService {
                 .orElseThrow(() -> new ApiException(
                         String.format("No se encontró la estrategia de valoración con ID %d.", id),
                         HttpStatus.NOT_FOUND,
-                        ErrorCode.STRATEGY_NOT_FOUND
-                ));
+                        ErrorCode.STRATEGY_NOT_FOUND));
 
         List<ValuationStrategy> allStrategies = valuationStrategyRepository.findAll();
         LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
@@ -128,21 +123,29 @@ public class ValuationStrategyService {
 
         // Registro auditable e inmutable de cambio de estrategia
         Transaction tx = new Transaction(new TransactionData(
-                    actorUserId != null ? actorUserId : 1L,
-                    OperationType.CAMBIO_ESTRATEGIA,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    target.getVersion()
-            ));
+                actorUserId != null ? actorUserId : 1L,
+                OperationType.CAMBIO_ESTRATEGIA,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                target.getVersion()));
         transactionRepository.save(tx);
 
-        log.info("Estrategia [{}] (ID {}) activada por usuario {}", target.getCode(), target.getId(), actorUserId);
+        log.info("Estrategia [{}] (ID {}) activada por usuario {}", sanitizeForLog(target.getCode()), target.getId(),
+                actorUserId);
         return target;
+    }
+
+    private String sanitizeForLog(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        return value.replaceAll("[\\r\\n\\t]", "_");
     }
 }

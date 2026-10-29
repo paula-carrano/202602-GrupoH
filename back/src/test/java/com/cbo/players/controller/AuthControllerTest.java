@@ -51,7 +51,7 @@ class AuthControllerTest {
 
         when(authService.register(any(RegisterRequestDto.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -64,7 +64,7 @@ class AuthControllerTest {
     void register_invalidPayload_returns400WithProblemDetail() throws Exception {
         RegisterRequestDto request = new RegisterRequestDto("", "email-invalido", "corta");
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -80,7 +80,7 @@ class AuthControllerTest {
 
         when(authService.login(any(LoginRequestDto.class))).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

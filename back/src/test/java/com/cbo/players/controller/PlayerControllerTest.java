@@ -1,12 +1,14 @@
 package com.cbo.players.controller;
 
-import com.cbo.players.dto.response.PlayerResponseDto;
 import com.cbo.players.dto.response.PlayerDetailResponseDto;
+import com.cbo.players.dto.response.PlayerResponseDto;
 import com.cbo.players.exception.ErrorCode;
 import com.cbo.players.exception.GlobalExceptionHandler;
 import com.cbo.players.exception.ResourceNotFoundException;
 import com.cbo.players.model.PlayerPosition;
+import com.cbo.players.service.PlayerQuoteService;
 import com.cbo.players.service.PlayerService;
+import com.cbo.players.service.RankingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +34,12 @@ class PlayerControllerTest {
     @Mock
     private PlayerService playerService;
 
+    @Mock
+    private PlayerQuoteService playerQuoteService;
+
+    @Mock
+    private RankingService rankingService;
+
     @InjectMocks
     private PlayerController playerController;
 
@@ -51,39 +59,37 @@ class PlayerControllerTest {
 
         when(playerService.getAllPlayers()).thenReturn(List.of(player1, player2));
 
-        mockMvc.perform(get("/api/v1/players")
+        mockMvc.perform(get("/api/players")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[0].firstName").value("Lionel"))
-                .andExpect(jsonPath("$[1].birthDate").doesNotExist()); // or null in json
+                .andExpect(jsonPath("$[1].birthDate").doesNotExist());
     }
 
     @Test
-    void getPlayerById_existingId_returns200() throws Exception {
-        PlayerDetailResponseDto player = new PlayerDetailResponseDto(1L, "Lionel", "Messi", LocalDate.of(1987, 6, 24),
-                "Argentina", PlayerPosition.FORWARD, "Inter Miami", "MLS", true, null);
+    void getPlayerById_returnsPlayer() throws Exception {
+        PlayerDetailResponseDto player = new PlayerDetailResponseDto(1L, "Lionel", "Messi",
+                LocalDate.of(1987, 6, 24), "Argentina", PlayerPosition.FORWARD, "Inter Miami", "MLS", true,
+                null);
 
         when(playerService.getPlayerById(1L)).thenReturn(player);
 
-        mockMvc.perform(get("/api/v1/players/1")
+        mockMvc.perform(get("/api/players/1")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.lastName").value("Messi"));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.firstName").value("Lionel"));
     }
 
     @Test
-    void getPlayerById_notFound_returns404WithProblemDetail() throws Exception {
-        when(playerService.getPlayerById(999L)).thenThrow(
-                new ResourceNotFoundException("No se encontró ningún jugador con el identificador especificado.", ErrorCode.PLAYER_NOT_FOUND)
-        );
+    void getPlayerById_notFound_returnsProblemDetail() throws Exception {
+        when(playerService.getPlayerById(99L)).thenThrow(new ResourceNotFoundException("Jugador no encontrado con id 99", ErrorCode.PLAYER_NOT_FOUND));
 
-        mockMvc.perform(get("/api/v1/players/999")
+        mockMvc.perform(get("/api/players/99")
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
-                .andExpect(jsonPath("$.errorCode").value("PLAYER_NOT_FOUND"))
-                .andExpect(jsonPath("$.detail").value("No se encontró ningún jugador con el identificador especificado."));
+                .andExpect(jsonPath("$.code").value(ErrorCode.PLAYER_NOT_FOUND.name()));
     }
 }

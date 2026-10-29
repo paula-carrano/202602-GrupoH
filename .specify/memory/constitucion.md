@@ -1,3 +1,18 @@
+<!--
+SYNC IMPACT REPORT
+- Version Change: 1.0.0 -> 1.1.0 (MINOR: directiva de cátedra sobre prefijo API y persistencia testing)
+- Date: 2026-10-20
+- Reason: Directiva verbal de cátedra sobre prefijo de API (rutas sin /v1) y persistencia de testing (PostgreSQL para unit y e2e con Testcontainers, descarte de HSQLDB/H2)
+- Modified Sections:
+  * Sección 2: Stack Tecnológico (Backend)
+  * Sección 11: API REST
+  * Sección 16: Roadmap de Entregas (Entrega 2)
+- Added Sections:
+  * Sección 18: Registro de Enmiendas (Sync Impact Report)
+- Removed Sections: Ninguna
+- Follow-up TODOs: Ninguno
+-->
+
 CONSTITUCIÓN DEL PROYECTO & CONTRATO DE DESARROLLO (Spec Kit)
 
 > [!IMPORTANT]
@@ -93,7 +108,7 @@ Backend
 
 \- PostgreSQL como base de datos principal
 
-\- HSQLDB o H2 para los perfiles de pruebas definidos en la Entrega 2
+\- PostgreSQL para perfiles de pruebas (descartada la alternativa de HSQLDB o H2 por directiva verbal de cátedra en Entrega 2; los perfiles `unit` y `e2e` operan sobre PostgreSQL, especificando que `e2e` requiere una instancia de PostgreSQL dedicada — por ejemplo vía Testcontainers — en lugar de una base embebida)
 
 \- Spring Security
 
@@ -941,9 +956,7 @@ Se deberá evitar que los tests dependan de servicios externos reales cuando est
 
 # **11\. API REST**
 
-Todos los endpoints deberán utilizar el prefijo:
-
-/api/v1
+Todos los endpoints deberán exponerse sin el prefijo `/v1` (las rutas operan directamente a partir de la raíz `/`, conforme a la Consigna Oficial y la directiva de cátedra en Entrega 2; resuelto en `specs/004-entrega2-core/spec.md` FR-013).
 
 Los contratos REST deberán definir:
 
@@ -959,37 +972,37 @@ Los contratos REST deberán definir:
 
 Endpoints principales previstos:
 
-POST   /api/v1/auth/register
+POST   /auth/register
 
-POST   /api/v1/auth/login
+POST   /auth/login
 
-POST   /api/v1/auth/api-keys
-
-&nbsp;
-
-GET    /api/v1/players
-
-GET    /api/v1/players/{id}
-
-GET    /api/v1/players/{id}/quotes
-
-GET    /api/v1/players/ranking
+POST   /auth/api-keys
 
 &nbsp;
 
-POST   /api/v1/quotes/recalculate
+GET    /players
+
+GET    /players/{id}
+
+GET    /players/{id}/quotes
+
+GET    /players/ranking
 
 &nbsp;
 
-POST   /api/v1/orders/buy
-
-POST   /api/v1/orders/sell
+POST   /quotes/recalculate
 
 &nbsp;
 
-GET    /api/v1/users/{id}/portfolio
+POST   /orders/buy
 
-GET    /api/v1/users/{id}/transactions
+POST   /orders/sell
+
+&nbsp;
+
+GET    /users/{id}/portfolio
+
+GET    /users/{id}/transactions
 
 Los endpoints definitivos podrán ajustarse durante la fase de Specification siempre que se mantengan los requerimientos funcionales del proyecto.
 
@@ -1151,7 +1164,7 @@ Una funcionalidad se considerará terminada cuando:
 
 ## **Entrega 2 — Core Functionality**
 
-* HSQLDB/H2 para testing.  
+* Perfiles unit/e2e separados, ambos sobre PostgreSQL (Testcontainers en CI).  
 * Perfiles Unit y E2E.  
 * Datos iniciales de prueba.  
 * Integración de datos de jugadores.  
@@ -1196,6 +1209,17 @@ Cualquier modificación de las reglas establecidas deberá ser acordada por el e
 
 La Constitución funciona como contrato técnico y funcional del proyecto y será la referencia principal para evaluar si una implementación respeta la arquitectura, los requisitos y los criterios de calidad establecidos.
 
-**Versión: 1.0.0**
+**Versión: 1.1.0**
+
+&nbsp;
+
+---
+
+# **18\. Registro de Enmiendas (Sync Impact Report)**
+
+| Versión | Fecha | Motivo de la Enmienda | Secciones Modificadas | Tipo de Enmienda (SemVer) |
+| :--- | :--- | :--- | :--- | :--- |
+| **1.0.0** | 2026-09-21 | Adopción y ratificación inicial de la Constitución del Proyecto (Entrega 1). | Todas (Adopción inicial) | Initial Ratification |
+| **1.1.0** | 2026-10-20 | Directiva verbal de cátedra sobre prefijo de API (rutas expuestas sin `/v1`) y persistencia de testing (descarte de HSQLDB/H2; perfiles `unit` y `e2e` operan sobre PostgreSQL, requiriendo `e2e` instancia dedicada con Testcontainers). | Sección 2 (Stack Tecnológico - Backend), Sección 11 (API REST), Sección 16 (Roadmap de Entregas → Entrega 2) | MINOR (1.0.0 → 1.1.0: clarificaciones y correcciones normativas sin ruptura de arquitectura retroactiva) |
 
 &nbsp;

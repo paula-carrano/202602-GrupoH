@@ -16,6 +16,11 @@ jobs:
   build:
     name: Build, Test & SonarCloud
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
 
     steps:
       - name: Checkout repository
@@ -73,7 +78,9 @@ jobs:
         working-directory: back
         run: |
           chmod +x mvnw
-          ./mvnw -B clean verify org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies \
+          ./mvnw -B clean verify -Punit
+          ./mvnw -B test -Pe2e
+          ./mvnw -B jacoco:report org.apache.maven.plugins:maven-dependency-plugin:3.8.1:copy-dependencies \
             -DincludeScope=test -DoutputDirectory=target/sonar-libraries
 
       - name: Verify coverage reports

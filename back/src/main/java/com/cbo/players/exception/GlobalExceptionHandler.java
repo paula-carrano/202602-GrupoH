@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     private static final String PROP_ERROR_CODE = "errorCode";
+    private static final String PROP_CODE = "code";
     private static final String PROP_TIMESTAMP = "timestamp";
     private static final String PROP_CORRELATION_ID = "correlationId";
     private static final String PROP_VIOLATIONS = "violations";
@@ -86,16 +87,31 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ProblemDetail> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
+        String correlationId = UUID.randomUUID().toString();
+        log.warn("Argumento inválido [{}]: {}", correlationId, ex.getMessage());
+
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        enrichProblemDetail(problem, ErrorCode.INVALID_AMOUNT.name(), request.getRequestURI(), correlationId, null);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problem);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
         String correlationId = UUID.randomUUID().toString();
         log.warn("Acceso denegado [{}]: {}", correlationId, ex.getMessage());
 
+        String detail = request.getRequestURI().startsWith("/api/admin/strategies")
+                ? "Acceso denegado: se requieren permisos exclusivos de superusuario para activar estrategias de mercado."
+                : "Acceso denegado: se requieren permisos exclusivos para realizar esta operación.";
+
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.FORBIDDEN,
-                "No posee los permisos necesarios para realizar esta operación."
+                detail
         );
-        enrichProblemDetail(problem, ErrorCode.FORBIDDEN_OPERATION.name(), request.getRequestURI(), correlationId, null);
+        enrichProblemDetail(problem, ErrorCode.ACCESS_DENIED.name(), request.getRequestURI(), correlationId, null);
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(problem);
     }
@@ -131,6 +147,7 @@ public class GlobalExceptionHandler {
     private void enrichProblemDetail(ProblemDetail problem, String errorCode, String path, String correlationId, List<ViolationDto> violations) {
         problem.setInstance(URI.create(path));
         problem.setProperty(PROP_ERROR_CODE, errorCode);
+        problem.setProperty(PROP_CODE, errorCode);
         problem.setProperty(PROP_TIMESTAMP, Instant.now().toString());
         problem.setProperty(PROP_CORRELATION_ID, correlationId);
         if (violations != null && !violations.isEmpty()) {

@@ -6,7 +6,7 @@ export const TransactionsPage = ({ state = 'unavailable', transactions = [], onS
   <FinancialPanel title="Historial de operaciones" state={state === 'ready' && !transactions.length ? 'empty' : state} emptyText="Todavía no hay operaciones." {...feedback}>
     <FinancialTable caption="Operaciones disponibles" rows={transactions} columns={[
       { key: 'dateLabel', label: 'Fecha y hora' }, { key: 'type', label: 'Operación', render: row => <span className="badge text-bg-secondary">{financialValue(row.type)}</span> },
-      { key: 'playerLabel', label: 'Jugador', render: row => onSelectPlayer ? <button className="btn btn-link" onClick={() => onSelectPlayer(row.playerId)}>{row.playerLabel}</button> : financialValue(row.playerLabel) },
+      { key: 'playerLabel', label: 'Jugador', render: row => onSelectPlayer && row.playerId != null ? <button className="btn btn-link" onClick={() => onSelectPlayer(row.playerId)}>{row.playerLabel}</button> : financialValue(row.playerLabel) },
       { key: 'quantity', label: 'Tokens' }, { key: 'unitPrice', label: 'Precio unitario (créditos)' }, { key: 'total', label: 'Total (créditos)' },
     ]} />
   </FinancialPanel>

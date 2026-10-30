@@ -37,7 +37,7 @@ export const useSessionRequest = ({ session, requestKey, request, enabled = true
             setState({ key, loading: false, data: null, error: '' })
             return
           }
-          setState({ key, loading: false, data: null, error: getApiError(error) })
+          setState({ key, loading: false, data: null, error: getApiError(error), status: error.response?.status })
           if (error.response?.status === 401) callbacks.current.onUnauthorized?.()
         }
       }

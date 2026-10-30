@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { ConnectedPortfolio, ConnectedTransactions, ConnectedRanking } from './pages/MarketPages';
+import { AlertsPage } from './pages/AlertsPage';
+import { useCallback, useEffect, useState } from "react";
 import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { MarketWorkspace } from "./components/MarketWorkspace";
 import { LoginPage } from "./pages/LoginPage";
@@ -6,17 +8,7 @@ import { RegisterPage } from "./pages/RegisterPage";
 import { Home } from "./pages/Home";
 import { PlayersPage } from "./pages/PlayersPage";
 import { ErrorPage } from "./pages/ErrorPage";
-import { PortfolioPage } from './pages/PortfolioPage';
-import { TransactionsPage } from './pages/TransactionsPage';
-import { RankingPage } from './pages/RankingPage';
 import { clearSession, getSession, subscribeSession } from "./services/session";
-
-const UnavailablePage = ({ title }) => (
-    <>
-        <h1 className="fs-5 fw-bold mb-3">{title}</h1>
-        <p role="status">Esta sección todavía no está disponible.</p>
-    </>
-);
 
 export const App = () => {
     const { pathname } = useLocation();
@@ -43,10 +35,10 @@ export const App = () => {
         return () => clearTimeout(timer);
     }, [session]);
 
-    const signOut = () => {
+    const signOut = useCallback(() => {
         clearSession();
         setSession(null);
-    };
+    }, []);
 
     return (
         <Routes>
@@ -68,10 +60,10 @@ export const App = () => {
             >
                 <Route path="/home" element={<Home session={session} onLogout={signOut} />} />
                 <Route path="/players" element={<PlayersPage session={session} onLogout={signOut} />} />
-                <Route path="/portfolio" element={<PortfolioPage />} />
-                <Route path="/transactions" element={<TransactionsPage />} />
-                <Route path="/ranking" element={<RankingPage />} />
-                <Route path="/alerts" element={<UnavailablePage title="Alertas" />} />
+                <Route path="/portfolio" element={<ConnectedPortfolio />} />
+                <Route path="/transactions" element={<ConnectedTransactions />} />
+                <Route path="/ranking" element={<ConnectedRanking />} />
+                <Route path="/alerts" element={<AlertsPage />} />
             </Route>
             <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<ErrorPage notFound />} />

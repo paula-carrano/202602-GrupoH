@@ -20,7 +20,7 @@ describe('contratos AuthController, PlayerController y cliente Axios real', () =
     const controller = new AbortController()
     await getPlayers({ signal: controller.signal })
     await getPlayer(7, { signal: controller.signal })
-    expect(adapter.mock.calls[0][0]).toMatchObject({ baseURL: '/api/v1', timeout: 12000, url: '/players', signal: controller.signal })
+    expect(adapter.mock.calls[0][0]).toMatchObject({ baseURL: '/api', timeout: 12000, url: '/players', signal: controller.signal })
     expect(adapter.mock.calls[0][0].headers.Authorization).toBe(`Bearer ${session.token}`)
     expect(adapter.mock.calls[1][0].url).toBe('/players/7')
     controller.abort()

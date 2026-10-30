@@ -1,3 +1,6 @@
+import { useMarket } from '../hooks/useMarket';
+import { requestState } from '../utils/financial';
+import { QuoteExplorer } from './QuoteExplorer';
 import { useSessionRequest } from "../hooks/useSessionRequest";
 import { getPlayer } from "../services/players";
 import { useDialogFocus } from '../hooks/useDialogFocus';
@@ -14,6 +17,15 @@ const metrics = [
 ];
 
 export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, investment, marketQuote, quotes }) => {
+    const market = useMarket();
+    if (market && investment === undefined) {
+        const position = market.view.positions.find(p => p.playerId === player?.id);
+        const state = requestState(market.portfolio);
+        investment = { state: state === 'ready' && !position ? 'empty' : state, position,
+            error: market.portfolio.error, onRetry: market.portfolio.retry,
+            onBuy: market.allowed ? () => { onClose?.(); market.openOrder('buy', player.id); } : undefined,
+            onSell: market.allowed ? () => { onClose?.(); market.openOrder('sell', player.id); } : undefined };
+    }
     const dialogRef = useDialogFocus(Boolean(player), onClose);
     const { data: detail, loading, error, retry } = useSessionRequest({
         session,
@@ -73,7 +85,7 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, 
 
                         <section aria-label="Mercado">
                         <h3 className="h5 px-4">Mercado</h3>
-                        <p className="px-4">Cotización actual (créditos): {financialValue(marketQuote)}</p>
+                        {!market && <p className="px-4">Cotización actual (créditos): {financialValue(marketQuote)}</p>}
                         <div className="player-profile-metrics">
                             <section className="player-profile-metric">
                                 <span>Liga</span>
@@ -102,7 +114,7 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, 
                             ))}
                         </div>
 
-                        <div className="px-3 pb-3"><QuoteHistoryChart playerLabel={`${profile.firstName} ${profile.lastName}`} {...quotes} /></div>
+                        <div className="px-3 pb-3"><>{market ? <QuoteExplorer key={player.id} playerId={player.id} playerLabel={`${profile.firstName || ""} ${profile.lastName || ""}`} session={session} onUnauthorized={onUnauthorized} revision={market.revision} /> : <QuoteHistoryChart playerLabel={`${profile.firstName} ${profile.lastName}`} {...quotes} />}</></div>
                         </section>
                         {loading && (
                             <output className="player-profile-status mb-0">

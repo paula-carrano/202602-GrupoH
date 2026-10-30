@@ -2,7 +2,7 @@ import axios from 'axios'
 import { getSession } from './session'
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 12000,
 })
 
@@ -16,6 +16,14 @@ export const isApiCancellation = error => axios.isCancel(error) || error?.code =
 
 // ErrorCode.java y GlobalExceptionHandler.java: no mostrar detail arbitrario.
 const messages = {
+  INSUFFICIENT_FUNDS: 'No tenés saldo suficiente para esta compra.',
+  INSUFFICIENT_TOKENS_AVAILABLE: 'No hay suficientes tokens disponibles en el mercado.',
+  INSUFFICIENT_TOKEN_BALANCE: 'No tenés suficientes tokens para esta venta.',
+  INVALID_AMOUNT: 'Ingresá un monto o cantidad válido.',
+  ACCESS_DENIED: 'No tenés permiso para consultar estos datos.',
+  ALERT_NOT_FOUND: 'La alerta ya no está disponible.',
+  ORDER_EXECUTION_ERROR: 'No se pudo completar la operación.',
+  STRATEGY_NOT_FOUND: 'No hay una estrategia de valoración disponible.',
   INVALID_CREDENTIALS: 'Credenciales inválidas',
   USER_NOT_FOUND: 'No se encontró el usuario.',
   EMAIL_ALREADY_EXISTS: 'El email ya está registrado.',

@@ -6,7 +6,7 @@ import { WealthHistoryChart } from '../components/charts/WealthHistoryChart'
 import { ProfitOrLoss } from '../components/PlayerInvestmentSummary'
 
 // Modelos de presentación inyectados; no son contratos HTTP.
-export const PortfolioPage = ({ state = 'unavailable', positions = [], summary, allocation, wealth, onSelectPlayer, onBuy, onSell, ...feedback }) => <>
+export const PortfolioPage = ({ state = 'unavailable', positions = [], summary, allocation, wealth, wealthContent, onSelectPlayer, onBuy, onSell, ...feedback }) => <>
   <h1 className="h5">Mi portfolio</h1>
   {state === 'unavailable' && <p role="status">Esta sección todavía no está disponible.</p>}
   <div className="mb-3"><FinancialSummary {...summary} /></div>
@@ -20,5 +20,5 @@ export const PortfolioPage = ({ state = 'unavailable', positions = [], summary, 
     ]} />
   </FinancialPanel>
   <Link className="btn btn-link my-2" to="/players">Explorar jugadores</Link>
-  <div className="row g-3"><div className="col-12 col-xl-6"><PortfolioAllocationChart {...allocation} /></div><div className="col-12 col-xl-6"><WealthHistoryChart {...wealth} /></div></div>
+  <div className="row g-3"><div className="col-12 col-xl-6"><PortfolioAllocationChart {...allocation} /></div><div className="col-12 col-xl-6">{wealthContent || <WealthHistoryChart {...wealth} />}</div></div>
 </>

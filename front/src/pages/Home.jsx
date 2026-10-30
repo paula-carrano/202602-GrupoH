@@ -1,3 +1,7 @@
+import { useMarket } from '../hooks/useMarket'
+import { requestState } from '../utils/financial'
+import { QuoteExplorer } from '../components/QuoteExplorer'
+import { WealthExplorer } from '../components/WealthExplorer'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useSessionRequest } from '../hooks/useSessionRequest'
@@ -16,6 +20,8 @@ export const DashboardPresentation = ({ summary, quotes, allocation, wealth }) =
 </div>
 
 export const Home = ({ session, onLogout }) => {
+  const market = useMarket()
+  const state = market ? requestState(market.portfolio) : "unavailable"
   const [loadPlayers, setLoadPlayers] = useState(false)
   const [selectedId, setSelectedId] = useState('')
   const [showDetail, setShowDetail] = useState(false)
@@ -23,7 +29,7 @@ export const Home = ({ session, onLogout }) => {
   const selected = catalog.data?.find(player => String(player.id) === selectedId)
   return <>
     <h1 className="fs-5 fw-bold mb-3">Inicio financiero</h1>
-    <p role="status">El resumen financiero todavía no está disponible.</p>
+    {!market?.allowed && <p role="status">El resumen financiero todavía no está disponible.</p>}
     <Link className="btn btn-outline-primary mb-3" to="/players">Explorar jugadores</Link>
     <section className="mb-3" aria-label="Selección de jugador">
       {!loadPlayers && <button className="btn btn-primary" onClick={() => setLoadPlayers(true)}>Elegir jugador para cotizaciones</button>}
@@ -34,9 +40,14 @@ export const Home = ({ session, onLogout }) => {
         <option value="">Seleccioná un jugador</option>
         {catalog.data.map(player => <option key={player.id} value={player.id}>{player.firstName} {player.lastName}</option>)}
       </select></label>}
-      {selected ? <div className="mt-2"><p>Cotizaciones de {selected.firstName} {selected.lastName}: pendientes de integración.</p><button className="btn btn-outline-primary" onClick={() => setShowDetail(true)}>Ver detalle del jugador</button></div> : <p className="mt-2">Seleccioná un jugador para consultar sus cotizaciones cuando estén disponibles.</p>}
+      {selected ? <div className="mt-2"><button className="btn btn-outline-primary" onClick={() => setShowDetail(true)}>Ver detalle del jugador</button></div> : <p className="mt-2">Seleccioná un jugador para consultar sus cotizaciones.</p>}
     </section>
-    <DashboardPresentation quotes={{ playerLabel: selected ? `${selected.firstName} ${selected.lastName}` : undefined }} />
+    {market ? <div className="row g-3">
+      <div className="col-12"><FinancialSummary state={state} data={market.view.summary} error={market.portfolio.error} onRetry={market.portfolio.retry} /></div>
+      <div className="col-12">{selected ? <QuoteExplorer key={selected.id} playerId={selected.id} playerLabel={`${selected.firstName} ${selected.lastName}`} session={session} onUnauthorized={onLogout} revision={market.revision} /> : <QuoteHistoryChart />}</div>
+      <div className="col-12 col-xl-6"><PortfolioAllocationChart state={state} positions={market.view.allocation} error={market.portfolio.error} onRetry={market.portfolio.retry} /></div>
+      <div className="col-12 col-xl-6"><WealthExplorer /></div>
+    </div> : <DashboardPresentation quotes={{ playerLabel: selected ? `${selected.firstName} ${selected.lastName}` : undefined }} />}
     <PlayerProfileDialog player={showDetail ? selected : null} session={session} onUnauthorized={onLogout} onClose={() => setShowDetail(false)} />
   </>
 }

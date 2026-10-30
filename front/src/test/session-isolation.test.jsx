@@ -9,6 +9,17 @@ import { api } from '../services/api'
 import { clearSession, getSession, saveSession } from '../services/session'
 import { sessionFor, tokenFor } from './fixtures/session'
 
+// Catalog scenarios isolate their transport from the newly shared financial reads.
+const catalogGet = () => {
+  const catalog = vi.fn()
+  vi.spyOn(api, 'get').mockImplementation((url, options) => {
+    if (url === '/players' || /^\/players\/\d+$/.test(url)) return catalog(url, options)
+    if (url.includes('/portfolio')) return Promise.resolve({ data: { creditsBalance: 0, totalCurrentValue: 0, totalInvestedCost: 0, totalPnLNominal: 0, positions: [] } })
+    if (url.includes('/quotes')) return Promise.resolve({ data: options?.params?.date ? { price: 1, currency: 'CRD' } : { content: [], pageNumber: 0, totalElements: 0, totalPages: 0, last: true } })
+    return Promise.resolve({ data: [] })
+  })
+  return catalog
+}
 const deferred = () => {
   let resolve, reject
   const promise = new Promise((yes, no) => { resolve = yes; reject = no })
@@ -16,14 +27,14 @@ const deferred = () => {
 }
 const player = (id, name) => ({ id, firstName: name, lastName: 'Prueba', currentTeam: 'Equipo', league: 'PL' })
 const renderCatalog = () => render(<MemoryRouter initialEntries={['/players']}><App /></MemoryRouter>)
-beforeEach(() => { localStorage.clear(); sessionStorage.clear() })
-afterEach(() => { vi.restoreAllMocks(); vi.useRealTimers(); localStorage.clear(); sessionStorage.clear() })
+beforeEach(() => { localStorage.clear(); sessionStorage.clear(); vi.stubGlobal('fetch', vi.fn().mockImplementation(() => new Promise(() => {}))) })
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); vi.useRealTimers(); localStorage.clear(); sessionStorage.clear() })
 
 describe('aislamiento de consultas por sesión y recurso', () => {
   it.each(['success', '401'])('descarta respuesta %s de A después de cambiar a B', async outcome => {
     const pending = deferred()
     saveSession(sessionFor(1), true)
-    const get = vi.spyOn(api, 'get').mockReturnValueOnce(pending.promise)
+    const get = catalogGet().mockReturnValueOnce(pending.promise)
       .mockResolvedValueOnce({ data: [player(2, 'UsuarioB')] })
     renderCatalog()
     const oldSignal = get.mock.calls[0][1].signal
@@ -44,7 +55,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
     const pending = deferred()
     const user = userEvent.setup()
     saveSession(sessionFor(1), true)
-    const get = vi.spyOn(api, 'get').mockResolvedValueOnce({ data: [player(1, 'Anterior')] })
+    const get = catalogGet().mockResolvedValueOnce({ data: [player(1, 'Anterior')] })
       .mockReturnValueOnce(pending.promise).mockResolvedValueOnce({ data: [player(2, 'Nuevo')] })
     renderCatalog()
     await screen.findByText('Anterior Prueba')
@@ -64,7 +75,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
   it('logout cancela consultas y descarta resolución posterior', async () => {
     const pending = deferred()
     saveSession(sessionFor(1), true)
-    const get = vi.spyOn(api, 'get').mockReturnValue(pending.promise)
+    const get = catalogGet().mockReturnValue(pending.promise)
     renderCatalog()
     await userEvent.click(screen.getByRole('button', { name: 'Salir' }))
     expect(get.mock.calls[0][1].signal.aborted).toBe(true)
@@ -75,7 +86,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
 
   it('descarta detalle tardío del jugador anterior aunque el transporte no aborte', async () => {
     const old = deferred()
-    const get = vi.spyOn(api, 'get').mockReturnValueOnce(old.promise)
+    const get = catalogGet().mockReturnValueOnce(old.promise)
       .mockResolvedValueOnce({ data: { ...player(2, 'Nuevo'), currentTeam: 'Club nuevo' } })
     const view = render(<PlayerProfileDialog session={sessionFor(1)} player={player(1, 'Anterior')} />)
     const signal = get.mock.calls[0][1].signal
@@ -112,7 +123,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
   it('responde a logout en otra pestaña', async () => {
     saveSession(sessionFor(1), true)
     const pending = deferred()
-    const get = vi.spyOn(api, 'get').mockReturnValue(pending.promise)
+    const get = catalogGet().mockReturnValue(pending.promise)
     renderCatalog()
     act(() => {
       localStorage.removeItem('football-market-session')
@@ -126,7 +137,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
     const pending = deferred()
     const session = sessionFor(1)
     saveSession(session, true)
-    const get = vi.spyOn(api, 'get').mockReturnValueOnce(pending.promise).mockResolvedValueOnce({ data: [] })
+    const get = catalogGet().mockReturnValueOnce(pending.promise).mockResolvedValueOnce({ data: [] })
     renderCatalog()
     act(() => { clearSession(); saveSession(session, true) })
     expect(get.mock.calls[0][1].signal.aborted).toBe(true)
@@ -139,7 +150,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
     vi.useFakeTimers()
     saveSession({ ...sessionFor(1), expiresAt: Date.now() + 1000 }, true)
     const pending = deferred()
-    const get = vi.spyOn(api, 'get').mockReturnValue(pending.promise)
+    const get = catalogGet().mockReturnValue(pending.promise)
     renderCatalog()
     await act(async () => vi.advanceTimersByTime(1001))
     expect(get.mock.calls[0][1].signal.aborted).toBe(true)
@@ -151,7 +162,7 @@ describe('aislamiento de consultas por sesión y recurso', () => {
 describe('401 y 403 en las consultas vigentes', () => {
   it.each([401, 403])('catálogo maneja HTTP %s sin cuerpo ProblemDetail', async status => {
     saveSession(sessionFor(1), true)
-    vi.spyOn(api, 'get').mockRejectedValue({ response: { status } })
+    catalogGet().mockRejectedValue({ response: { status } })
     renderCatalog()
     if (status === 401) {
       expect(await screen.findByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument()
@@ -164,7 +175,7 @@ describe('401 y 403 en las consultas vigentes', () => {
   })
   it.each([401, 403])('perfil maneja HTTP %s coherentemente con el catálogo', async status => {
     saveSession(sessionFor(1), true)
-    vi.spyOn(api, 'get').mockResolvedValueOnce({ data: [player(1, 'Jugador')] })
+    catalogGet().mockResolvedValueOnce({ data: [player(1, 'Jugador')] })
       .mockRejectedValueOnce({ response: { status } })
     renderCatalog()
     await userEvent.click(await screen.findByRole('button', { name: 'Ver perfil de Jugador Prueba' }))

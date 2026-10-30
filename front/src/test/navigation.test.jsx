@@ -116,16 +116,17 @@ describe('navegación integrada de App', () => {
     ['Alertas', '/alerts', 'Alertas'],
   ])('permite navegar a %s sin inventar consultas financieras', async (label, path, heading) => {
     signIn()
-    const get = vi.spyOn(api, 'get')
+    const get = vi.spyOn(api, 'get').mockResolvedValue({ data: { ranking: [], strategyCode: 'BALANCED', strategyVersion: 1 } })
     const user = userEvent.setup()
     renderApp()
     await user.click(screen.getByRole('link', { name: label, exact: true }))
     expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent(path)
-    expect(screen.getByText('Esta sección todavía no está disponible.')).toBeInTheDocument()
     expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent(label)
-    expect(get).not.toHaveBeenCalled()
+    if (path === '/ranking') expect(get).toHaveBeenCalledWith('/players/ranking', expect.any(Object))
+    else expect(get).not.toHaveBeenCalled()
   })
+
 
   it('conserva el modo preview del layout sin requerir sesión', () => {
     render(<MemoryRouter initialEntries={['/home']}><DashboardLayout preview>Contenido de prueba</DashboardLayout></MemoryRouter>)

@@ -90,7 +90,7 @@ export function reconstructWealth(
     const result = Date.parse(value)
 
     if (!Number.isFinite(result)) {
-      throw new TypeTypeError('Fecha inválida')
+      throw new TypeError('Fecha inválida')
     }
 
     return result

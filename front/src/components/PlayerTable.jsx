@@ -9,10 +9,10 @@ export const PlayerTable = ({
     <section
         className="table-responsive catalog-table-scroll"
         aria-label="Catálogo de jugadores"
+        tabIndex={0}
     >
         <table className="table players-table mb-0">
             <caption className="visually-hidden">Catálogo de jugadores</caption>
-
             <thead>
                 <tr>
                     <th scope="col" className="text-center">
@@ -36,14 +36,12 @@ export const PlayerTable = ({
                     </th>
                 </tr>
             </thead>
-
             <tbody>
                 {players.map((player, index) => (
                     <tr key={player.id}>
                         <td className="text-center">
                             {rankingOffset + index + 1}
                         </td>
-
                         <td>
                             <button
                                 type="button"
@@ -54,21 +52,16 @@ export const PlayerTable = ({
                                 {player.firstName} {player.lastName}
                             </button>
                         </td>
-
                         <td className="text-center">
                             {formatBirthDate(player.birthDate)}
                         </td>
-
                         <td className="text-center">
                             {player.nationality || "N/D"}
                         </td>
-
                         <td className="text-center">
                             {player.position || "N/D"}
                         </td>
-
                         <td className="text-center">{player.currentTeam}</td>
-
                         <td className="text-center">{player.league}</td>
                     </tr>
                 ))}

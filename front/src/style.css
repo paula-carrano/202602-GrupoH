@@ -175,3 +175,18 @@ body { background: var(--fm-bg); color: #eef2fa; font-family: 'Segoe UI', Arial,
 .dashboard-brand { min-height: 106px; white-space: nowrap; }
 .dashboard-sidebar { background: linear-gradient(180deg, #0a1525, #081321); border-right: 1px solid #1b2638; }
 .sidebar-footer { color: #8e9eb5; font-size: 12px; line-height: 1.8; }
+
+/* Investment workspace: layout and responsive columns use Bootstrap. */
+.investment-workspace > *, .investment-player-list .list-group-item { min-width: 0; }
+.investment-catalog { --bs-card-border-color: #223044; }
+.investment-player-list { --bs-list-group-bg: transparent; --bs-list-group-color: #edf2fa; --bs-list-group-border-color: #223044; --bs-list-group-action-color: #edf2fa; --bs-list-group-action-hover-bg: #152d3f; --bs-list-group-action-hover-color: #fff; --bs-list-group-active-bg: #103440; --bs-list-group-active-color: #fff; --bs-list-group-active-border-color: #20616a; max-height: 65vh; }
+.investment-player-list strong { font-size: 13px; }
+.investment-player-list small { font-size: 11px; }
+.player-avatar { width: 40px; height: 40px; background: linear-gradient(135deg, #214654, #162739); color: #62e1d4; font-size: 13px; font-weight: 600; }
+.player-avatar-large { width: 76px; height: 76px; font-size: 24px; }
+.player-facts { border-top: 1px solid #223044; }
+.investment-section-nav .nav-link { color: #b4c5d8; font-size: 13px; padding: 12px; }
+.investment-section-nav .nav-link:hover, .investment-section-nav .nav-link:focus-visible { color: #28d6ca; background: #103440; }
+#investment-summary, #investment-quotes { scroll-margin-top: 20px; }
+@media (min-width: 1200px) { .investment-catalog { position: sticky; top: 16px; } }
+.investment-workspace .financial-panel { height: auto !important; }

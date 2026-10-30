@@ -51,3 +51,21 @@ it('recupera un error de catálogo y distingue vacío confirmado', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'Reintentar catálogo' }))
   expect(await screen.findByText('No hay jugadores disponibles.')).toBeInTheDocument()
 })
+
+it('filtra la lista lateral y selecciona la ficha sin perder la selección al filtrar', async () => {
+  const user = userEvent.setup()
+  vi.spyOn(api, 'get').mockResolvedValue({ data: [
+    { id: 7, firstName: 'Ana', lastName: 'Sur', league: 'Liga A', currentTeam: 'Club Sur' },
+    { id: 8, firstName: 'Sol', lastName: 'Norte', league: 'Liga B', currentTeam: 'Club Norte' },
+  ] })
+  render(<MemoryRouter><Home /></MemoryRouter>)
+  await user.click(screen.getByRole('button', { name: 'Elegir jugador para cotizaciones' }))
+  await user.click(await screen.findByRole('button', { name: /Ana Sur/ }))
+  expect(screen.getByRole('heading', { name: 'Ana Sur' })).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Liga B', exact: true }))
+  expect(screen.queryByRole('button', { name: /Ana Sur/ })).not.toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Ana Sur' })).toBeInTheDocument()
+  await user.type(screen.getByRole('searchbox', { name: 'Buscar jugador' }), 'inexistente')
+  expect(screen.getByText('No hay jugadores que coincidan con los filtros.')).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: 'Comprar tokens' })).toBeDisabled()
+})

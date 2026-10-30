@@ -2,18 +2,14 @@ import { afterEach, expect, it, vi } from "vitest";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { DashboardPresentation, Home } from "../pages/index";
 import { api } from "../services/api";
+import { Home, DashboardPresentation } from "../pages/Home";
 
 afterEach(() => vi.restoreAllMocks());
 it("carga el catalogo al entrar sin consultas financieras", async () => {
-    const get = vi
-        .spyOn(api, "get")
-        .mockResolvedValue({
-            data: [
-                { id: 7, firstName: "Ana", lastName: "Sur", league: "Liga A" },
-            ],
-        });
+    const get = vi.spyOn(api, "get").mockResolvedValue({
+        data: [{ id: 7, firstName: "Ana", lastName: "Sur", league: "Liga A" }],
+    });
     render(
         <MemoryRouter>
             <Home />

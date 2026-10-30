@@ -1,14 +1,14 @@
 import {
-  PlayerCatalog,
-  SelectedPlayerCard,
-  QuoteExplorer,
-  WealthExplorer,
-  FinancialSummary,
-  QuoteHistoryChart,
-  PortfolioAllocationChart,
-  WealthHistoryChart,
-  PlayerProfileDialog,
-} from "../components"
+    PlayerCatalog,
+    SelectedPlayerCard,
+    QuoteExplorer,
+    WealthExplorer,
+    FinancialSummary,
+    QuoteHistoryChart,
+    PortfolioAllocationChart,
+    WealthHistoryChart,
+    PlayerProfileDialog,
+} from "../components/index";
 import { playerName } from "../utils/playerDisplay";
 import { useMarket } from "../hooks/useMarket";
 import { requestState } from "../utils/financial";

@@ -133,6 +133,6 @@ describe('navegación integrada de App', () => {
     expect(screen.getByText('Vista previa')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Iniciar sesión' })).toHaveAttribute('href', '/login')
     expect(screen.queryByRole('button', { name: 'Salir' })).not.toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /FOOTBALL MARKET PLATFORM/ })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /FootMarket/ })).toBeInTheDocument()
   })
 })

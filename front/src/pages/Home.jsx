@@ -12,11 +12,11 @@ import { PortfolioAllocationChart } from '../components/charts/PortfolioAllocati
 import { WealthHistoryChart } from '../components/charts/WealthHistoryChart'
 import { PlayerProfileDialog } from '../components/PlayerProfileDialog'
 
-export const DashboardPresentation = ({ summary, quotes, allocation, wealth }) => <div className="row g-3">
-  <div className="col-12"><FinancialSummary {...summary} /></div>
-  <div className="col-12"><QuoteHistoryChart {...quotes} /></div>
-  <div className="col-12 col-xl-6"><PortfolioAllocationChart {...allocation} /></div>
-  <div className="col-12 col-xl-6"><WealthHistoryChart {...wealth} /></div>
+export const DashboardPresentation = ({ summary, quotes, allocation, wealth }) => <div className="dashboard-grid">
+  <div className="summary-slot"><FinancialSummary {...summary} /></div>
+  <div className="quote-slot"><QuoteHistoryChart {...quotes} /></div>
+  <div className="allocation-slot"><PortfolioAllocationChart {...allocation} /></div>
+  <div className="wealth-slot"><WealthHistoryChart {...wealth} /></div>
 </div>
 
 export const Home = ({ session, onLogout }) => {
@@ -31,7 +31,7 @@ export const Home = ({ session, onLogout }) => {
     <h1 className="fs-5 fw-bold mb-3">Inicio financiero</h1>
     {!market?.allowed && <p role="status">El resumen financiero todavía no está disponible.</p>}
     <Link className="btn btn-outline-primary mb-3" to="/players">Explorar jugadores</Link>
-    <section className="mb-3" aria-label="Selección de jugador">
+    <section className="player-selector mb-3" aria-label="Selección de jugador">
       {!loadPlayers && <button className="btn btn-primary" onClick={() => setLoadPlayers(true)}>Elegir jugador para cotizaciones</button>}
       {catalog.loading && <p role="status">Cargando jugadores…</p>}
       {catalog.error && <div role="alert">{catalog.error} <button className="btn btn-outline-primary" onClick={catalog.retry}>Reintentar catálogo</button></div>}
@@ -42,11 +42,11 @@ export const Home = ({ session, onLogout }) => {
       </select></label>}
       {selected ? <div className="mt-2"><button className="btn btn-outline-primary" onClick={() => setShowDetail(true)}>Ver detalle del jugador</button></div> : <p className="mt-2">Seleccioná un jugador para consultar sus cotizaciones.</p>}
     </section>
-    {market ? <div className="row g-3">
-      <div className="col-12"><FinancialSummary state={state} data={market.view.summary} error={market.portfolio.error} onRetry={market.portfolio.retry} /></div>
-      <div className="col-12">{selected ? <QuoteExplorer key={selected.id} playerId={selected.id} playerLabel={`${selected.firstName} ${selected.lastName}`} session={session} onUnauthorized={onLogout} revision={market.revision} /> : <QuoteHistoryChart />}</div>
-      <div className="col-12 col-xl-6"><PortfolioAllocationChart state={state} positions={market.view.allocation} error={market.portfolio.error} onRetry={market.portfolio.retry} /></div>
-      <div className="col-12 col-xl-6"><WealthExplorer /></div>
+    {market ? <div className="dashboard-grid">
+      <div className="summary-slot"><FinancialSummary state={state} data={market.view.summary} error={market.portfolio.error} onRetry={market.portfolio.retry} /></div>
+      <div className="quote-slot">{selected ? <QuoteExplorer key={selected.id} playerId={selected.id} playerLabel={`${selected.firstName} ${selected.lastName}`} session={session} onUnauthorized={onLogout} revision={market.revision} /> : <QuoteHistoryChart />}</div>
+      <div className="allocation-slot"><PortfolioAllocationChart state={state} positions={market.view.allocation} error={market.portfolio.error} onRetry={market.portfolio.retry} /></div>
+      <div className="wealth-slot"><WealthExplorer /></div>
     </div> : <DashboardPresentation quotes={{ playerLabel: selected ? `${selected.firstName} ${selected.lastName}` : undefined }} />}
     <PlayerProfileDialog player={showDetail ? selected : null} session={session} onUnauthorized={onLogout} onClose={() => setShowDetail(false)} />
   </>

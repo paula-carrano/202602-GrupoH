@@ -1,5 +1,8 @@
 # Feature Specification: Plataforma de Mercado y Valoración de Jugadores — Entrega 2: Frontend Visualization, Trading & Real-Time Alerts
 
+> Actualizacion de implementacion (2026-10-29): por instruccion del usuario, el backend aprobado se conserva sin cambios y los contratos `/api` ya fueron contrastados con el codigo. El frontend usa Recharts y reconstruccion patrimonial diaria con operaciones y cotizaciones reales, autorizada expresamente. Esta decision reemplaza las restricciones anteriores sobre `/api/v1`, contratos pendientes y DEP-004. No se implementan pantallas administrativas ni API keys. Ver [contratos, limites y demo del frontend](../../front/README.md). Las secciones originales siguientes conservan el contexto de planificacion anterior.
+
+
 **Feature Branch**: `feature/front2`
 **Feature Directory**: `specs/005-entrega2-frontend`
 **Backend de referencia / rama base declarada**: `004-entrega2-core`

@@ -1,6 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
 import {
-    FaFileLines,
     FaFutbol,
     FaHouse,
     FaRightFromBracket,
@@ -21,38 +20,18 @@ const navigation = [
 ];
 
 export const DashboardLayout = ({ session, preview, onLogout, children }) => (
-    <main className="dashboard-page container-fluid p-2 p-md-4 min-vh-100">
-        <div className="dashboard d-flex flex-column mx-auto overflow-hidden rounded shadow-sm">
-            <header className="dashboard-header d-flex align-items-center justify-content-between flex-wrap gap-3 px-3 py-2">
+    <main className="dashboard-page container-fluid p-0 min-vh-100">
+        <div className="dashboard d-flex flex-column flex-lg-row min-vh-100">
+            <aside className="dashboard-sidebar d-flex flex-column flex-shrink-0 sticky-lg-top align-self-lg-start">
                 <Link
-                    className="dashboard-brand d-inline-flex align-items-center gap-2 text-white text-decoration-none"
+                    className="dashboard-brand d-inline-flex align-items-center gap-3 p-4 flex-shrink-0 text-white text-decoration-none"
                     to="/home"
                 >
                     <FaFutbol aria-hidden="true" />
-                    <strong>FOOTBALL MARKET PLATFORM</strong>
-                    <span className="ms-2">[v1.0 · Foundation]</span>
+                    <div className="dashboard-brand-copy d-flex flex-column gap-1"><strong>FootMarket</strong><span>Mercado de Jugadores</span></div>
                 </Link>
-                <div className="dashboard-account d-inline-flex align-items-center gap-2">
-                    <FaUser aria-hidden="true" />
-                    <span>{preview ? "Vista previa" : session.username}</span>
-                    {preview ? (
-                        <Link className="text-white ms-2" to="/login">
-                            Iniciar sesión
-                        </Link>
-                    ) : (
-                        <button
-                            className="btn btn-link text-white text-decoration-none d-inline-flex align-items-center gap-2 p-0 ms-2"
-                            type="button"
-                            onClick={onLogout}
-                        >
-                            <FaRightFromBracket aria-hidden="true" /> Salir
-                        </button>
-                    )}
-                </div>
-            </header>
-            <div className="row g-0 flex-grow-1">
                 <nav
-                    className="dashboard-sidebar col-lg-2 d-flex flex-lg-column gap-1 p-2"
+                    className="d-flex flex-lg-column gap-1 p-2 overflow-x-auto"
                     aria-label="Navegación principal"
                 >
                     {navigation.map(({ to, label, icon: Icon }) => (
@@ -61,22 +40,37 @@ export const DashboardLayout = ({ session, preview, onLogout, children }) => (
                             to={to}
                             end
                             className={({ isActive }) =>
-                                `d-inline-flex align-items-center gap-2 text-white text-decoration-none rounded px-3 py-2${isActive ? " active" : ""}`
+                                `d-inline-flex align-items-center gap-3 text-white text-decoration-none rounded px-3 py-3${isActive ? " active" : ""}`
                             }
                         >
                             <Icon aria-hidden="true" /> {label}
                         </NavLink>
                     ))}
-                    <a
-                        className="d-inline-flex align-items-center gap-2 text-white text-decoration-none rounded px-3 py-2"
-                        href="http://localhost:8080/swagger-ui/index.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <FaFileLines aria-hidden="true" /> Swagger Docs
-                    </a>
                 </nav>
-                <section className="catalog-panel col-lg-10 d-flex flex-column p-3 p-md-4">
+                <div className="sidebar-footer d-none d-lg-flex align-items-center gap-3 mt-auto p-3"><FaFutbol aria-hidden="true" /><span>Tu pasión por el fútbol.<br />Tu próximo movimiento.</span></div>
+            </aside>
+            <div className="dashboard-content d-flex flex-column flex-grow-1">
+                <header className="dashboard-header d-flex align-items-center justify-content-between flex-wrap gap-3 px-3 py-2">
+                    <span className="dashboard-header-title">Dashboard</span>
+                    <div className="dashboard-account d-inline-flex align-items-center gap-2">
+                        <FaUser aria-hidden="true" />
+                        <span>{preview ? "Vista previa" : session.username}</span>
+                        {preview ? (
+                            <Link className="text-white ms-2" to="/login">
+                                Iniciar sesión
+                            </Link>
+                        ) : (
+                            <button
+                                className="btn btn-link text-white text-decoration-none d-inline-flex align-items-center gap-2 p-0 ms-2"
+                                type="button"
+                                onClick={onLogout}
+                            >
+                                <FaRightFromBracket aria-hidden="true" /> Salir
+                            </button>
+                        )}
+                    </div>
+                </header>
+                <section className="catalog-panel d-flex flex-column flex-grow-1 p-3 p-md-4">
                     {children}
                 </section>
             </div>

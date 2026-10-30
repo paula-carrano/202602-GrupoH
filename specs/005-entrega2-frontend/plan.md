@@ -1,5 +1,8 @@
 # Implementation Plan: Entrega 2 — Adaptación del frontend financiero
 
+> Actualizacion de implementacion (2026-10-29): por instruccion del usuario, el backend aprobado se conserva sin cambios y los contratos `/api` ya fueron contrastados con el codigo. El frontend usa Recharts y reconstruccion patrimonial diaria con operaciones y cotizaciones reales, autorizada expresamente. Esta decision reemplaza las restricciones anteriores sobre `/api/v1`, contratos pendientes y DEP-004. No se implementan pantallas administrativas ni API keys. Ver [contratos, limites y demo del frontend](../../front/README.md). Las secciones originales siguientes conservan el contexto de planificacion anterior.
+
+
 **Branch**: `feature/front2` | **Date**: 2026-10-13 | **Spec**: [spec.md](./spec.md)
 
 **Input**: `specs/005-entrega2-frontend/spec.md` y [checklist](./checklists/requirements.md).

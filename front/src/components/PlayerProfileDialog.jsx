@@ -1,12 +1,12 @@
-import { useMarket } from '../hooks/useMarket';
-import { requestState } from '../utils/financial';
-import { QuoteExplorer } from './QuoteExplorer';
+import { useMarket } from "../hooks/useMarket";
+import { requestState } from "../utils/financial";
+import { QuoteExplorer } from "./QuoteExplorer";
 import { useSessionRequest } from "../hooks/useSessionRequest";
 import { getPlayer } from "../services/players";
-import { useDialogFocus } from '../hooks/useDialogFocus';
-import { PlayerInvestmentSummary } from './PlayerInvestmentSummary';
-import { QuoteHistoryChart } from './charts/QuoteHistoryChart';
-import { financialValue } from './FinancialPanel';
+import { useDialogFocus } from "../hooks/useDialogFocus";
+import { PlayerInvestmentSummary } from "./PlayerInvestmentSummary";
+import { QuoteHistoryChart } from "./charts/QuoteHistoryChart";
+import { financialValue } from "./FinancialPanel";
 
 const metrics = [
     { key: "goals", label: "Goles" },
@@ -16,18 +16,59 @@ const metrics = [
     { key: "minutesPlayed", label: "Minutos jugados" },
 ];
 
-export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, investment, marketQuote, quotes }) => {
+const buildInvestment = (market, player, onClose) => {
+    if (!market || !player) return undefined;
+
+    const position = market.view.positions.find(
+        (p) => p.playerId === player.id,
+    );
+
+    const state = requestState(market.portfolio);
+
+    return {
+        state: state === "ready" && !position ? "empty" : state,
+        position,
+        error: market.portfolio.error,
+        onRetry: market.portfolio.retry,
+        onBuy: market.allowed
+            ? () => {
+                  onClose?.();
+                  market.openOrder("buy", player.id);
+              }
+            : undefined,
+        onSell: market.allowed
+            ? () => {
+                  onClose?.();
+                  market.openOrder("sell", player.id);
+              }
+            : undefined,
+    };
+};
+
+export const PlayerProfileDialog = ({
+    player,
+    onClose,
+    session,
+    onUnauthorized,
+    investment,
+    marketQuote,
+    quotes,
+}) => {
     const market = useMarket();
-    if (market && investment === undefined) {
-        const position = market.view.positions.find(p => p.playerId === player?.id);
-        const state = requestState(market.portfolio);
-        investment = { state: state === 'ready' && !position ? 'empty' : state, position,
-            error: market.portfolio.error, onRetry: market.portfolio.retry,
-            onBuy: market.allowed ? () => { onClose?.(); market.openOrder('buy', player.id); } : undefined,
-            onSell: market.allowed ? () => { onClose?.(); market.openOrder('sell', player.id); } : undefined };
-    }
+
+    const resolvedInvestment =
+        investment === undefined
+            ? buildInvestment(market, player, onClose)
+            : investment;
+
     const dialogRef = useDialogFocus(Boolean(player), onClose);
-    const { data: detail, loading, error, retry } = useSessionRequest({
+
+    const {
+        data: detail,
+        loading,
+        error,
+        retry,
+    } = useSessionRequest({
         session,
         requestKey: player?.id,
         enabled: Boolean(player),
@@ -84,38 +125,64 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, 
                         </header>
 
                         <section aria-label="Mercado">
-                        <h3 className="h5 px-4">Mercado</h3>
-                        {!market && <p className="px-4">Cotización actual (créditos): {financialValue(marketQuote)}</p>}
-                        <div className="player-profile-metrics">
-                            <section className="player-profile-metric">
-                                <span>Liga</span>
-                                <strong>{profile.league || "—"}</strong>
-                            </section>
+                            <h3 className="h5 px-4">Mercado</h3>
 
-                            {metrics.map((metric) => (
-                                <section
-                                    className="player-profile-metric"
-                                    key={metric.key}
-                                >
-                                    <span className="d-flex align-items-center gap-2">
-                                        {metric.marker && (
-                                            <i
-                                                className={`player-card-marker player-card-marker--${metric.marker}`}
-                                                aria-hidden="true"
-                                            />
-                                        )}
-                                        {metric.label}
-                                    </span>
+                            {!market && (
+                                <p className="px-4">
+                                    Cotización actual (créditos):{" "}
+                                    {financialValue(marketQuote)}
+                                </p>
+                            )}
 
-                                    <strong>
-                                        {valueOrPending(stats?.[metric.key])}
-                                    </strong>
+                            <div className="player-profile-metrics">
+                                <section className="player-profile-metric">
+                                    <span>Liga</span>
+                                    <strong>{profile.league || "—"}</strong>
                                 </section>
-                            ))}
-                        </div>
 
-                        <div className="px-3 pb-3"><>{market ? <QuoteExplorer key={player.id} playerId={player.id} playerLabel={`${profile.firstName || ""} ${profile.lastName || ""}`} session={session} onUnauthorized={onUnauthorized} revision={market.revision} /> : <QuoteHistoryChart playerLabel={`${profile.firstName} ${profile.lastName}`} {...quotes} />}</></div>
+                                {metrics.map((metric) => (
+                                    <section
+                                        className="player-profile-metric"
+                                        key={metric.key}
+                                    >
+                                        <span className="d-flex align-items-center gap-2">
+                                            {metric.marker && (
+                                                <i
+                                                    className={`player-card-marker player-card-marker--${metric.marker}`}
+                                                    aria-hidden="true"
+                                                />
+                                            )}
+                                            {metric.label}
+                                        </span>
+
+                                        <strong>
+                                            {valueOrPending(
+                                                stats?.[metric.key],
+                                            )}
+                                        </strong>
+                                    </section>
+                                ))}
+                            </div>
+
+                            <div className="px-3 pb-3">
+                                {market ? (
+                                    <QuoteExplorer
+                                        key={player.id}
+                                        playerId={player.id}
+                                        playerLabel={`${profile.firstName || ""} ${profile.lastName || ""}`}
+                                        session={session}
+                                        onUnauthorized={onUnauthorized}
+                                        revision={market.revision}
+                                    />
+                                ) : (
+                                    <QuoteHistoryChart
+                                        playerLabel={`${profile.firstName} ${profile.lastName}`}
+                                        {...quotes}
+                                    />
+                                )}
+                            </div>
                         </section>
+
                         {loading && (
                             <output className="player-profile-status mb-0">
                                 <span
@@ -129,7 +196,13 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, 
                         {error && (
                             <output className="player-profile-status player-profile-status--error mb-0">
                                 {error}
-                                <button className="btn btn-outline-light ms-2" onClick={retry}>Reintentar perfil</button>
+                                <button
+                                    type="button"
+                                    className="btn btn-outline-light ms-2"
+                                    onClick={retry}
+                                >
+                                    Reintentar perfil
+                                </button>
                             </output>
                         )}
 
@@ -138,7 +211,10 @@ export const PlayerProfileDialog = ({ player, onClose, session, onUnauthorized, 
                                 Estadísticas todavía no disponibles.
                             </output>
                         )}
-                        <div className="p-3"><PlayerInvestmentSummary {...investment} /></div>
+
+                        <div className="p-3">
+                            <PlayerInvestmentSummary {...resolvedInvestment} />
+                        </div>
                     </article>
                 </div>
             </dialog>

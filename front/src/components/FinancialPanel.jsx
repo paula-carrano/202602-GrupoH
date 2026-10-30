@@ -52,6 +52,7 @@ export const FinancialPanel = ({
 
                         {onRetry && (
                             <button
+                                type="button"
                                 className="btn btn-outline-primary"
                                 onClick={onRetry}
                             >
@@ -73,3 +74,35 @@ export const FinancialPanel = ({
         </section>
     );
 };
+
+export const FinancialTable = ({ caption, columns = [], rows = [] }) => (
+    <div className="table-responsive">
+        <table className="table">
+            <caption>{caption}</caption>
+
+            <thead>
+                <tr>
+                    {columns.map((column) => (
+                        <th key={column.key} scope="col">
+                            {column.label}
+                        </th>
+                    ))}
+                </tr>
+            </thead>
+
+            <tbody>
+                {rows.map((row, index) => (
+                    <tr key={row.playerId ?? index}>
+                        {columns.map((column) => (
+                            <td key={column.key}>
+                                {column.render
+                                    ? column.render(row)
+                                    : financialValue(row[column.key])}
+                            </td>
+                        ))}
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+    </div>
+);

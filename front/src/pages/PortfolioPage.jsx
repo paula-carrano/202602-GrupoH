@@ -1,9 +1,13 @@
+import {
+  FinancialPanel,
+  FinancialTable,
+  financialValue,
+  FinancialSummary,
+  PortfolioAllocationChart,
+  WealthHistoryChart,
+  ProfitOrLoss,
+} from '../components'
 import { Link } from 'react-router-dom'
-import { FinancialPanel, FinancialTable, financialValue } from '../components/FinancialPanel'
-import { FinancialSummary } from '../components/FinancialSummary'
-import { PortfolioAllocationChart } from '../components/charts/PortfolioAllocationChart'
-import { WealthHistoryChart } from '../components/charts/WealthHistoryChart'
-import { ProfitOrLoss } from '../components/PlayerInvestmentSummary'
 
 // Modelos de presentación inyectados; no son contratos HTTP.
 export const PortfolioPage = ({ state = 'unavailable', positions = [], summary, allocation, wealth, wealthContent, onSelectPlayer, onBuy, onSell, ...feedback }) => <>

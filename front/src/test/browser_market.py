@@ -46,7 +46,6 @@ with sync_playwright() as p:
         page.goto('http://127.0.0.1:5173/login')
         page.evaluate('(session) => localStorage.setItem("football-market-session", JSON.stringify(session))', session)
         page.goto('http://127.0.0.1:5173/home')
-        page.get_by_role('button', name='Elegir jugador para cotizaciones').click()
         try:
             page.get_by_role('combobox', name='Jugador', exact=True).select_option('7', timeout=10000)
         except Exception:

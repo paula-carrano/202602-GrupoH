@@ -1,5 +1,4 @@
-import { FinancialPanel, FinancialTable, financialValue } from '../components/FinancialPanel'
-
+import { FinancialPanel, FinancialTable, financialValue } from '../components'
 export const RankingPage = ({ state = 'unavailable', players = [], strategy, onSelectPlayer, onBuy, ...feedback }) => <>
   <h1 className="h5">Ranking</h1>
   {state === 'unavailable' && <p role="status">Esta sección todavía no está disponible.</p>}

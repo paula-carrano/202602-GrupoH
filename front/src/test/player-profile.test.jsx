@@ -1,7 +1,8 @@
+import { PlayerProfileDialog } from '../components'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { PlayerProfileDialog } from '../components/PlayerProfileDialog'
+
 import { api } from '../services/api'
 
 const player = { id: 7, firstName: 'Lionel', lastName: 'Messi' }

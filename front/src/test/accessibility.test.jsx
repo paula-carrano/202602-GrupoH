@@ -1,8 +1,7 @@
+import { ErrorDialog, PlayerTable } from '../components'
 import { useState } from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { ErrorDialog } from '../components/ErrorDialog'
-import { PlayerTable } from '../components/PlayerTable'
 
 it('el aviso de error recibe foco, cicla Tab, cierra con Escape y restaura el disparador', async () => {
   const user = userEvent.setup()

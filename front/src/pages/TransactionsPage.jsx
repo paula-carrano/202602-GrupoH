@@ -1,5 +1,4 @@
-import { FinancialPanel, FinancialTable, financialValue } from '../components/FinancialPanel'
-
+import { FinancialPanel, FinancialTable, financialValue } from '../components'
 export const TransactionsPage = ({ state = 'unavailable', transactions = [], onSelectPlayer, ...feedback }) => <>
   <h1 className="h5">Historial</h1>
   {state === 'unavailable' && <p role="status">Esta sección todavía no está disponible.</p>}

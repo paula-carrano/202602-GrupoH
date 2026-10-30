@@ -1,9 +1,10 @@
+import { PlayerProfileDialog } from '../components'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, render, renderHook, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { App } from '../App'
-import { PlayerProfileDialog } from '../components/PlayerProfileDialog'
+
 import { useSessionRequest } from '../hooks/useSessionRequest'
 import { api } from '../services/api'
 import { clearSession, getSession, saveSession } from '../services/session'

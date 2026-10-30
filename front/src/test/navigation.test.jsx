@@ -1,9 +1,10 @@
+import { DashboardLayout } from '../components'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { App } from '../App'
-import { DashboardLayout } from '../components'
+
 import { api } from '../services/api'
 import { saveSession } from '../services/session'
 
@@ -30,10 +31,10 @@ beforeEach(() => { localStorage.clear(); sessionStorage.clear() })
 afterEach(() => { vi.restoreAllMocks(); localStorage.clear(); sessionStorage.clear() })
 
 describe('navegación integrada de App', () => {
-  it('abre el dashboard real después del login sin consultar el catálogo', async () => {
+  it('abre el dashboard y carga el catalogo al iniciar sesion', async () => {
     const user = userEvent.setup()
     vi.spyOn(api, 'post').mockResolvedValue({ data: { accessToken: 'jwt-solo-prueba', expiresInSeconds: 3600 } })
-    const get = vi.spyOn(api, 'get')
+    const get = vi.spyOn(api, 'get').mockResolvedValue({ data: [] })
     renderApp('/login')
     await user.type(screen.getByRole('textbox', { name: 'Usuario' }), 'jugador')
     await user.type(screen.getByLabelText('Contraseña'), 'password123')
@@ -41,7 +42,7 @@ describe('navegación integrada de App', () => {
     expect(await screen.findByRole('heading', { name: 'Inicio financiero' })).toBeInTheDocument()
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/home')
     expect(screen.getByText('El resumen financiero todavía no está disponible.')).toBeInTheDocument()
-    expect(get).not.toHaveBeenCalled()
+    expect(get.mock.calls.map(call => call[0])).toEqual(['/players'])
   })
 
   it('navega entre Inicio y Jugadores y actualiza el único enlace activo', async () => {
@@ -106,7 +107,7 @@ describe('navegación integrada de App', () => {
     await user.click(screen.getByRole('button', { name: 'Volver en el historial de prueba' }))
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent('/login')
     expect(screen.queryByRole('heading', { name: 'Inicio financiero' })).not.toBeInTheDocument()
-    expect(get).toHaveBeenCalledTimes(1)
+    expect(get.mock.calls.map(call => call[0])).toEqual(['/players', '/players'])
   })
 
   it.each([
@@ -116,7 +117,7 @@ describe('navegación integrada de App', () => {
     ['Alertas', '/alerts', 'Alertas'],
   ])('permite navegar a %s sin inventar consultas financieras', async (label, path, heading) => {
     signIn()
-    const get = vi.spyOn(api, 'get').mockResolvedValue({ data: { ranking: [], strategyCode: 'BALANCED', strategyVersion: 1 } })
+    const get = vi.spyOn(api, 'get').mockImplementation(url => Promise.resolve({ data: url === '/players' ? [] : { ranking: [], strategyCode: 'BALANCED', strategyVersion: 1 } }))
     const user = userEvent.setup()
     renderApp()
     await user.click(screen.getByRole('link', { name: label, exact: true }))
@@ -124,9 +125,8 @@ describe('navegación integrada de App', () => {
     expect(screen.getByLabelText('Ruta actual')).toHaveTextContent(path)
     expect(screen.getByRole('link', { current: 'page' })).toHaveTextContent(label)
     if (path === '/ranking') expect(get).toHaveBeenCalledWith('/players/ranking', expect.any(Object))
-    else expect(get).not.toHaveBeenCalled()
+    expect(get.mock.calls.map(call => call[0])).toEqual(path === '/ranking' ? ['/players', '/players/ranking'] : ['/players'])
   })
-
 
   it('conserva el modo preview del layout sin requerir sesión', () => {
     render(<MemoryRouter initialEntries={['/home']}><DashboardLayout preview>Contenido de prueba</DashboardLayout></MemoryRouter>)

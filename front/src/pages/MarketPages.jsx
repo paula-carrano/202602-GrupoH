@@ -1,3 +1,4 @@
+import { WealthExplorer, Pagination } from '../components'
 import { useState } from 'react'
 import { useMarket } from '../hooks/useMarket'
 import { useSessionRequest } from '../hooks/useSessionRequest'
@@ -6,8 +7,6 @@ import { requestState } from '../utils/financial'
 import { PortfolioPage } from './PortfolioPage'
 import { TransactionsPage } from './TransactionsPage'
 import { RankingPage } from './RankingPage'
-import { WealthExplorer } from '../components/WealthExplorer'
-import { Pagination } from '../components/Pagination'
 
 export function ConnectedPortfolio() {
   const m = useMarket(), state = requestState(m.portfolio)

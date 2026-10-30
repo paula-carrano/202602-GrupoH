@@ -1,12 +1,13 @@
+import {
+  ErrorDialog,
+  FeedbackAlert,
+  Pagination,
+  PlayerProfileDialog,
+  PlayerTable,
+} from "../components"
 import { useState } from "react";
 import { FaMagnifyingGlass, FaUserGroup } from "react-icons/fa6";
-import {
-    ErrorDialog,
-    FeedbackAlert,
-    Pagination,
-    PlayerProfileDialog,
-    PlayerTable,
-} from "../components";
+
 import { usePlayerCatalog } from "../hooks/usePlayerCatalog";
 
 export const PlayersPage = ({ session, onLogout }) => (

@@ -1,9 +1,8 @@
+import { QuoteHistoryChart, PortfolioAllocationChart, WealthHistoryChart } from '../components'
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { QuoteHistoryChart } from '../components/charts/QuoteHistoryChart'
-import { PortfolioAllocationChart } from '../components/charts/PortfolioAllocationChart'
-import { WealthHistoryChart } from '../components/charts/WealthHistoryChart'
+
 import { financialPresentation } from './fixtures/financialPresentation'
 
 describe.each([QuoteHistoryChart, PortfolioAllocationChart, WealthHistoryChart])('contenedor de gráfico %s', Chart => {

@@ -190,3 +190,13 @@ body { background: var(--fm-bg); color: #eef2fa; font-family: 'Segoe UI', Arial,
 #investment-summary, #investment-quotes { scroll-margin-top: 20px; }
 @media (min-width: 1200px) { .investment-catalog { position: sticky; top: 16px; } }
 .investment-workspace .financial-panel { height: auto !important; }
+
+.alert-form label,
+.alert-form .form-select,
+.alert-form .form-control,
+.alert-form .form-select option { color: #fff; }
+.alert-form .form-select option { background-color: #0a1525; }
+
+.alert-form .alert-player-list { background-image: none; padding: 6px; }
+.alert-form .alert-player-list option { padding: 8px 12px; -webkit-text-fill-color: #fff; }
+.alert-form .alert-player-list option:checked { color: #fff; background: #145461 linear-gradient(#145461, #145461); }

@@ -1,7 +1,8 @@
+import { AuthLayout, FeedbackAlert, FormField } from "../components"
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaLock, FaUser } from "react-icons/fa6";
-import { AuthLayout, FeedbackAlert, FormField } from "../components";
+
 import { useApiRequest } from "../hooks/useApiRequest";
 import { login } from "../services/auth";
 
@@ -19,7 +20,7 @@ export const LoginPage = ({ onLogin }) => {
 		return run(async () => {
 			const session = await login(username.trim(), password, remember);
 			onLogin(session);
-			void navigate(location.state?.from?.pathname || "/home", {
+			void navigate("/home", {
 				replace: true,
 			});
 		});

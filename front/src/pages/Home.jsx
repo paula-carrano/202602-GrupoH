@@ -1,100 +1,169 @@
-import { useState } from "react";
-import { FaMagnifyingGlass, FaUserGroup } from "react-icons/fa6";
 import {
-    DashboardLayout,
-    ErrorDialog,
-    FeedbackAlert,
-    Pagination,
+    PlayerCatalog,
+    SelectedPlayerCard,
+    QuoteExplorer,
+    WealthExplorer,
+    FinancialSummary,
+    QuoteHistoryChart,
+    PortfolioAllocationChart,
+    WealthHistoryChart,
     PlayerProfileDialog,
-    PlayerTable,
-} from "../components";
-import { usePlayerCatalog } from "../hooks/usePlayerCatalog";
+} from "../components/index";
+import { playerName } from "../utils/playerDisplay";
+import { useMarket } from "../hooks/useMarket";
+import { requestState } from "../utils/financial";
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { useSessionRequest } from "../hooks/useSessionRequest";
+import { getPlayers } from "../services/players";
+
+export const DashboardPresentation = ({
+    summary,
+    quotes,
+    allocation,
+    wealth,
+}) => (
+    <div className="row g-3">
+        <div className="col-12 order-4">
+            <FinancialSummary {...summary} />
+        </div>
+        <div className="col-12 col-xxl-7">
+            <QuoteHistoryChart {...quotes} />
+        </div>
+        <div className="col-12 col-xxl-5">
+            <PortfolioAllocationChart {...allocation} />
+        </div>
+        <div className="col-12">
+            <WealthHistoryChart {...wealth} />
+        </div>
+    </div>
+);
 
 export const Home = ({ session, onLogout }) => {
-    const catalog = usePlayerCatalog({ session, onLogout });
-    const [selectedPlayer, setSelectedPlayer] = useState(null);
-
-    let catalogContent;
-
-    if (catalog.loading) {
-        catalogContent = (
-            <output className="catalog-state d-flex align-items-center justify-content-center gap-2">
-                <span
-                    className="spinner-border spinner-border-sm"
-                    aria-hidden="true"
-                />{" "}
-                Cargando jugadores…
-            </output>
-        );
-    } else if (catalog.error) {
-        catalogContent = (
-            <div className="catalog-state d-flex flex-column align-items-center justify-content-center gap-2">
-                <FeedbackAlert message={catalog.error} />
-                <button className="btn btn-primary" onClick={catalog.retry}>
-                    Reintentar
-                </button>
-            </div>
-        );
-    } else {
-        catalogContent = (
-            <>
-                <PlayerTable
-                    players={catalog.visible}
-                    hasResults={catalog.filteredCount > 0}
-                    rankingOffset={(catalog.page - 1) * catalog.pageSize}
-                    onPlayerSelect={setSelectedPlayer}
-                />
-                <Pagination
-                    page={catalog.page}
-                    pageSize={catalog.pageSize}
-                    total={catalog.filteredCount}
-                    onPageChange={catalog.setPage}
-                />
-            </>
-        );
-    }
-
+    const market = useMarket();
+    const state = market ? requestState(market.portfolio) : "unavailable";
+    const [selectedId, setSelectedId] = useState("");
+    const [showDetail, setShowDetail] = useState(false);
+    const catalog = useSessionRequest({
+        session,
+        requestKey: "dashboard-players",
+        request: getPlayers,
+        onUnauthorized: onLogout,
+    });
+    const players = catalog.data || [];
+    const selected = players.find((player) => String(player.id) === selectedId);
+    const selectPlayer = (id) => {
+        setSelectedId(String(id));
+        setShowDetail(false);
+    };
+    const position = market?.view.positions.find(
+        (item) => item.playerId === selected?.id,
+    );
     return (
         <>
-            <DashboardLayout session={session} onLogout={onLogout}>
-                <div className="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-                    <h1 className="catalog-title d-flex align-items-center gap-2 mb-0 fs-5 fw-bold">
-                        <span className="catalog-icon d-inline-flex align-items-center justify-content-center rounded-circle">
-                            <FaUserGroup aria-hidden="true" />
-                        </span>
-                        <span>CATÁLOGO DE JUGADORES</span>
-                    </h1>
-
-                    <label className="input-group catalog-search">
-                        <span className="input-group-text bg-white">
-                            <FaMagnifyingGlass aria-hidden="true" />
-                        </span>
-                        <input
-                            className="form-control border-start-0"
-                            aria-label="Buscar jugador por nombre"
-                            placeholder="Buscar por nombre…"
-                            value={catalog.query}
-                            onChange={(event) =>
-                                catalog.setQuery(event.target.value)
-                            }
-                        />
-                    </label>
+            <h1 className="visually-hidden">Inicio financiero</h1>
+            <div className="row g-4 investment-workspace">
+                <aside className="col-12 col-xl-4 col-xxl-3">
+                    <PlayerCatalog
+                        players={players}
+                        catalog={catalog}
+                        selectedId={selectedId}
+                        onSelect={selectPlayer}
+                    />
+                </aside>
+                <div className="col-12 col-xl-8 col-xxl-9">
+                    <SelectedPlayerCard
+                        selected={selected}
+                        canBuy={Boolean(selected && market?.allowed)}
+                        canSell={Boolean(
+                            selected &&
+                            market?.allowed &&
+                            state === "ready" &&
+                            position?.tokenQuantity > 0,
+                        )}
+                        onBuy={() => market.openOrder("buy", selected.id)}
+                        onSell={() => market.openOrder("sell", selected.id)}
+                        onShowDetail={() => setShowDetail(true)}
+                    />
+                    <nav
+                        className="nav investment-section-nav border-bottom mb-3 gap-2"
+                        aria-label="Secciones de inversión"
+                    >
+                        <a className="nav-link" href="#investment-summary">
+                            Resumen
+                        </a>
+                        <a className="nav-link" href="#investment-quotes">
+                            Cotización
+                        </a>
+                        <Link className="nav-link" to="/portfolio">
+                            Mi portfolio
+                        </Link>
+                        <Link className="nav-link" to="/transactions">
+                            Historial de operaciones
+                        </Link>
+                    </nav>
+                    {!market?.allowed && (
+                        <output className="d-block mb-3 small text-body-secondary">
+                            El resumen financiero todavía no está disponible.
+                        </output>
+                    )}
+                    <div className="row g-3">
+                        <div
+                            className="col-12 col-xxl-7"
+                            id="investment-quotes"
+                        >
+                            {market && selected ? (
+                                <QuoteExplorer
+                                    key={selected.id}
+                                    playerId={selected.id}
+                                    playerLabel={playerName(selected)}
+                                    session={session}
+                                    onUnauthorized={onLogout}
+                                    revision={market.revision}
+                                />
+                            ) : (
+                                <QuoteHistoryChart
+                                    playerLabel={
+                                        selected
+                                            ? playerName(selected)
+                                            : undefined
+                                    }
+                                />
+                            )}
+                        </div>
+                        <div className="col-12 col-xxl-5">
+                            <PortfolioAllocationChart
+                                state={state}
+                                positions={market?.view.allocation}
+                                error={market?.portfolio.error}
+                                onRetry={market?.portfolio.retry}
+                            />
+                        </div>
+                        <div className="col-12">
+                            {market ? (
+                                <WealthExplorer />
+                            ) : (
+                                <WealthHistoryChart />
+                            )}
+                        </div>
+                        <div className="col-12" id="investment-summary">
+                            <FinancialSummary
+                                state={state}
+                                data={market?.view.summary}
+                                error={market?.portfolio.error}
+                                onRetry={market?.portfolio.retry}
+                            />
+                        </div>
+                    </div>
                 </div>
-
-                {catalogContent}
-            </DashboardLayout>
-
+            </div>
             <PlayerProfileDialog
-                player={selectedPlayer}
-                onClose={() => setSelectedPlayer(null)}
+                player={showDetail ? selected : null}
+                session={session}
+                onUnauthorized={onLogout}
+                onClose={() => setShowDetail(false)}
             />
-
-            {catalog.modalError && (
-                <ErrorDialog
-                    message={catalog.modalError}
-                    onClose={catalog.closeModalError}
-                />
-            )}
         </>
     );
 };

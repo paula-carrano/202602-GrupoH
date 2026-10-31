@@ -9,7 +9,6 @@ export const PlayerTable = ({
     <section
         className="table-responsive catalog-table-scroll"
         aria-label="Catálogo de jugadores"
-        tabIndex={0}
     >
         <table className="table players-table mb-0">
             <caption className="visually-hidden">Catálogo de jugadores</caption>

@@ -15,9 +15,13 @@ export function WealthExplorer() {
       const quotes = {}
       // Bounded concurrency to avoid flooding the API for larger portfolios.
       let index = 0
-      await Promise.all(Array.from({ length: Math.min(4, ids.length) }, async () => {
-        while (index < ids.length) { const id = ids[index++]; quotes[id] = await getAllQuotes(id, options) }
-      }))
+      const fetchNext = async () => {
+        if (index >= ids.length) return
+        const id = ids[index++]
+        quotes[id] = await getAllQuotes(id, options)
+        return fetchNext()
+      }
+      await Promise.all(Array.from({ length: Math.min(4, ids.length) }, () => fetchNext()))
       try { return { data: { points: reconstructWealth(portfolio, transactions, quotes), problem: '' } } }
       catch (error) { return { data: { points: [], problem: error.message } } }
     },

@@ -25,6 +25,6 @@ it('el aviso de error recibe foco, cicla Tab, cierra con Escape y restaura el di
 it('identifica la tabla desplazable y anuncia resultados vacíos', () => {
   render(<PlayerTable players={[]} hasResults={false} />)
   expect(screen.getByRole('table', { name: 'Catálogo de jugadores' })).toBeInTheDocument()
-  expect(screen.getByRole('region', { name: 'Catálogo de jugadores' })).toHaveAttribute('tabindex', '0')
+  expect(screen.getByRole('region', { name: 'Catálogo de jugadores' })).not.toHaveAttribute('tabindex')
   expect(screen.getByRole('status')).toHaveTextContent('No se encontraron jugadores.')
 })

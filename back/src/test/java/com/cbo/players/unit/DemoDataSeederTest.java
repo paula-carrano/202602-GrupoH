@@ -68,7 +68,7 @@ class DemoDataSeederTest {
 
     @Test
     @DisplayName("Cuando el usuario inversor ya existe, el seeder no realiza ninguna acción (idempotencia)")
-    void run_whenInversorAlreadyExists_doesNothing() {
+    void runWhenInversorAlreadyExistsDoesNothing() {
         when(userRepository.existsByEmail("inversor@demo.com")).thenReturn(true);
 
         demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
@@ -81,7 +81,7 @@ class DemoDataSeederTest {
 
     @Test
     @DisplayName("Cuando la base está vacía, el seeder inicializa estrategias, jugadores, cotizaciones, usuarios y alertas")
-    void run_whenEmptyDatabase_executesFullSeed() {
+    void runWhenEmptyDatabaseExecutesFullSeed() {
         when(userRepository.existsByEmail("inversor@demo.com")).thenReturn(false);
         when(valuationStrategyRepository.findByActiveTrue()).thenReturn(Optional.empty());
         when(playerRepository.count()).thenReturn(0L);
@@ -110,7 +110,7 @@ class DemoDataSeederTest {
 
     @Test
     @DisplayName("Cuando los jugadores ya existen y hay estrategia activa, utiliza los jugadores existentes")
-    void run_whenPlayersAndStrategyAlreadyExist_usesExistingData() {
+    void runWhenPlayersAndStrategyAlreadyExistUsesExistingData() {
         when(userRepository.existsByEmail("inversor@demo.com")).thenReturn(false);
 
         ValuationStrategy activeStrategy = new ValuationStrategy();
@@ -159,7 +159,7 @@ class DemoDataSeederTest {
 
     @ParameterizedTest
     @MethodSource("invalidConfiguration")
-    void run_whenConfigurationMissingOrBlank_failsBeforeInserting(String name, String value) {
+    void runWhenConfigurationMissingOrBlankFailsBeforeInserting(String name, String value) {
         when(environment.getProperty(anyString())).thenAnswer(invocation ->
                 name.equals(invocation.getArgument(0)) ? value : "test-only-demo-credential");
 
@@ -171,7 +171,7 @@ class DemoDataSeederTest {
     }
 
     @Test
-    void run_whenApiKeyTooShort_failsBeforeInserting() {
+    void runWhenApiKeyTooShortFailsBeforeInserting() {
         when(environment.getProperty(anyString())).thenAnswer(invocation ->
                 "DEMO_ADMIN_API_KEY".equals(invocation.getArgument(0)) ? "short" : "test-password");
 

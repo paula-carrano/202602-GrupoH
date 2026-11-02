@@ -27,9 +27,11 @@ public class UserPrincipal implements UserDetails {
     }
 
     public static UserPrincipal create(User user) {
-        Collection<GrantedAuthority> authorities = Collections.singletonList(
-                new SimpleGrantedAuthority(user.getRole().name())
-        );
+        java.util.List<GrantedAuthority> authorities = new java.util.ArrayList<>();
+        authorities.add(new SimpleGrantedAuthority(user.getRole().name()));
+        if (user.getRole() == com.cbo.players.model.UserRole.ROLE_SUPERUSER) {
+            authorities.add(new SimpleGrantedAuthority(com.cbo.players.model.UserRole.ROLE_ADMIN.name()));
+        }
 
         return new UserPrincipal(
                 user.getId(),

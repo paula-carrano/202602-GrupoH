@@ -74,6 +74,13 @@ public class Transaction {
         this.strategyVersion = data.strategyVersion() != null ? data.strategyVersion() : 1;
     }
 
+    public Transaction(TransactionData data, LocalDateTime timestamp) {
+        this(data);
+        if (timestamp != null) {
+            this.timestamp = timestamp;
+        }
+    }
+
     @PrePersist
     protected void onCreate() {
         if (this.timestamp == null) {

@@ -25,6 +25,8 @@ spring:
       timeout: 2000ms
 
 app:
+  demo-seed:
+    enabled: ${DEMO_SEED_ENABLED:true}
   catalog-sync:
     enabled: ${CATALOG_SYNC_ENABLED:false}
     cron: ${CATALOG_SYNC_CRON:0 0 15 * * MON}

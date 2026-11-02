@@ -26,6 +26,8 @@ management:
       enabled: false
 
 app:
+  demo-seed:
+    enabled: false
   catalog-sync:
     enabled: false
   security:

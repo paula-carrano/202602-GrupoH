@@ -1,0 +1,87 @@
+import { FinancialPanel, financialValue } from "./FinancialPanel";
+
+export const ProfitOrLoss = ({ value }) => {
+    if (value == null) {
+        return "No disponible";
+    }
+
+    let className = "";
+    let description = "Sin ganancia ni pérdida: 0";
+
+    if (value > 0) {
+        className = "text-success";
+        description = `Ganancia: +${value}`;
+    } else if (value < 0) {
+        className = "text-danger";
+        description = `Pérdida: ${value}`;
+    }
+
+    return <span className={className}>{description}</span>;
+};
+
+export const PlayerInvestmentSummary = ({
+    state = "unavailable",
+    position = {},
+    onBuy,
+    onSell,
+    ...feedback
+}) => (
+    <>
+        <FinancialPanel
+            title="Mi inversión"
+            state={state}
+            emptyText="No tenés tokens de este jugador."
+            {...feedback}
+        >
+            <dl>
+                {[
+                    ["tokenQuantity", "Cantidad de tokens"],
+                    [
+                        "averagePurchasePrice",
+                        "Precio promedio de compra (créditos)",
+                    ],
+                    ["acquisitionCost", "Costo de adquisición (créditos)"],
+                    ["currentValue", "Valor actual (créditos)"],
+                ].map(([key, label]) => (
+                    <div key={key}>
+                        <dt>{label}</dt>
+                        <dd>{financialValue(position[key])}</dd>
+                    </div>
+                ))}
+
+                <dt>Ganancia/pérdida (créditos)</dt>
+                <dd>
+                    <ProfitOrLoss value={position.profitOrLoss} />
+                </dd>
+            </dl>
+        </FinancialPanel>
+
+        <div className="d-flex flex-wrap gap-2 mt-2">
+            <button
+                type="button"
+                className="btn btn-primary"
+                disabled={!onBuy}
+                onClick={onBuy}
+            >
+                Comprar tokens
+            </button>
+
+            <button
+                type="button"
+                className="btn btn-outline-primary"
+                disabled={
+                    !onSell || state !== "ready" || position.tokenQuantity <= 0
+                }
+                onClick={onSell}
+            >
+                Vender tokens
+            </button>
+        </div>
+
+        {!onBuy && (
+            <p className="small mt-2">
+                Las operaciones todavía no están disponibles.
+            </p>
+        )}
+    </>
+);

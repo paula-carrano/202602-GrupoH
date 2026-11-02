@@ -1,13 +1,13 @@
 import { api } from './api'
-import { saveSession } from './session'
+import { normalizeSession, saveSession } from './session'
 
 export const login = async (username, password, remember = true) => {
   const { data } = await api.post('/auth/login', { username, password })
-  const session = {
+  const session = normalizeSession({
     token: data.accessToken,
     username,
     expiresAt: Date.now() + data.expiresInSeconds * 1000,
-  }
+  })
   saveSession(session, remember)
   return session
 }

@@ -1,7 +1,8 @@
+import { AuthLayout, FeedbackAlert, FormField } from "../components"
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEnvelope, FaLock, FaUser, FaUserPlus } from "react-icons/fa6";
-import { AuthLayout, FeedbackAlert, FormField } from "../components";
+
 import { useApiRequest } from "../hooks/useApiRequest";
 import { register } from "../services/auth";
 

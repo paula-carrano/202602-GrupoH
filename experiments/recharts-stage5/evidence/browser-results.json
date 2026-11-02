@@ -1,0 +1,182 @@
+{
+  "browser": "155.0.8059.85",
+  "platform": "Windows-10-10.0.19045-SP0",
+  "cpu": "Intel64 Family 6 Model 78 Stepping 3, GenuineIntel",
+  "fixtures": "SOLO PRUEBA; 3 puntos y 2 posiciones",
+  "results": [
+    {
+      "width": 360,
+      "lineKeyboardFirst": "02/10/2026\n\nEstrategia: SIMULADA-v1\n\nPatrimonio: 90,1234 créditos\n\nSaldo: 40 créditos",
+      "lineKeyboardNext": "03/10/2026\n\nEstrategia: SIMULADA-v2\n\nPatrimonio: 100 créditos\n\nSaldo: 0 créditos",
+      "pieTooltipAfterArrow": "hidden",
+      "pieInnerTooltipAfterArrow": "hidden",
+      "pieHover": "Valor : 60 créditos",
+      "twoTabsLeavePie": true
+    },
+    {
+      "width": 360,
+      "case": "complete",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 1,
+      "tables": 2
+    },
+    {
+      "width": 360,
+      "case": "empty",
+      "pageOverflow": false,
+      "lineCharts": 0,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 360,
+      "case": "nulls",
+      "pageOverflow": false,
+      "lineCharts": 0,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 360,
+      "case": "incomplete",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 360,
+      "case": "zero",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 360,
+      "case": "single",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 1,
+      "tables": 2
+    },
+    {
+      "width": 768,
+      "lineKeyboardFirst": "02/10/2026\n\nEstrategia: SIMULADA-v1\n\nPatrimonio: 90,1234 créditos\n\nSaldo: 40 créditos",
+      "lineKeyboardNext": "03/10/2026\n\nEstrategia: SIMULADA-v2\n\nPatrimonio: 100 créditos\n\nSaldo: 0 créditos",
+      "pieTooltipAfterArrow": "hidden",
+      "pieInnerTooltipAfterArrow": "hidden",
+      "pieHover": "Valor : 60 créditos",
+      "twoTabsLeavePie": true
+    },
+    {
+      "width": 768,
+      "case": "complete",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 1,
+      "tables": 2
+    },
+    {
+      "width": 768,
+      "case": "empty",
+      "pageOverflow": false,
+      "lineCharts": 0,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 768,
+      "case": "nulls",
+      "pageOverflow": false,
+      "lineCharts": 0,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 768,
+      "case": "incomplete",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 768,
+      "case": "zero",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 768,
+      "case": "single",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 1,
+      "tables": 2
+    },
+    {
+      "width": 1280,
+      "lineKeyboardFirst": "02/10/2026\n\nEstrategia: SIMULADA-v1\n\nPatrimonio: 90,1234 créditos\n\nSaldo: 40 créditos",
+      "lineKeyboardNext": "03/10/2026\n\nEstrategia: SIMULADA-v2\n\nPatrimonio: 100 créditos\n\nSaldo: 0 créditos",
+      "pieTooltipAfterArrow": "hidden",
+      "pieInnerTooltipAfterArrow": "hidden",
+      "pieHover": "Valor : 60 créditos",
+      "twoTabsLeavePie": true
+    },
+    {
+      "width": 1280,
+      "case": "complete",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 1,
+      "tables": 2
+    },
+    {
+      "width": 1280,
+      "case": "empty",
+      "pageOverflow": false,
+      "lineCharts": 0,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 1280,
+      "case": "nulls",
+      "pageOverflow": false,
+      "lineCharts": 0,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 1280,
+      "case": "incomplete",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 1280,
+      "case": "zero",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 0,
+      "tables": 2
+    },
+    {
+      "width": 1280,
+      "case": "single",
+      "pageOverflow": false,
+      "lineCharts": 1,
+      "pieCharts": 1,
+      "tables": 2
+    }
+  ],
+  "pageErrors": [],
+  "apiRequests": [],
+  "screenReader": "No ejecutado; árbol accesible no equivale a lector de pantalla"
+}

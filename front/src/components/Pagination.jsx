@@ -1,6 +1,6 @@
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa6";
 
-export const Pagination = ({ page, pageSize, total, onPageChange }) => {
+export const Pagination = ({ page, pageSize, total, onPageChange, itemLabel = 'jugadores' }) => {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     const first = total ? (page - 1) * pageSize + 1 : 0;
     const last = Math.min(page * pageSize, total);
@@ -8,7 +8,7 @@ export const Pagination = ({ page, pageSize, total, onPageChange }) => {
     return (
         <div className="catalog-footer d-flex flex-wrap align-items-center justify-content-between gap-3 mt-auto pt-3">
             <span>
-                Mostrando {first}–{last} de {total} jugadores
+                Mostrando {first}–{last} de {total} {itemLabel}
             </span>
             <div className="d-flex gap-2">
                 <button

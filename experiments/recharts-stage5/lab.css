@@ -1,0 +1,8 @@
+.lab { max-width: 1280px; color: #102f55; }
+.lab h1 { font-size: 1.65rem; }
+.lab h2 { font-size: 1.2rem; }
+.lab-chart { height: 320px; width: 100%; min-width: 0; }
+.lab-tooltip { padding: 10px; background: #fff; border: 1px solid #102f55; color: #102f55; max-width: 260px; }
+.lab-tooltip p { margin: 0; }
+.lab :focus-visible { outline: 3px solid #102f55; outline-offset: 2px; }
+.lab th, .lab td { min-width: 7rem; }

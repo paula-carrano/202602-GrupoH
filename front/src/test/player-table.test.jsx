@@ -1,6 +1,6 @@
+import { PlayerTable } from '../components'
 import { render, screen } from '@testing-library/react'
 import { expect, it } from 'vitest'
-import { PlayerTable } from '../components/PlayerTable'
 
 it('muestra N/D para datos personales que el proveedor no informa', () => {
   render(<PlayerTable hasResults players={[{ id: 1, firstName: 'Nombre completo', lastName: '',

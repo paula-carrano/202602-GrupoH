@@ -1,0 +1,249 @@
+{
+  "node": "v22.19.0",
+  "builds": {
+    "app": {
+      "files": [
+        {
+          "file": "assets/index-4-kTmvUN.css",
+          "bytes": 236875,
+          "gzip": 32734
+        },
+        {
+          "file": "assets/index-DYFixnQO.js",
+          "bytes": 362304,
+          "gzip": 118337
+        }
+      ],
+      "js": {
+        "bytes": 362304,
+        "gzip": 118337
+      },
+      "css": {
+        "bytes": 236875,
+        "gzip": 32734
+      }
+    },
+    "baseline": {
+      "files": [
+        {
+          "file": "assets/index-CzKISo4b.js",
+          "bytes": 365732,
+          "gzip": 119504
+        },
+        {
+          "file": "assets/index-DEYxo2cW.css",
+          "bytes": 237230,
+          "gzip": 32856
+        }
+      ],
+      "js": {
+        "bytes": 365732,
+        "gzip": 119504
+      },
+      "css": {
+        "bytes": 237230,
+        "gzip": 32856
+      }
+    },
+    "recharts": {
+      "files": [
+        {
+          "file": "assets/index-CcUaPtzO.js",
+          "bytes": 705802,
+          "gzip": 221995
+        },
+        {
+          "file": "assets/index-DEYxo2cW.css",
+          "bytes": 237230,
+          "gzip": 32856
+        }
+      ],
+      "js": {
+        "bytes": 705802,
+        "gzip": 221995
+      },
+      "css": {
+        "bytes": 237230,
+        "gzip": 32856
+      }
+    }
+  },
+  "deltaRenderer": {
+    "bytes": 340070,
+    "gzip": 102491
+  },
+  "deltaFromApp": {
+    "bytes": 343498,
+    "gzip": 103658
+  },
+  "addedPackages": [
+    {
+      "path": "node_modules/@reduxjs/toolkit",
+      "version": "2.13.0"
+    },
+    {
+      "path": "node_modules/@reduxjs/toolkit/node_modules/immer",
+      "version": "11.2.7"
+    },
+    {
+      "path": "node_modules/@standard-schema/spec",
+      "version": "1.1.0"
+    },
+    {
+      "path": "node_modules/@standard-schema/utils",
+      "version": "0.3.0"
+    },
+    {
+      "path": "node_modules/@types/d3-array",
+      "version": "3.2.2"
+    },
+    {
+      "path": "node_modules/@types/d3-color",
+      "version": "3.1.3"
+    },
+    {
+      "path": "node_modules/@types/d3-ease",
+      "version": "3.0.2"
+    },
+    {
+      "path": "node_modules/@types/d3-interpolate",
+      "version": "3.0.4"
+    },
+    {
+      "path": "node_modules/@types/d3-path",
+      "version": "3.1.1"
+    },
+    {
+      "path": "node_modules/@types/d3-scale",
+      "version": "4.0.9"
+    },
+    {
+      "path": "node_modules/@types/d3-shape",
+      "version": "3.2.0"
+    },
+    {
+      "path": "node_modules/@types/d3-time",
+      "version": "3.0.4"
+    },
+    {
+      "path": "node_modules/@types/d3-timer",
+      "version": "3.0.2"
+    },
+    {
+      "path": "node_modules/@types/use-sync-external-store",
+      "version": "0.0.6"
+    },
+    {
+      "path": "node_modules/clsx",
+      "version": "2.1.1"
+    },
+    {
+      "path": "node_modules/d3-array",
+      "version": "3.2.4"
+    },
+    {
+      "path": "node_modules/d3-color",
+      "version": "3.1.0"
+    },
+    {
+      "path": "node_modules/d3-ease",
+      "version": "3.0.1"
+    },
+    {
+      "path": "node_modules/d3-format",
+      "version": "3.1.2"
+    },
+    {
+      "path": "node_modules/d3-interpolate",
+      "version": "3.0.1"
+    },
+    {
+      "path": "node_modules/d3-path",
+      "version": "3.1.0"
+    },
+    {
+      "path": "node_modules/d3-scale",
+      "version": "4.0.2"
+    },
+    {
+      "path": "node_modules/d3-shape",
+      "version": "3.2.0"
+    },
+    {
+      "path": "node_modules/d3-time",
+      "version": "3.1.0"
+    },
+    {
+      "path": "node_modules/d3-time-format",
+      "version": "4.1.0"
+    },
+    {
+      "path": "node_modules/d3-timer",
+      "version": "3.0.1"
+    },
+    {
+      "path": "node_modules/decimal.js-light",
+      "version": "2.5.1"
+    },
+    {
+      "path": "node_modules/es-toolkit",
+      "version": "1.52.0"
+    },
+    {
+      "path": "node_modules/eventemitter3",
+      "version": "5.0.4"
+    },
+    {
+      "path": "node_modules/immer",
+      "version": "10.2.0"
+    },
+    {
+      "path": "node_modules/internmap",
+      "version": "2.0.3"
+    },
+    {
+      "path": "node_modules/pretty-format/node_modules/react-is",
+      "version": "17.0.2"
+    },
+    {
+      "path": "node_modules/react-redux",
+      "version": "9.3.0"
+    },
+    {
+      "path": "node_modules/recharts",
+      "version": "3.3.0"
+    },
+    {
+      "path": "node_modules/redux",
+      "version": "5.0.1"
+    },
+    {
+      "path": "node_modules/redux-thunk",
+      "version": "3.1.0"
+    },
+    {
+      "path": "node_modules/reselect",
+      "version": "5.1.1"
+    },
+    {
+      "path": "node_modules/tiny-invariant",
+      "version": "1.3.3"
+    },
+    {
+      "path": "node_modules/use-sync-external-store",
+      "version": "1.7.0"
+    },
+    {
+      "path": "node_modules/victory-vendor",
+      "version": "37.3.6"
+    }
+  ],
+  "changedPackages": [
+    {
+      "path": "node_modules/react-is",
+      "before": "17.0.2",
+      "after": "19.3.0"
+    }
+  ],
+  "changedOriginalFiles": []
+}

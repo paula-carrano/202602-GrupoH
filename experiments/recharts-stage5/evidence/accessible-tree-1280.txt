@@ -1,0 +1,85 @@
+- main:
+  - heading "Recharts — SOLO PRUEBA TÉCNICA" [level=1]
+  - paragraph: "Datos sintéticos y esquema hipotético. Sin servicios, sesiones ni contratos financieros reales. Unidad de prueba: créditos."
+  - text: Escenario
+  - combobox "Escenario":
+    - option "Completo" [selected]
+    - option "Vacío"
+    - option "Nulos"
+    - option "Incompleto"
+    - option "Cero"
+    - option "Punto único"
+  - status: "Escenario de prueba: Completo. Valores faltantes: no se unen ni reemplazan por cero."
+  - region "Patrimonio y saldo — prueba":
+    - heading "Patrimonio y saldo — prueba" [level=2]
+    - paragraph: Foco en el gráfico y flechas izquierda/derecha. Todos los valores están también en la tabla.
+    - status:
+      - strong: 03/10/2026
+      - paragraph: "Estrategia: SIMULADA-v2"
+      - paragraph: "Patrimonio: 100 créditos"
+      - paragraph: "Saldo: 0 créditos"
+    - list:
+      - listitem:
+        - img "Patrimonio (créditos) legend icon"
+        - text: Patrimonio (créditos)
+      - listitem:
+        - img "Saldo (créditos) legend icon"
+        - text: Saldo (créditos)
+    - application "Patrimonio y saldo sintéticos": 01/10/2026 02/10/2026 03/10/2026 0 25 50 75 100
+  - region "Distribución — prueba":
+    - heading "Distribución — prueba" [level=2]
+    - status:
+      - paragraph
+      - list:
+        - listitem: "Valor : 60 créditos"
+    - list:
+      - listitem:
+        - img "Jugador A — PRUEBA legend icon"
+        - text: Jugador A — PRUEBA
+      - listitem:
+        - img "Jugador B — PRUEBA legend icon"
+        - text: Jugador B — PRUEBA
+    - application "Distribución sintética; alternativa tabular a continuación"
+  - region "Alternativa tabular — series":
+    - heading "Alternativa tabular — series" [level=2]
+    - region "Series de prueba":
+      - table "Series sintéticas; mismos registros que el gráfico":
+        - caption: Series sintéticas; mismos registros que el gráfico
+        - rowgroup:
+          - row "Fecha civil Estrategia simulada Patrimonio (créditos) Saldo (créditos)":
+            - columnheader "Fecha civil"
+            - columnheader "Estrategia simulada"
+            - columnheader "Patrimonio (créditos)"
+            - columnheader "Saldo (créditos)"
+        - rowgroup:
+          - row "01/10/2026 SIMULADA-v1 85 50":
+            - rowheader "01/10/2026"
+            - cell "SIMULADA-v1"
+            - cell "85"
+            - cell "50"
+          - row "02/10/2026 SIMULADA-v1 90,1234 40":
+            - rowheader "02/10/2026"
+            - cell "SIMULADA-v1"
+            - cell "90,1234"
+            - cell "40"
+          - row "03/10/2026 SIMULADA-v2 100 0":
+            - rowheader "03/10/2026"
+            - cell "SIMULADA-v2"
+            - cell "100"
+            - cell "0"
+  - region "Alternativa tabular — distribución":
+    - heading "Alternativa tabular — distribución" [level=2]
+    - region "Distribución de prueba":
+      - table "Posiciones sintéticas; valores sin calcular PnL ni porcentajes":
+        - caption: Posiciones sintéticas; valores sin calcular PnL ni porcentajes
+        - rowgroup:
+          - row "Jugador Valor (créditos)":
+            - columnheader "Jugador"
+            - columnheader "Valor (créditos)"
+        - rowgroup:
+          - row "Jugador A — PRUEBA 60":
+            - rowheader "Jugador A — PRUEBA"
+            - cell "60"
+          - row "Jugador B — PRUEBA 40":
+            - rowheader "Jugador B — PRUEBA"
+            - cell "40"

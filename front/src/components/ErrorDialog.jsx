@@ -1,10 +1,13 @@
 import { FaCircleExclamation } from 'react-icons/fa6'
 import { FeedbackAlert } from './FeedbackAlert'
+import { useDialogFocus } from '../hooks/useDialogFocus'
 
-export const ErrorDialog = ({ message, onClose }) => (
+export const ErrorDialog = ({ message, onClose }) => {
+  const ref = useDialogFocus(true, onClose)
+  return (
   <>
     <div className="modal-backdrop fade show" />
-    <div className="modal fade show d-block" role="alertdialog" aria-modal="true" aria-labelledby="error-title" aria-describedby="error-description" tabIndex={-1}>
+    <div ref={ref} className="modal fade show d-block" role="alertdialog" aria-modal="true" aria-labelledby="error-title" aria-describedby="error-description" tabIndex={-1}>
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content shadow-lg">
           <div className="modal-header border-0 pb-0">
@@ -18,3 +21,4 @@ export const ErrorDialog = ({ message, onClose }) => (
     </div>
   </>
 )
+}

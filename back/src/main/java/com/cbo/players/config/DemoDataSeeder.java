@@ -12,6 +12,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,6 +74,7 @@ public class DemoDataSeeder implements ApplicationRunner {
         private final ValuationStrategyRepository valuationStrategyRepository;
         private final ApiKeyRepository apiKeyRepository;
         private final PasswordEncoder passwordEncoder;
+        private final Environment environment;
 
         public DemoDataSeeder(
                         UserRepository userRepository,
@@ -84,7 +86,8 @@ public class DemoDataSeeder implements ApplicationRunner {
                         PriceAlertRepository priceAlertRepository,
                         ValuationStrategyRepository valuationStrategyRepository,
                         ApiKeyRepository apiKeyRepository,
-                        PasswordEncoder passwordEncoder) {
+                        PasswordEncoder passwordEncoder,
+                        Environment environment) {
 
                 this.userRepository = userRepository;
                 this.playerRepository = playerRepository;
@@ -96,6 +99,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                 this.valuationStrategyRepository = valuationStrategyRepository;
                 this.apiKeyRepository = apiKeyRepository;
                 this.passwordEncoder = passwordEncoder;
+                this.environment = environment;
         }
 
         @Override
@@ -109,6 +113,15 @@ public class DemoDataSeeder implements ApplicationRunner {
 
                 log.info("Iniciando carga de datos de demostración para Players Market...");
 
+                String demoInversorPassword = requiredEnv("DEMO_INVERSOR_PASSWORD");
+                String demoAdminPassword = requiredEnv("DEMO_ADMIN_PASSWORD");
+                String demoNuevoPassword = requiredEnv("DEMO_NUEVO_PASSWORD");
+                String demoAdminApiKey = requiredEnv("DEMO_ADMIN_API_KEY");
+                if (demoAdminApiKey.length() < 16) {
+                        throw new IllegalStateException(
+                                        "DEMO_ADMIN_API_KEY debe tener al menos 16 caracteres");
+                }
+
                 LocalDateTime now = LocalDateTime.now(ZoneOffset.UTC);
 
                 ValuationStrategy activeStrategy = ensureValuationStrategies();
@@ -117,7 +130,7 @@ public class DemoDataSeeder implements ApplicationRunner {
 
                 seedQuotes(players, activeStrategy, now);
 
-                Map<String, User> users = seedUsers();
+                Map<String, User> users = seedUsers(demoInversorPassword, demoAdminPassword, demoNuevoPassword);
 
                 User inversor = users.get(USER_INVERSOR);
                 User admin = users.get(USER_ADMIN);
@@ -129,14 +142,14 @@ public class DemoDataSeeder implements ApplicationRunner {
 
                 seedAlerts(inversor, players);
 
-                seedAdminApiKey(admin);
+                seedAdminApiKey(admin, demoAdminApiKey);
 
                 log.info("Carga de datos de demostración completada exitosamente.");
         }
 
         // Obtiene variables de entorno obligatorias
         private String requiredEnv(String name) {
-                String value = System.getenv(name);
+                String value = environment.getProperty(name);
 
                 if (value == null || value.isBlank()) {
                         throw new IllegalStateException(
@@ -383,12 +396,13 @@ public class DemoDataSeeder implements ApplicationRunner {
                 playerQuoteRepository.saveAll(quotesToSave);
         }
 
-        private Map<String, User> seedUsers() {
+        private Map<String, User> seedUsers(String demoInversorPassword, String demoAdminPassword,
+                        String demoNuevoPassword) {
 
                 User inversor = new User(
                                 USER_INVERSOR,
                                 DEMO_INVERSOR_EMAIL,
-                                passwordEncoder.encode(requiredEnv("DEMO_INVERSOR_PASSWORD")),
+                                passwordEncoder.encode(demoInversorPassword),
                                 UserRole.ROLE_USER);
 
                 inversor.setCreditsBalance(new BigDecimal("15000.0000"));
@@ -396,7 +410,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                 User admin = new User(
                                 USER_ADMIN,
                                 DEMO_ADMIN_EMAIL,
-                                passwordEncoder.encode(requiredEnv("DEMO_ADMIN_PASSWORD")),
+                                passwordEncoder.encode(demoAdminPassword),
                                 UserRole.ROLE_SUPERUSER);
 
                 admin.setCreditsBalance(new BigDecimal("100000.0000"));
@@ -404,7 +418,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                 User nuevo = new User(
                                 USER_NUEVO,
                                 DEMO_NUEVO_EMAIL,
-                                passwordEncoder.encode(requiredEnv("DEMO_NUEVO_PASSWORD")),
+                                passwordEncoder.encode(demoNuevoPassword),
                                 UserRole.ROLE_USER);
 
                 nuevo.setCreditsBalance(
@@ -566,14 +580,7 @@ public class DemoDataSeeder implements ApplicationRunner {
                 priceAlertRepository.saveAll(alerts);
         }
 
-        private void seedAdminApiKey(User admin) {
-
-                String rawKey = requiredEnv("DEMO_ADMIN_API_KEY");
-
-                if (rawKey.length() < 16) {
-                        throw new IllegalStateException(
-                                        "DEMO_ADMIN_API_KEY debe tener al menos 16 caracteres");
-                }
+        private void seedAdminApiKey(User admin, String rawKey) {
 
                 String prefix = rawKey.substring(0, 16);
 

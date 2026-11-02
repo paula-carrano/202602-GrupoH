@@ -5,6 +5,11 @@ import com.cbo.players.model.*;
 import com.cbo.players.repository.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.springframework.core.env.Environment;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,6 +25,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
 class DemoDataSeederTest {
@@ -54,6 +60,9 @@ class DemoDataSeederTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    @Mock
+    private Environment environment;
+
     @InjectMocks
     private DemoDataSeeder demoDataSeeder;
 
@@ -64,6 +73,7 @@ class DemoDataSeederTest {
 
         demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
 
+        verifyNoInteractions(environment);
         verify(userRepository, never()).saveAll(any());
         verify(playerRepository, never()).saveAndFlush(any());
         verify(transactionRepository, never()).saveAll(any());
@@ -82,6 +92,7 @@ class DemoDataSeederTest {
             return p;
         });
 
+        stubDemoConfiguration();
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
 
         demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
@@ -123,6 +134,7 @@ class DemoDataSeederTest {
 
         when(playerRepository.count()).thenReturn(4L);
         when(playerRepository.findAllByActiveTrue()).thenReturn(List.of(haaland, bellingham, martinez));
+        stubDemoConfiguration();
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
 
         demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
@@ -133,5 +145,48 @@ class DemoDataSeederTest {
         verify(transactionRepository).saveAll(anyList());
         verify(priceAlertRepository).saveAll(anyList());
         verify(apiKeyRepository).save(any(ApiKey.class));
+    }
+    private void stubDemoConfiguration() {
+        when(environment.getProperty(anyString())).thenReturn("test-only-demo-credential");
+    }
+
+    static Stream<Arguments> invalidConfiguration() {
+        return Stream.of("DEMO_INVERSOR_PASSWORD", "DEMO_ADMIN_PASSWORD",
+                        "DEMO_NUEVO_PASSWORD", "DEMO_ADMIN_API_KEY")
+                .flatMap(name -> Stream.of(Arguments.of(name, null), Arguments.of(name, ""),
+                        Arguments.of(name, "   ")));
+    }
+
+    @ParameterizedTest
+    @MethodSource("invalidConfiguration")
+    void run_whenConfigurationMissingOrBlank_failsBeforeInserting(String name, String value) {
+        when(environment.getProperty(anyString())).thenAnswer(invocation ->
+                name.equals(invocation.getArgument(0)) ? value : "test-only-demo-credential");
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> demoDataSeeder.run(new DefaultApplicationArguments(new String[] {})));
+
+        assertTrue(error.getMessage().contains(name));
+        verifyNoSeedWrites();
+    }
+
+    @Test
+    void run_whenApiKeyTooShort_failsBeforeInserting() {
+        when(environment.getProperty(anyString())).thenAnswer(invocation ->
+                "DEMO_ADMIN_API_KEY".equals(invocation.getArgument(0)) ? "short" : "test-password");
+
+        IllegalStateException error = assertThrows(IllegalStateException.class,
+                () -> demoDataSeeder.run(new DefaultApplicationArguments(new String[] {})));
+
+        assertTrue(error.getMessage().contains("16 caracteres"));
+        verifyNoSeedWrites();
+    }
+
+    private void verifyNoSeedWrites() {
+        verify(userRepository).existsByEmail("inversor@demo.com");
+        verifyNoMoreInteractions(userRepository);
+        verifyNoInteractions(playerRepository, playerStatisticsRepository, playerQuoteRepository,
+                portfolioPositionRepository, transactionRepository, priceAlertRepository,
+                valuationStrategyRepository, apiKeyRepository, passwordEncoder);
     }
 }

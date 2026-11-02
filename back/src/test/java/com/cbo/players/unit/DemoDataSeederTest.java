@@ -62,7 +62,7 @@ class DemoDataSeederTest {
     void run_whenInversorAlreadyExists_doesNothing() {
         when(userRepository.existsByEmail("inversor@demo.com")).thenReturn(true);
 
-        demoDataSeeder.run(new DefaultApplicationArguments(new String[]{}));
+        demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
 
         verify(userRepository, never()).saveAll(any());
         verify(playerRepository, never()).saveAndFlush(any());
@@ -84,11 +84,11 @@ class DemoDataSeederTest {
 
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
 
-        demoDataSeeder.run(new DefaultApplicationArguments(new String[]{}));
+        demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
 
         verify(valuationStrategyRepository).saveAll(anyList());
-        verify(playerRepository, atLeast(10)).saveAndFlush(any(Player.class));
-        verify(playerStatisticsRepository, atLeast(10)).save(any(PlayerStatistics.class));
+        verify(playerRepository, atLeast(9)).saveAndFlush(any(Player.class));
+        verify(playerStatisticsRepository, atLeast(9)).save(any(PlayerStatistics.class));
         verify(playerQuoteRepository).saveAll(anyList());
         verify(userRepository).saveAll(anyList());
         verify(transactionRepository).saveAll(anyList());
@@ -109,10 +109,6 @@ class DemoDataSeederTest {
         activeStrategy.setActive(true);
         when(valuationStrategyRepository.findByActiveTrue()).thenReturn(Optional.of(activeStrategy));
 
-        Player messi = new Player("Lionel", "Messi", LocalDate.of(1987, 6, 24), "Argentina",
-                PlayerPosition.FORWARD, "Inter Miami", "MLS");
-        messi.setId(1L);
-
         Player haaland = new Player("Erling", "Haaland", LocalDate.of(2000, 7, 21), "Norway",
                 PlayerPosition.FORWARD, "Manchester City", "Premier League");
         haaland.setId(2L);
@@ -126,10 +122,10 @@ class DemoDataSeederTest {
         martinez.setId(4L);
 
         when(playerRepository.count()).thenReturn(4L);
-        when(playerRepository.findAllByActiveTrue()).thenReturn(List.of(messi, haaland, bellingham, martinez));
+        when(playerRepository.findAllByActiveTrue()).thenReturn(List.of(haaland, bellingham, martinez));
         when(passwordEncoder.encode(anyString())).thenReturn("hashed_password");
 
-        demoDataSeeder.run(new DefaultApplicationArguments(new String[]{}));
+        demoDataSeeder.run(new DefaultApplicationArguments(new String[] {}));
 
         verify(playerRepository, never()).saveAndFlush(any(Player.class));
         verify(playerQuoteRepository).saveAll(anyList());

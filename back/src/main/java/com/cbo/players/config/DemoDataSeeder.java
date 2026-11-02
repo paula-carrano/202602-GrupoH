@@ -1,4 +1,3 @@
-
 package com.cbo.players.config;
 
 import com.cbo.players.adapter.dto.PlayerStatsDto;

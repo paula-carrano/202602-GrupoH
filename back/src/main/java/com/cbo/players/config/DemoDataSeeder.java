@@ -31,9 +31,9 @@ public class DemoDataSeeder implements ApplicationRunner {
         private static final Logger log = LoggerFactory.getLogger(DemoDataSeeder.class);
 
         // Emails de usuarios demo
-        private static final String DEMO_INVERSOR_EMAIL = "inversor@demo.com";
-        private static final String DEMO_ADMIN_EMAIL = "admin@demo.com";
-        private static final String DEMO_NUEVO_EMAIL = "nuevo@demo.com";
+        private static final String DEMO_INVERSOR_PASSWORD = System.getenv("DEMO_INVERSOR_PASSWORD");
+        private static final String DEMO_ADMIN_PASSWORD = System.getenv("DEMO_ADMIN_PASSWORD");
+        private static final String DEMO_NUEVO_PASSWORD = System.getenv("DEMO_NUEVO_PASSWORD");
 
         // Constantes de usuarios
         private static final String USER_INVERSOR = "inversor";
@@ -284,15 +284,24 @@ public class DemoDataSeeder implements ApplicationRunner {
         }
 
         private Map<String, User> seedUsers() {
-                User inversor = new User(USER_INVERSOR, DEMO_INVERSOR_EMAIL, passwordEncoder.encode("Demo1234!"),
+                User inversor = new User(
+                                USER_INVERSOR,
+                                DEMO_INVERSOR_EMAIL,
+                                passwordEncoder.encode(DEMO_INVERSOR_PASSWORD),
                                 UserRole.ROLE_USER);
                 inversor.setCreditsBalance(new BigDecimal("15000.0000"));
 
-                User admin = new User(USER_ADMIN, DEMO_ADMIN_EMAIL, passwordEncoder.encode("Admin1234!"),
+                User admin = new User(
+                                USER_ADMIN,
+                                DEMO_ADMIN_EMAIL,
+                                passwordEncoder.encode(DEMO_ADMIN_PASSWORD),
                                 UserRole.ROLE_SUPERUSER);
                 admin.setCreditsBalance(new BigDecimal("100000.0000"));
 
-                User nuevo = new User(USER_NUEVO, DEMO_NUEVO_EMAIL, passwordEncoder.encode("Nuevo1234!"),
+                User nuevo = new User(
+                                USER_NUEVO,
+                                DEMO_NUEVO_EMAIL,
+                                passwordEncoder.encode(DEMO_NUEVO_PASSWORD),
                                 UserRole.ROLE_USER);
                 nuevo.setCreditsBalance(BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP));
 

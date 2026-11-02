@@ -18,7 +18,7 @@ export function ConnectedPortfolio() {
 export function ConnectedTransactions() {
   const m = useMarket(), [page, setPage] = useState(0)
   const result = useSessionRequest({ session: m.session, personal: true, requestKey: ['transactions', page, m.revision], request: options => getTransactions(m.session.userId, page, options), onUnauthorized: m.onLogout })
-  const rows = (result.data?.content || []).map(t => ({ id: t.id, playerId: t.playerId, playerLabel: t.playerName || (t.playerId ? `Jugador ${t.playerId}` : '—'), dateLabel: new Date(t.timestamp).toLocaleString('es-AR'), type: t.operationType, quantity: t.quantity, unitPrice: t.unitPrice, total: t.totalAmount }))
+  const rows = (result.data?.content || []).map(t => ({ ...t, id: t.id, playerId: t.playerId, playerLabel: t.playerName || (t.playerId ? `Jugador ${t.playerId}` : '—'), dateLabel: new Date(t.timestamp).toLocaleString('es-AR'), type: t.operationType, quantity: t.quantity, unitPrice: t.unitPrice, total: t.totalAmount }))
   return <><TransactionsPage state={requestState(result)} transactions={rows} error={result.error} onRetry={result.retry} onSelectPlayer={m.selectPlayer} />
     {result.data && <Pagination itemLabel="operaciones" page={page + 1} pageSize={result.data.pageSize} total={result.data.totalElements} onPageChange={value => setPage(value - 1)} />}
   </>

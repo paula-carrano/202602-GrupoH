@@ -1,7 +1,9 @@
+import { FaUser } from "react-icons/fa6";
 import { playerName, initials } from "../utils/playerDisplay";
 
 export const SelectedPlayerCard = ({
     selected,
+    username,
     canBuy,
     canSell,
     onBuy,
@@ -18,7 +20,7 @@ export const SelectedPlayerCard = ({
                     className="player-avatar player-avatar-large rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0"
                     aria-hidden="true"
                 >
-                    {selected ? initials(selected) : "FM"}
+                    {selected ? initials(selected) : (Array.from(username?.trim() || "").slice(0, 2).join("").toLocaleUpperCase("es-AR") || <FaUser />)}
                 </span>
                 <div>
                     <p className="small text-body-secondary mb-1">

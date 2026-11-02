@@ -163,8 +163,9 @@ class DemoDataSeederTest {
         when(environment.getProperty(anyString())).thenAnswer(invocation ->
                 name.equals(invocation.getArgument(0)) ? value : "test-only-demo-credential");
 
+        DefaultApplicationArguments arguments = new DefaultApplicationArguments(new String[] {});
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> demoDataSeeder.run(new DefaultApplicationArguments(new String[] {})));
+                () -> demoDataSeeder.run(arguments));
 
         assertTrue(error.getMessage().contains(name));
         verifyNoSeedWrites();
@@ -175,8 +176,9 @@ class DemoDataSeederTest {
         when(environment.getProperty(anyString())).thenAnswer(invocation ->
                 "DEMO_ADMIN_API_KEY".equals(invocation.getArgument(0)) ? "short" : "test-password");
 
+        DefaultApplicationArguments arguments = new DefaultApplicationArguments(new String[] {});
         IllegalStateException error = assertThrows(IllegalStateException.class,
-                () -> demoDataSeeder.run(new DefaultApplicationArguments(new String[] {})));
+                () -> demoDataSeeder.run(arguments));
 
         assertTrue(error.getMessage().contains("16 caracteres"));
         verifyNoSeedWrites();

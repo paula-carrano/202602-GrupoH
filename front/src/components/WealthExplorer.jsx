@@ -27,9 +27,9 @@ export function WealthExplorer() {
     },
   })
   const points = useMemo(() => (history.data?.points || []).filter(p => period === 'all' || Date.parse(p.date) >= Date.now() - Number(period) * 86400000), [history.data, period])
-  return <>
+  const controls = <>
     <label className="mb-2">Período patrimonial<select className="form-select" value={period} onChange={e => setPeriod(e.target.value)}><option value="30">30 días</option><option value="90">90 días</option><option value="all">Todo el historial</option></select></label>
     <p className="small">Reconstrucción diaria al cierre UTC con operaciones y cotizaciones reales. El día actual muestra el último estado consultado.</p>
-    <WealthHistoryChart state={history.data?.problem ? 'error' : requestState(history)} points={points} error={history.data?.problem ? `Historial incompleto: ${history.data.problem}` : history.error} onRetry={history.retry} />
   </>
+  return <WealthHistoryChart controls={controls} emptyText="Todavía no hay operaciones para reconstruir tu patrimonio." state={history.data?.problem ? 'error' : requestState(history)} points={points} error={history.data?.problem ? `Historial incompleto: ${history.data.problem}` : history.error} onRetry={history.retry} />
 }

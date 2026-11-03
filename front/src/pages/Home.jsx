@@ -75,6 +75,7 @@ export const Home = ({ session, onLogout }) => {
                 <div className="col-12 col-xl-8 col-xxl-9">
                     <SelectedPlayerCard
                         selected={selected}
+                        username={session?.username}
                         canBuy={Boolean(selected && market?.allowed)}
                         canSell={Boolean(
                             selected &&
@@ -124,6 +125,8 @@ export const Home = ({ session, onLogout }) => {
                                 />
                             ) : (
                                 <QuoteHistoryChart
+                                    state="empty"
+                                    emptyText="Seleccioná un jugador para ver su evolución"
                                     playerLabel={
                                         selected
                                             ? playerName(selected)

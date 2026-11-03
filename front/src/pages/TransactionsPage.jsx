@@ -1,4 +1,7 @@
+import { decimal } from "../utils/financial";
 import { FinancialPanel, FinancialTable, financialValue } from "../components";
+
+const money = value => value == null ? "No disponible" : decimal(value).toFixed(4);
 
 export const TransactionsPage = ({
     state = "unavailable",
@@ -61,10 +64,27 @@ export const TransactionsPage = ({
                     {
                         key: "unitPrice",
                         label: "Precio unitario (créditos)",
+                        render: row => money(row.unitPrice),
                     },
                     {
                         key: "total",
                         label: "Total (créditos)",
+                        render: row => money(row.total),
+                    },
+                    {
+                        key: "audit",
+                        label: "Trazabilidad",
+                        render: row => <details className="transaction-audit">
+                            <summary>Ver detalle de operación {row.id}</summary>
+                            <dl className="mt-2 mb-0">
+                                <dt>ID de operación</dt><dd>{financialValue(row.id)}</dd>
+                                <dt>Saldo anterior (CRD)</dt><dd>{money(row.balanceBefore)}</dd>
+                                <dt>Saldo posterior (CRD)</dt><dd>{money(row.balanceAfter)}</dd>
+                                <dt>Tokens anteriores</dt><dd>{row.type === 'RECARGA' ? 'No aplica' : financialValue(row.tokensBefore)}</dd>
+                                <dt>Tokens posteriores</dt><dd>{row.type === 'RECARGA' ? 'No aplica' : financialValue(row.tokensAfter)}</dd>
+                                <dt>Versión de estrategia</dt><dd>{financialValue(row.strategyVersion)}</dd>
+                            </dl>
+                        </details>,
                     },
                 ]}
             />

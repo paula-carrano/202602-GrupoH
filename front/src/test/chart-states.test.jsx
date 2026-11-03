@@ -38,10 +38,10 @@ it('cotizaciones conserva punto único, estrategia, cero y desconocidos sin inte
   expect(screen.queryByRole('combobox')).not.toBeInTheDocument()
 })
 
-it('distribución muestra valores recibidos sin deducir porcentajes', () => {
-  render(<PortfolioAllocationChart state="ready" positions={[{ playerLabel: 'SOLO PRUEBA', currentValue: 35, percentage: null }]} />)
+it('distribución calcula porcentajes sobre el total completo', () => {
+  render(<PortfolioAllocationChart state="ready" positions={[{ playerId: 1, playerLabel: 'SOLO PRUEBA', currentValue: 35, percentage: null }]} />)
   expect(screen.getByRole('cell', { name: '35' })).toBeInTheDocument()
-  expect(screen.getByRole('cell', { name: 'No disponible' })).toBeInTheDocument()
+  expect(screen.getByRole('cell', { name: '100' })).toBeInTheDocument()
 })
 
 it('patrimonio y saldo se mantienen como series distintas', () => {

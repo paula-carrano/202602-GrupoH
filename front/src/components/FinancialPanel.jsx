@@ -12,13 +12,14 @@ export const FinancialPanel = ({
     onRetry,
     emptyText = "Todavía no hay datos para mostrar.",
     children,
+    controls,
 }) => {
     const id = useId();
     const showData = state === "ready" || state === "partial";
 
     return (
         <section
-            className="card h-100 financial-panel"
+            className="card financial-panel"
             aria-labelledby={id}
             aria-busy={state === "loading"}
         >
@@ -28,6 +29,7 @@ export const FinancialPanel = ({
                 </h2>
 
                 {description && <p>{description}</p>}
+                {controls}
 
                 {state === "loading" && <output>Cargando datos…</output>}
 
@@ -92,7 +94,7 @@ export const FinancialTable = ({ caption, columns = [], rows = [] }) => (
 
             <tbody>
                 {rows.map((row, index) => (
-                    <tr key={row.playerId ?? index}>
+                    <tr key={row.id ?? row.playerId ?? index}>
                         {columns.map((column) => (
                             <td key={column.key}>
                                 {column.render

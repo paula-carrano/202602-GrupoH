@@ -1,7 +1,7 @@
 :root {
     font-family: Arial, Helvetica, sans-serif;
-    color: #102f55;
-    background: #f6faff;
+    color: #eef2fa;
+    background: #070f1c;
 
     color-scheme: dark;
     --fm-bg: #070f1c;
@@ -25,6 +25,43 @@ body {
 .financial-panel {
     min-width: 0;
     color: #102f55;
+    flex-shrink: 0;
+}
+
+.allocation-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+}
+
+.allocation-legend li {
+    overflow-wrap: anywhere;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.allocation-legend li > span {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 6px;
+}
+
+.transaction-audit summary {
+    cursor: pointer;
+    min-width: 150px;
+}
+
+.financial-panel .transaction-audit dd {
+    font-size: 16px;
+    letter-spacing: normal;
+}
+
+.dashboard-content > .catalog-panel > * {
+    flex-shrink: 0;
 }
 
 .financial-panel .table-responsive {

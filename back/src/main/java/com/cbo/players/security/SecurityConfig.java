@@ -169,6 +169,7 @@ public class SecurityConfig {
                 || StringUtils.hasText(request.getHeader("X-API-Key"));
     }
 
+    @SuppressWarnings("java:S7467") // Java 17 does not support unnamed catch variables.
     private static boolean isJsonAuthentication(HttpServletRequest request) {
         String path = StringUtils.hasText(request.getServletPath()) ? request.getServletPath()
                 : request.getRequestURI();
@@ -178,7 +179,7 @@ public class SecurityConfig {
         try {
             return request.getContentType() != null && MediaType.APPLICATION_JSON
                     .includes(MediaType.parseMediaType(request.getContentType()));
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ignored) {
             return false;
         }
     }

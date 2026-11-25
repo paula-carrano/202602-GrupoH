@@ -162,16 +162,18 @@ public class AuditParameterSanitizer {
         return sanitized;
     }
 
+    @SuppressWarnings("java:S7467") // Java 17 does not support unnamed catch variables.
     private Object sanitizeComplexObject(Object value, int depth) {
         try {
             Map<String, Object> asMap = mapper.convertValue(value, new TypeReference<>() {
             });
             return sanitizeMap(asMap, depth);
-        } catch (IllegalArgumentException _) {
+        } catch (IllegalArgumentException ignored) {
             return "[" + value.getClass().getSimpleName() + "]";
         }
     }
 
+    @SuppressWarnings("java:S7467") // Java 17 does not support unnamed catch variables.
     private static boolean isSimpleScalar(Object value) {
         return value instanceof CharSequence
                 || value instanceof Number

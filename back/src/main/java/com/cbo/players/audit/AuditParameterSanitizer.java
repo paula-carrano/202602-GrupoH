@@ -32,6 +32,7 @@ public class AuditParameterSanitizer {
     public static final int MAX_OUTPUT_LENGTH = 500;
     private static final int MAX_COLLECTION_PREVIEW = 10;
     private static final int MAX_DEPTH = 4;
+    private static final String MORE_SUFFIX = " more";
 
     private static final List<String> SENSITIVE_TOKENS = List.of(
             "password",
@@ -43,8 +44,7 @@ public class AuditParameterSanitizer {
             "authorization",
             "credential",
             "jwt",
-            "key"
-    );
+            "key");
 
     private final ObjectMapper mapper;
 
@@ -123,7 +123,7 @@ public class AuditParameterSanitizer {
         int count = 0;
         for (Map.Entry<?, ?> entry : map.entrySet()) {
             if (count++ >= MAX_COLLECTION_PREVIEW) {
-                sanitized.put("...", "+" + (map.size() - MAX_COLLECTION_PREVIEW) + " more");
+                sanitized.put("...", "+" + (map.size() - MAX_COLLECTION_PREVIEW) + MORE_PREFIX);
                 break;
             }
             String key = sanitizeForSingleLine(String.valueOf(entry.getKey()));
@@ -141,7 +141,7 @@ public class AuditParameterSanitizer {
         int count = 0;
         for (Object item : collection) {
             if (count++ >= MAX_COLLECTION_PREVIEW) {
-                sanitized.add("...+" + (collection.size() - MAX_COLLECTION_PREVIEW) + " more");
+                sanitized.add("...+" + (collection.size() - MAX_COLLECTION_PREVIEW) + MORE_PREFIX);
                 break;
             }
             sanitized.add(sanitizeValue(item, depth));
@@ -157,14 +157,15 @@ public class AuditParameterSanitizer {
             sanitized.add(sanitizeValue(Array.get(array, i), depth));
         }
         if (len > MAX_COLLECTION_PREVIEW) {
-            sanitized.add("...+" + (len - MAX_COLLECTION_PREVIEW) + " more");
+            sanitized.add("...+" + (len - MAX_COLLECTION_PREVIEW) + MORE_PREFIX);
         }
         return sanitized;
     }
 
     private Object sanitizeComplexObject(Object value, int depth) {
         try {
-            Map<String, Object> asMap = mapper.convertValue(value, new TypeReference<>() {});
+            Map<String, Object> asMap = mapper.convertValue(value, new TypeReference<>() {
+            });
             return sanitizeMap(asMap, depth);
         } catch (IllegalArgumentException ex) {
             return "[" + value.getClass().getSimpleName() + "]";

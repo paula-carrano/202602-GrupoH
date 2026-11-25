@@ -123,7 +123,7 @@ public class AuditParameterSanitizer {
         int count = 0;
         for (Map.Entry<?, ?> entry : map.entrySet()) {
             if (count++ >= MAX_COLLECTION_PREVIEW) {
-                sanitized.put("...", "+" + (map.size() - MAX_COLLECTION_PREVIEW) + MORE_PREFIX);
+                sanitized.put("...", "+" + (map.size() - MAX_COLLECTION_PREVIEW) + MORE_SUFFIX);
                 break;
             }
             String key = sanitizeForSingleLine(String.valueOf(entry.getKey()));
@@ -141,7 +141,7 @@ public class AuditParameterSanitizer {
         int count = 0;
         for (Object item : collection) {
             if (count++ >= MAX_COLLECTION_PREVIEW) {
-                sanitized.add("...+" + (collection.size() - MAX_COLLECTION_PREVIEW) + MORE_PREFIX);
+                sanitized.add("...+" + (collection.size() - MAX_COLLECTION_PREVIEW) + MORE_SUFFIX);
                 break;
             }
             sanitized.add(sanitizeValue(item, depth));
@@ -157,7 +157,7 @@ public class AuditParameterSanitizer {
             sanitized.add(sanitizeValue(Array.get(array, i), depth));
         }
         if (len > MAX_COLLECTION_PREVIEW) {
-            sanitized.add("...+" + (len - MAX_COLLECTION_PREVIEW) + MORE_PREFIX);
+            sanitized.add("...+" + (len - MAX_COLLECTION_PREVIEW) + MORE_SUFFIX);
         }
         return sanitized;
     }
@@ -167,7 +167,7 @@ public class AuditParameterSanitizer {
             Map<String, Object> asMap = mapper.convertValue(value, new TypeReference<>() {
             });
             return sanitizeMap(asMap, depth);
-        } catch (IllegalArgumentException ex) {
+        } catch (IllegalArgumentException _) {
             return "[" + value.getClass().getSimpleName() + "]";
         }
     }

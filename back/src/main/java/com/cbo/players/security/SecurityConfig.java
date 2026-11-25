@@ -42,6 +42,7 @@ public class SecurityConfig {
     private final ApiKeyAuthenticationFilter apiKeyAuthenticationFilter;
     private final ObjectMapper objectMapper;
     private final List<String> allowedOrigins;
+    private static final String ROLE_SUPERUSER = "SUPERUSER";
 
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
@@ -139,9 +140,9 @@ public class SecurityConfig {
                         }))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers("/api/admin/strategies/**").hasRole("SUPERUSER")
-                        .requestMatchers("/metrics/**").hasRole("SUPERUSER")
-                        .requestMatchers(HttpMethod.POST, "/api/quotes/recalculate").hasAnyRole("ADMIN", "SUPERUSER")
+                        .requestMatchers("/api/admin/strategies/**").hasRole(ROLE_SUPERUSER)
+                        .requestMatchers("/metrics/**").hasRole(ROLE_SUPERUSER)
+                        .requestMatchers(HttpMethod.POST, "/api/quotes/recalculate").hasAnyRole("ADMIN", ROLE_SUPERUSER)
                         .requestMatchers(
                                 "/actuator/health",
                                 "/actuator/health/**",
@@ -169,14 +170,15 @@ public class SecurityConfig {
     }
 
     private static boolean isJsonAuthentication(HttpServletRequest request) {
-        String path = StringUtils.hasText(request.getServletPath()) ? request.getServletPath() : request.getRequestURI();
+        String path = StringUtils.hasText(request.getServletPath()) ? request.getServletPath()
+                : request.getRequestURI();
         if (!"POST".equals(request.getMethod()) || !("/api/auth/login".equals(path)
                 || "/api/auth/register".equals(path)))
             return false;
         try {
             return request.getContentType() != null && MediaType.APPLICATION_JSON
                     .includes(MediaType.parseMediaType(request.getContentType()));
-        } catch (IllegalArgumentException error) {
+        } catch (IllegalArgumentException _) {
             return false;
         }
     }

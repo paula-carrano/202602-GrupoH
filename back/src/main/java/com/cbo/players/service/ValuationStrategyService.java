@@ -1,5 +1,6 @@
 package com.cbo.players.service;
 
+import com.cbo.players.config.RedisCacheConfig;
 import com.cbo.players.model.records.ValuationWeights;
 import com.cbo.players.model.records.TransactionData;
 import com.cbo.players.exception.ApiException;
@@ -12,6 +13,9 @@ import com.cbo.players.repository.ValuationStrategyRepository;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,12 +32,22 @@ public class ValuationStrategyService {
 
     private final ValuationStrategyRepository valuationStrategyRepository;
     private final TransactionRepository transactionRepository;
+    private final CacheManager cacheManager;
 
     public ValuationStrategyService(
             ValuationStrategyRepository valuationStrategyRepository,
             TransactionRepository transactionRepository) {
+        this(valuationStrategyRepository, transactionRepository, null);
+    }
+
+    @Autowired
+    public ValuationStrategyService(
+            ValuationStrategyRepository valuationStrategyRepository,
+            TransactionRepository transactionRepository,
+            @Autowired(required = false) CacheManager cacheManager) {
         this.valuationStrategyRepository = valuationStrategyRepository;
         this.transactionRepository = transactionRepository;
+        this.cacheManager = cacheManager;
     }
 
     @PostConstruct
@@ -135,10 +149,25 @@ public class ValuationStrategyService {
                 null,
                 target.getVersion()));
         transactionRepository.save(tx);
+        evictRankingCache();
 
         log.info("Estrategia [{}] (ID {}) activada por usuario {}", sanitizeForLog(target.getCode()), target.getId(),
                 sanitizeForLog(String.valueOf(actorUserId)));
         return target;
+    }
+
+    private void evictRankingCache() {
+        if (cacheManager == null) {
+            return;
+        }
+        try {
+            Cache rankingCache = cacheManager.getCache(RedisCacheConfig.CACHE_RANKING);
+            if (rankingCache != null) {
+                rankingCache.clear();
+            }
+        } catch (RuntimeException ex) {
+            log.warn("No se pudo invalidar la caché de ranking al activar estrategia: {}", ex.getMessage());
+        }
     }
 
     private String sanitizeForLog(String value) {

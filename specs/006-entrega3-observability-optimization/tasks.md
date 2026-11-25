@@ -27,9 +27,9 @@
 
 **Purpose**: Agregar las dependencias Maven requeridas para AOP, Prometheus y ArchUnit, y preparar archivos base de configuración y exclusión de logs.
 
-- [ ] T001 Agregar dependencias `spring-boot-starter-aop`, `io.micrometer:micrometer-registry-prometheus` y `com.tngtech.archunit:archunit-junit5:1.3.0` (scope `test`) en `back/pom.xml`
-- [ ] T002 [P] Excluir archivos y directorios de logs de auditoría (`logs/`, `back/logs/`, `*.log`) en `.gitignore`
-- [ ] T003 [P] Crear configuración de scraping automático al backend (`cbo-backend:8080/actuator/prometheus`) en `monitoring/prometheus.yml`
+- [X] T001 Agregar dependencias `spring-boot-starter-aop`, `io.micrometer:micrometer-registry-prometheus` y `com.tngtech.archunit:archunit-junit5:1.3.0` (scope `test`) en `back/pom.xml`
+- [X] T002 [P] Excluir archivos y directorios de logs de auditoría (`logs/`, `back/logs/`, `*.log`) en `.gitignore`
+- [X] T003 [P] Crear configuración de scraping automático al backend (`cbo-backend:8080/actuator/prometheus`) en `monitoring/prometheus.yml`
 
 ---
 
@@ -39,12 +39,12 @@
 
 **⚠️ CRITICAL**: Completar esta fase antes de iniciar las User Stories.
 
-- [ ] T004 [P] Agregar índice `@Index(name = "idx_players_active", columnList = "active")` en `back/src/main/java/com/cbo/players/model/Player.java`
-- [ ] T005 [P] Agregar índice compuesto `@Index(name = "idx_player_quotes_player_timestamp", columnList = "player_id, timestamp")` en `back/src/main/java/com/cbo/players/model/PlayerQuote.java`
-- [ ] T006 [P] Agregar índice `@Index(name = "idx_transactions_operation_type", columnList = "operation_type")` en `back/src/main/java/com/cbo/players/model/Transaction.java`
-- [ ] T007 Implementar y registrar filtro `CorrelationIdFilter` (`@Component` + `@Order(Ordered.HIGHEST_PRECEDENCE)`, extendiendo `OncePerRequestFilter`, leyendo/generando `X-Correlation-ID`, poblando `MDC`, enviando cabecera de respuesta `X-Correlation-ID` y limpiando `MDC` en `finally`) para que quede activo desde Phase 2 sin depender de US3 en `back/src/main/java/com/cbo/players/audit/CorrelationIdFilter.java`
-- [ ] T008 Actualizar `GlobalExceptionHandler` para leer el `correlationId` activo desde `MDC` (con fallback a UUID si no existe) en `back/src/main/java/com/cbo/players/exception/GlobalExceptionHandler.java`
-- [ ] T009 Configurar bloque `management` (exposición `health,info,metrics,prometheus`, `show-details: always`, `probes.enabled: true`, tags `application`), TTLs configurables de caché Redis (`ranking`, `catalog`, `external`) e `info.app` (versión `3.0.0`) en `back/src/main/resources/application.yml`
+- [X] T004 [P] Agregar índice `@Index(name = "idx_players_active", columnList = "active")` en `back/src/main/java/com/cbo/players/model/Player.java`
+- [X] T005 [P] Agregar índice compuesto `@Index(name = "idx_player_quotes_player_timestamp", columnList = "player_id, timestamp")` en `back/src/main/java/com/cbo/players/model/PlayerQuote.java`
+- [X] T006 [P] Agregar índice `@Index(name = "idx_transactions_operation_type", columnList = "operation_type")` en `back/src/main/java/com/cbo/players/model/Transaction.java`
+- [X] T007 Implementar y registrar filtro `CorrelationIdFilter` (`@Component` + `@Order(Ordered.HIGHEST_PRECEDENCE)`, extendiendo `OncePerRequestFilter`, leyendo/generando `X-Correlation-ID`, poblando `MDC`, enviando cabecera de respuesta `X-Correlation-ID` y limpiando `MDC` en `finally`) para que quede activo desde Phase 2 sin depender de US3 en `back/src/main/java/com/cbo/players/audit/CorrelationIdFilter.java`
+- [X] T008 Actualizar `GlobalExceptionHandler` para leer el `correlationId` activo desde `MDC` (con fallback a UUID si no existe) en `back/src/main/java/com/cbo/players/exception/GlobalExceptionHandler.java`
+- [X] T009 Configurar bloque `management` (exposición `health,info,metrics,prometheus`, `show-details: always`, `probes.enabled: true`, tags `application`), TTLs configurables de caché Redis (`ranking`, `catalog`, `external`) e `info.app` (versión `3.0.0`) en `back/src/main/resources/application.yml`
 
 **Checkpoint**: Base lista — las User Stories P1 pueden desarrollarse de forma independiente o en paralelo.
 
@@ -58,18 +58,18 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [P] [US1] Verificar/garantizar consulta indexada de jugadores activos (`findAllByActiveTrue()`) en `back/src/main/java/com/cbo/players/repository/PlayerRepository.java`
-- [ ] T011 [P] [US1] Optimizar consulta batch de última cotización por jugador (resolviendo desempates de timestamp por `id DESC` sin N+1) en `back/src/main/java/com/cbo/players/repository/PlayerQuoteRepository.java`
-- [ ] T012 [US1] Consolidar `RedisCacheConfig` con `ObjectMapper` dedicado con `JavaTimeModule`, `enableStatistics()`, cachés configurables (`players::ranking`, `players::catalog`, `players::external`) y `CacheErrorHandler` tolerante a fallos ante caída de Redis en `back/src/main/java/com/cbo/players/config/RedisCacheConfig.java`
-- [ ] T013 [US1] Refactorizar `RankingService` para eliminar el loop N+1 usando las consultas batch de `T010`/`T011`, usar clave de caché vinculada a estrategia activa y versión (`active_ranking:<strategyCode>:v<version>`), aplicar protección sincronizada contra *cache stampede*, mantener degradación elegante a PostgreSQL ante fallo de Redis e instrumentar métricas Micrometer (`cbo_ranking_cache_requests_total` con tag `result=hit|miss` y `cbo_ranking_query_duration_seconds`) en `back/src/main/java/com/cbo/players/service/RankingService.java`
-- [ ] T014 [P] [US1] Consolidar caché Redis `players::catalog` (`@Cacheable` con fallback transparente ante error de caché) en `back/src/main/java/com/cbo/players/service/PlayerService.java` e invalidación de `players::catalog` y `players::ranking` al persistir planteles/estadísticas en `back/src/main/java/com/cbo/players/service/CatalogPersistenceService.java`
-- [ ] T015 [P] [US1] Incorporar caché Redis `players::external` y fallback resiliente ante indisponibilidad de proveedores externos (WhoScored / Football-Data.org) en `back/src/main/java/com/cbo/players/adapter/ScrapingRestAdapter.java`
-- [ ] T016 [US1] Agregar invalidación de caché `players::ranking` al activar una nueva estrategia en `back/src/main/java/com/cbo/players/service/ValuationStrategyService.java`
-- [ ] T017 [US1] Verificar y corregir el flujo del scheduler de scraping (`CatalogScheduler` + `CatalogSyncService`) para garantizar que actualice correctamente los datos y estadísticas de los jugadores en la base de datos PostgreSQL, invalide las cachés afectadas al completar la persistencia y ejecute el recálculo de cotizaciones una vez persistidos los datos actualizados (eliminando condición de carrera asíncrona) en `back/src/main/java/com/cbo/players/service/CatalogScheduler.java` y `back/src/main/java/com/cbo/players/service/CatalogSyncService.java`
-- [ ] T018 [US1] Inyectar variables `REDIS_HOST: cbo-redis`, `REDIS_PORT: 6379` y dependencia saludable `redis` al servicio `backend` en `docker-compose.yml`
-- [ ] T019 [P] [US1] Actualizar y ampliar tests unitarios de `RankingService` verificando eliminación de N+1 (1 llamada batch), clave por estrategia/versión, protección contra *cache stampede*, registro de métricas `hit`/`miss` (hit ratio `> 90%` en lecturas repetidas — `SC-001`) y fallback `200 OK` ante error de Redis (`SC-006`) en `back/src/test/java/com/cbo/players/service/RankingServiceTest.java`
-- [ ] T020 [P] [US1] Crear tests unitarios verificando caché `players::catalog`, caché/fallback de proveedor externo (`FR-002`) y degradación elegante ante fallo de Redis (`SC-006`) en `back/src/test/java/com/cbo/players/service/PlayerServiceCacheTest.java`
-- [ ] T021 [P] [US1] Crear tests unitarios/integración verificando que `CatalogScheduler` + `CatalogSyncService` actualizan correctamente los datos y estadísticas de jugadores en base de datos, invalidan cachés y recalculan cotizaciones tras la persistencia (`FR-013`) en `back/src/test/java/com/cbo/players/service/CatalogSchedulerTest.java`
+- [X] T010 [P] [US1] Verificar/garantizar consulta indexada de jugadores activos (`findAllByActiveTrue()`) en `back/src/main/java/com/cbo/players/repository/PlayerRepository.java`
+- [X] T011 [P] [US1] Optimizar consulta batch de última cotización por jugador (resolviendo desempates de timestamp por `id DESC` sin N+1) en `back/src/main/java/com/cbo/players/repository/PlayerQuoteRepository.java`
+- [X] T012 [US1] Consolidar `RedisCacheConfig` con `ObjectMapper` dedicado con `JavaTimeModule`, `enableStatistics()`, cachés configurables (`players::ranking`, `players::catalog`, `players::external`) y `CacheErrorHandler` tolerante a fallos ante caída de Redis en `back/src/main/java/com/cbo/players/config/RedisCacheConfig.java`
+- [X] T013 [US1] Refactorizar `RankingService` para eliminar el loop N+1 usando las consultas batch de `T010`/`T011`, usar clave de caché vinculada a estrategia activa y versión (`active_ranking:<strategyCode>:v<version>`), aplicar protección sincronizada contra *cache stampede*, mantener degradación elegante a PostgreSQL ante fallo de Redis e instrumentar métricas Micrometer (`cbo_ranking_cache_requests_total` con tag `result=hit|miss` y `cbo_ranking_query_duration_seconds`) en `back/src/main/java/com/cbo/players/service/RankingService.java`
+- [X] T014 [P] [US1] Consolidar caché Redis `players::catalog` (`@Cacheable` con fallback transparente ante error de caché) en `back/src/main/java/com/cbo/players/service/PlayerService.java` e invalidación de `players::catalog` y `players::ranking` al persistir planteles/estadísticas en `back/src/main/java/com/cbo/players/service/CatalogPersistenceService.java`
+- [X] T015 [P] [US1] Incorporar caché Redis `players::external` y fallback resiliente ante indisponibilidad de proveedores externos (WhoScored / Football-Data.org) en `back/src/main/java/com/cbo/players/adapter/ScrapingRestAdapter.java`
+- [X] T016 [US1] Agregar invalidación de caché `players::ranking` al activar una nueva estrategia en `back/src/main/java/com/cbo/players/service/ValuationStrategyService.java`
+- [X] T017 [US1] Verificar y corregir el flujo del scheduler de scraping (`CatalogScheduler` + `CatalogSyncService`) para garantizar que actualice correctamente los datos y estadísticas de los jugadores en la base de datos PostgreSQL, invalide las cachés afectadas al completar la persistencia y ejecute el recálculo de cotizaciones una vez persistidos los datos actualizados (eliminando condición de carrera asíncrona) en `back/src/main/java/com/cbo/players/service/CatalogScheduler.java` y `back/src/main/java/com/cbo/players/service/CatalogSyncService.java`
+- [X] T018 [US1] Inyectar variables `REDIS_HOST: cbo-redis`, `REDIS_PORT: 6379` y dependencia saludable `redis` al servicio `backend` en `docker-compose.yml`
+- [X] T019 [P] [US1] Actualizar y ampliar tests unitarios de `RankingService` verificando eliminación de N+1 (1 llamada batch), clave por estrategia/versión, protección contra *cache stampede*, registro de métricas `hit`/`miss` (hit ratio `> 90%` en lecturas repetidas — `SC-001`) y fallback `200 OK` ante error de Redis (`SC-006`) en `back/src/test/java/com/cbo/players/unit/RankingServiceTest.java`
+- [X] T020 [P] [US1] Crear tests unitarios verificando caché `players::catalog`, caché/fallback de proveedor externo (`FR-002`) y degradación elegante ante fallo de Redis (`SC-006`) en `back/src/test/java/com/cbo/players/service/PlayerServiceCacheTest.java`
+- [X] T021 [P] [US1] Crear tests unitarios/integración verificando que `CatalogScheduler` + `CatalogSyncService` actualizan correctamente los datos y estadísticas de jugadores en base de datos, invalidan cachés y recalculan cotizaciones tras la persistencia (`FR-013`) en `back/src/test/java/com/cbo/players/service/CatalogSchedulerTest.java`
 
 **Checkpoint**: User Story 1 (MVP) funcional, optimizada, con cobertura completa de `FR-002`, `FR-003`, `FR-004`, `FR-013`, `SC-001` y `SC-006`.
 
@@ -83,12 +83,12 @@
 
 ### Implementation for User Story 2
 
-- [ ] T022 [P] [US2] Implementar `AuditParameterSanitizer` para serializar argumentos de forma segura, enmascarar campos sensibles (`password`, `secret`, `token`, `apikey`, `authorization`, `credential`, `jwt`) con `[REDACTED]` y truncar payloads largos (> 500 caracteres) en `back/src/main/java/com/cbo/players/audit/AuditParameterSanitizer.java`
-- [ ] T023 [P] [US2] Crear configuración Logback con appender de consola estructurada y `RollingFileAppender` dedicado (`logs/audit.log`, logger `AUDIT_LOGGER` con `additivity="false"`, rotación diaria y límite de tamaño) en `back/src/main/resources/logback-spring.xml`
-- [ ] T024 [US2] Implementar aspecto AOP `WebServiceAuditAspect` (`@Around` sobre métodos públicos de `@RestController` en `com.cbo.players.controller..*`) registrando `<timestamp, correlationId, user, operation, params, executionTimeMs, outcome>` para casos exitosos y fallidos en `back/src/main/java/com/cbo/players/audit/WebServiceAuditAspect.java`
-- [ ] T025 [P] [US2] Crear tests unitarios de redacción de secretos, objetos anidados, nulos y truncado en `back/src/test/java/com/cbo/players/audit/AuditParameterSanitizerTest.java`
-- [ ] T026 [P] [US2] Crear tests unitarios de generación, propagación y limpieza de `MDC` para `X-Correlation-ID` en `back/src/test/java/com/cbo/players/audit/CorrelationIdFilterTest.java`
-- [ ] T027 [US2] Crear tests unitarios de `WebServiceAuditAspect` verificando logging estructurado para usuario autenticado, usuario anónimo, excepciones y enmascaramiento de parámetros en `back/src/test/java/com/cbo/players/audit/WebServiceAuditAspectTest.java`
+- [X] T022 [P] [US2] Implementar `AuditParameterSanitizer` para serializar argumentos de forma segura, enmascarar campos sensibles (`password`, `secret`, `token`, `apikey`, `authorization`, `credential`, `jwt`) con `[REDACTED]` y truncar payloads largos (> 500 caracteres) en `back/src/main/java/com/cbo/players/audit/AuditParameterSanitizer.java`
+- [X] T023 [P] [US2] Crear configuración Logback con appender de consola estructurada y `RollingFileAppender` dedicado (`logs/audit.log`, logger `AUDIT_LOGGER` con `additivity="false"`, rotación diaria y límite de tamaño) en `back/src/main/resources/logback-spring.xml`
+- [X] T024 [US2] Implementar aspecto AOP `WebServiceAuditAspect` (`@Around` sobre métodos públicos de `@RestController` en `com.cbo.players.controller..*`) registrando `<timestamp, correlationId, user, operation, params, executionTimeMs, outcome>` para casos exitosos y fallidos en `back/src/main/java/com/cbo/players/audit/WebServiceAuditAspect.java`
+- [X] T025 [P] [US2] Crear tests unitarios de redacción de secretos, objetos anidados, nulos y truncado en `back/src/test/java/com/cbo/players/audit/AuditParameterSanitizerTest.java`
+- [X] T026 [P] [US2] Crear tests unitarios de generación, propagación y limpieza de `MDC` para `X-Correlation-ID` en `back/src/test/java/com/cbo/players/audit/CorrelationIdFilterTest.java`
+- [X] T027 [US2] Crear tests unitarios de `WebServiceAuditAspect` verificando logging estructurado para usuario autenticado, usuario anónimo, excepciones y enmascaramiento de parámetros en `back/src/test/java/com/cbo/players/audit/WebServiceAuditAspectTest.java`
 
 **Checkpoint**: User Story 2 funcional, 100% independiente de US3 y verificable en consola y `logs/audit.log`.
 
@@ -102,10 +102,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T028 [US3] Actualizar `SecurityConfig` para permitir acceso público a `/actuator/health`, `/actuator/health/**`, `/actuator/info`, `/actuator/metrics`, `/actuator/metrics/**` y `/actuator/prometheus` e incluir `correlationId` (desde `MDC`) en `accessDeniedHandler` en `back/src/main/java/com/cbo/players/security/SecurityConfig.java`
-- [ ] T029 [P] [US3] Instrumentar contador Micrometer `cbo_orders_executed_total` (tag `type=buy|sell`) en `back/src/main/java/com/cbo/players/service/OrderService.java`
-- [ ] T030 [P] [US3] Instrumentar contador Micrometer `cbo_quotes_recalculations_total` (tag `strategy=<code>`) en `back/src/main/java/com/cbo/players/service/QuoteCalculationService.java`
-- [ ] T031 [US3] Agregar servicio `prometheus` (`prom/prometheus:v2.54.1`, puerto `9090`, volumen `./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro`, red `cbo_network`) en `docker-compose.yml`
+- [X] T028 [US3] Actualizar `SecurityConfig` para permitir acceso público a `/actuator/health`, `/actuator/health/**`, `/actuator/info`, `/actuator/metrics`, `/actuator/metrics/**` y `/actuator/prometheus` e incluir `correlationId` (desde `MDC`) en `accessDeniedHandler` en `back/src/main/java/com/cbo/players/security/SecurityConfig.java`
+- [X] T029 [P] [US3] Instrumentar contador Micrometer `cbo_orders_executed_total` (tag `type=buy|sell`) en `back/src/main/java/com/cbo/players/service/OrderService.java`
+- [X] T030 [P] [US3] Instrumentar contador Micrometer `cbo_quotes_recalculations_total` (tag `strategy=<code>`) en `back/src/main/java/com/cbo/players/service/QuoteCalculationService.java`
+- [X] T031 [US3] Agregar servicio `prometheus` (`prom/prometheus:v2.54.1`, puerto `9090`, volumen `./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro`, red `cbo_network`) en `docker-compose.yml`
 
 **Checkpoint**: User Story 3 operativa con Actuator, Prometheus y métricas de dominio.
 
@@ -119,8 +119,8 @@
 
 ### Implementation for User Story 4
 
-- [ ] T032 [US4] Crear suite `ArchitectureTest` con ArchUnit (`@AnalyzeClasses`) validando: arquitectura en capas (`controller → service → repository` y `adapter`), prohibición de acceso directo `controller → repository/adapter`, prohibición de `repository → service/controller`, ausencia de dependencias cíclicas entre paquetes, no retorno de clases `@Entity` desde métodos públicos de controladores y convenciones de sufijo/paquete en `back/src/test/java/com/cbo/players/architecture/ArchitectureTest.java`
-- [ ] T033 [US4] Ejecutar `ArchitectureTest` vía `./mvnw test -Punit -Dtest=ArchitectureTest` y corregir cualquier violación arquitectónica preexistente si existiera en `back/src/main/java/com/cbo/players/`
+- [X] T032 [US4] Crear suite `ArchitectureTest` con ArchUnit (`@AnalyzeClasses`) validando: arquitectura en capas (`controller → service → repository` y `adapter`), prohibición de acceso directo `controller → repository/adapter`, prohibición de `repository → service/controller`, ausencia de dependencias cíclicas entre paquetes, no retorno de clases `@Entity` desde métodos públicos de controladores y convenciones de sufijo/paquete en `back/src/test/java/com/cbo/players/architecture/ArchitectureTest.java`
+- [X] T033 [US4] Ejecutar `ArchitectureTest` vía `./mvnw test -Punit -Dtest=ArchitectureTest` y corregir cualquier violación arquitectónica preexistente si existiera en `back/src/main/java/com/cbo/players/`
 
 **Checkpoint**: Todos los requerimientos CORE técnicos P1 (US1, US2, US3, US4) implementados y verificados.
 
@@ -134,21 +134,21 @@
 
 ### Implementation for User Story 5 — Backend
 
-- [ ] T034 [P] [US5] Crear DTOs de respuesta `TopTradedPlayerDto`, `MarketMetricsDto`, `ValuationMetricsDto`, `AlertMetricsDto`, `PerformanceMetricsDto` y `AdvancedMetricsResponseDto` (con `generatedAt` en el nivel raíz) en `back/src/main/java/com/cbo/players/dto/response/`
-- [ ] T035 [P] [US5] Agregar consultas agregadas JPQL (conteo por tipo de operación, suma de créditos negociados y Top 5 jugadores por volumen de tokens) en `back/src/main/java/com/cbo/players/repository/TransactionRepository.java`
-- [ ] T036 [P] [US5] Agregar consulta agregada de tokens en circulación (excluyendo al superusuario) en `back/src/main/java/com/cbo/players/repository/PortfolioPositionRepository.java`
-- [ ] T037 [P] [US5] Agregar consulta de conteo por estado `countByStatus(AlertStatus status)` en `back/src/main/java/com/cbo/players/repository/PriceAlertRepository.java`
-- [ ] T038 [US5] Implementar `AdvancedMetricsService` consolidando métricas de mercado, valoración (últimas cotizaciones + estrategia activa), alertas, telemetría de `MeterRegistry` (cache hits/misses, hit ratio y latencia promedio del ranking, con protección contra división por cero) y `generatedAt` en nivel raíz en `back/src/main/java/com/cbo/players/service/AdvancedMetricsService.java`
-- [ ] T039 [US5] Implementar `AdvancedMetricsController` exponiendo `GET /metrics/advanced` (sin prefijo `/api` ni `/v1`) con anotaciones Swagger/OpenAPI en `back/src/main/java/com/cbo/players/controller/AdvancedMetricsController.java`, restringir `/metrics/**` exclusivamente a `hasRole("SUPERUSER")` con mensaje `403 ProblemDetail` en español en `back/src/main/java/com/cbo/players/security/SecurityConfig.java`, y crear `back/src/test/java/com/cbo/players/service/AdvancedMetricsServiceTest.java`
+- [X] T034 [P] [US5] Crear DTOs de respuesta `TopTradedPlayerDto`, `MarketMetricsDto`, `ValuationMetricsDto`, `AlertMetricsDto`, `PerformanceMetricsDto` y `AdvancedMetricsResponseDto` (con `generatedAt` en el nivel raíz) en `back/src/main/java/com/cbo/players/dto/response/`
+- [X] T035 [P] [US5] Agregar consultas agregadas JPQL (conteo por tipo de operación, suma de créditos negociados y Top 5 jugadores por volumen de tokens) en `back/src/main/java/com/cbo/players/repository/TransactionRepository.java`
+- [X] T036 [P] [US5] Agregar consulta agregada de tokens en circulación (excluyendo al superusuario) en `back/src/main/java/com/cbo/players/repository/PortfolioPositionRepository.java`
+- [X] T037 [P] [US5] Agregar consulta de conteo por estado `countByStatus(AlertStatus status)` en `back/src/main/java/com/cbo/players/repository/PriceAlertRepository.java`
+- [X] T038 [US5] Implementar `AdvancedMetricsService` consolidando métricas de mercado, valoración (últimas cotizaciones + estrategia activa), alertas, telemetría de `MeterRegistry` (cache hits/misses, hit ratio y latencia promedio del ranking, con protección contra división por cero) y `generatedAt` en nivel raíz en `back/src/main/java/com/cbo/players/service/AdvancedMetricsService.java`
+- [X] T039 [US5] Implementar `AdvancedMetricsController` exponiendo `GET /metrics/advanced` (sin prefijo `/api` ni `/v1`) con anotaciones Swagger/OpenAPI en `back/src/main/java/com/cbo/players/controller/AdvancedMetricsController.java`, restringir `/metrics/**` exclusivamente a `hasRole("SUPERUSER")` con mensaje `403 ProblemDetail` en español en `back/src/main/java/com/cbo/players/security/SecurityConfig.java`, y crear `back/src/test/java/com/cbo/players/service/AdvancedMetricsServiceTest.java`
 
 ### Implementation for User Story 5 — Frontend Básico (Regla Estricta Zero/Minimal-Touch)
 
 > **Recordatorio obligatorio:** Usar el frontend actual (`front/`) **únicamente como referencia visual y arquitectónica**. NO modificar ningún archivo existente en `front/` a menos que sea sumamente importante / estrictamente indispensable.
 
-- [ ] T040 [P] [US5] Crear servicio HTTP nuevo y aislado para consumir `GET /metrics/advanced` (tomando `front/src/services/api.js` y `session.js` como referencia sin modificarlos) en `front/src/services/advancedMetrics.js`
-- [ ] T041 [P] [US5] Crear componente de presentación nuevo `AdvancedMetricsPanel` renderizando los bloques `market`, `valuation`, `alerts`, `performance` y `generatedAt` con las clases/estilos de referencia de `front/src/style.css` (sin modificar `style.css` ni componentes existentes) en `front/src/components/AdvancedMetricsPanel.jsx`
-- [ ] T042 [US5] Crear página nueva `AdvancedMetricsPage` (estados de carga, error `403`/red en español y botón de refresco manual) en `front/src/pages/AdvancedMetricsPage.jsx`, registrando únicamente la ruta `/metrics/advanced` en `front/src/App.jsx` si es estrictamente indispensable para navegación sin alterar ninguna ruta ni archivo previo
-- [ ] T043 [US5] Crear suite de pruebas aislada en Vitest verificando renderizado de métricas, estado vacío y manejo de `403 Forbidden` en `front/src/test/advanced-metrics.test.jsx` y verificar `npm test` sin regresiones en `front/`
+- [X] T040 [P] [US5] Crear servicio HTTP nuevo y aislado para consumir `GET /metrics/advanced` (tomando `front/src/services/api.js` y `session.js` como referencia sin modificarlos) en `front/src/services/advancedMetrics.js`
+- [X] T041 [P] [US5] Crear componente de presentación nuevo `AdvancedMetricsPanel` renderizando los bloques `market`, `valuation`, `alerts`, `performance` y `generatedAt` con las clases/estilos de referencia de `front/src/style.css` (sin modificar `style.css` ni componentes existentes) en `front/src/components/AdvancedMetricsPanel.jsx`
+- [X] T042 [US5] Crear página nueva `AdvancedMetricsPage` (estados de carga, error `403`/red en español y botón de refresco manual) en `front/src/pages/AdvancedMetricsPage.jsx`, registrando únicamente la ruta `/metrics/advanced` en `front/src/App.jsx` si es estrictamente indispensable para navegación sin alterar ninguna ruta ni archivo previo
+- [X] T043 [US5] Crear suite de pruebas aislada en Vitest verificando renderizado de métricas, estado vacío y manejo de `403 Forbidden` en `front/src/test/advanced-metrics.test.jsx` y verificar `npm test` sin regresiones en `front/`
 
 **Checkpoint**: User Story 5 funcional en backend y frontend básico sin alterar funcionalidad previa del frontend.
 
@@ -158,8 +158,8 @@
 
 **Purpose**: Verificación integral E2E sobre PostgreSQL (Testcontainers), pruebas completas de rendimiento/resiliencia (`SC-001`, `SC-006`), ejecución completa de suites `unit`, `e2e` y Vitest, y control de calidad.
 
-- [ ] T044 Crear suite de integración `ObservabilityAndMetricsE2ETest` verificando: `/actuator/health`, `/actuator/info`, `/actuator/metrics`, `/actuator/prometheus`, `GET /metrics/advanced` (`200` superusuario con `generatedAt` en raíz / `403` usuario regular / `401` anónimo), cabecera `X-Correlation-ID`, consistencia de `GET /players/ranking`, verificación cuantitativa de `cbo_ranking_cache_requests_total` (`miss` → `hit`, hit ratio `> 90%` y latencia `< 50 ms` en lecturas repetidas — `SC-001`) y fallback `200 OK` en `GET /players/ranking` y `GET /players` ante fallo simulado de Redis (`SC-006`) en `back/src/test/java/com/cbo/players/integration/ObservabilityAndMetricsE2ETest.java`
-- [ ] T045 Ejecutar suites completas `./mvnw test -Punit`, `./mvnw test -Pe2e` (en `back/`), `npm test` (en `front/`) y validar `specs/006-entrega3-observability-optimization/quickstart.md` (incluyendo `docker compose config`, formato de `logs/audit.log`, verificación de `git diff front/` minimal-touch y Swagger `/v3/api-docs`)
+- [X] T044 Crear suite de integración `ObservabilityAndMetricsE2ETest` verificando: `/actuator/health`, `/actuator/info`, `/actuator/metrics`, `/actuator/prometheus`, `GET /metrics/advanced` (`200` superusuario con `generatedAt` en raíz / `403` usuario regular / `401` anónimo), cabecera `X-Correlation-ID`, consistencia de `GET /players/ranking`, verificación cuantitativa de `cbo_ranking_cache_requests_total` (`miss` → `hit`, hit ratio `> 90%` y latencia `< 50 ms` en lecturas repetidas — `SC-001`) y fallback `200 OK` en `GET /players/ranking` y `GET /players` ante fallo simulado de Redis (`SC-006`) en `back/src/test/java/com/cbo/players/e2e/ObservabilityAndMetricsE2ETest.java`
+- [X] T045 Ejecutar suites completas `./mvnw test -Punit`, `./mvnw test -Pe2e` (en `back/`), `npm test` (en `front/`) y validar `specs/006-entrega3-observability-optimization/quickstart.md` *(PASS: `-Punit` 246/246 con 10/10 ArchUnit, `-Pe2e` 46/46 sobre Testcontainers PostgreSQL + Redis 7, `Vitest` 152/152, `docker compose config` PASS y `back/logs/audit.log` verificado)*
 
 ---
 
@@ -169,7 +169,7 @@
 
 **Independent Test**: Confirmar existencia de `docs/release-notes-v3.0.0.md` completo, verificar pipeline CI remoto en `SUCCESS` y SonarCloud `< 10 issues`, y comprobar tag anotado `v3.0.0` y Release publicados en GitHub.
 
-- [ ] T046 [US6] Confeccionar las Release Notes formales de la Entrega 3 (resumen ejecutivo, novedades CORE y funcionales, nuevos endpoints sin `/api` ni `/v1`, vista básica de métricas avanzadas, verificación de scheduler de scraping, observabilidad, rendimiento, estado de tests/arquitectura/SonarCloud y guía de verificación) en `docs/release-notes-v3.0.0.md`
+- [X] T046 [US6] Confeccionar las Release Notes formales de la Entrega 3 (resumen ejecutivo, novedades CORE y funcionales, nuevos endpoints sin `/api` ni `/v1`, vista básica de métricas avanzadas, verificación de scheduler de scraping, observabilidad, rendimiento, estado de tests/arquitectura/SonarCloud y guía de verificación) en `docs/release-notes-v3.0.0.md`
 - [ ] T047 [US6] Tras verificar compuerta obligatoria de pipeline CI remoto en estado `SUCCESS` y SonarCloud `< 10 issues` sobre la rama principal (`main`), crear el tag anotado `v3.0.0`, pushear el tag a `origin` y publicar la Release en GitHub con el contenido de `docs/release-notes-v3.0.0.md`
 
 ---

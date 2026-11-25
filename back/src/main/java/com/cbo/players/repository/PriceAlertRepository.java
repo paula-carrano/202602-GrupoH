@@ -18,4 +18,6 @@ public interface PriceAlertRepository extends JpaRepository<PriceAlert, Long> {
     List<PriceAlert> findByPlayerIdAndStatus(Long playerId, AlertStatus status);
 
     Optional<PriceAlert> findByIdAndUserId(Long id, Long userId);
+
+    long countByStatus(AlertStatus status);
 }

@@ -8,7 +8,9 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.utility.DockerImageName;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
@@ -17,6 +19,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class AbstractE2ETest {
 
     protected static final PostgreSQLContainer<?> postgres;
+    protected static final GenericContainer<?> redis;
 
     static {
         postgres = new PostgreSQLContainer<>("postgres:15-alpine")
@@ -24,6 +27,10 @@ public abstract class AbstractE2ETest {
                 .withUsername("postgres")
                 .withPassword("postgres");
         postgres.start();
+
+        redis = new GenericContainer<>(DockerImageName.parse("redis:7-alpine"))
+                .withExposedPorts(6379);
+        redis.start();
     }
 
     @DynamicPropertySource
@@ -32,6 +39,8 @@ public abstract class AbstractE2ETest {
         registry.add("spring.datasource.username", postgres::getUsername);
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
+        registry.add("spring.data.redis.host", redis::getHost);
+        registry.add("spring.data.redis.port", () -> redis.getMappedPort(6379));
     }
 
     @Autowired

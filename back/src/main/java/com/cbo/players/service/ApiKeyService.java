@@ -8,6 +8,7 @@ import com.cbo.players.model.ApiKey;
 import com.cbo.players.model.User;
 import com.cbo.players.repository.ApiKeyRepository;
 import com.cbo.players.repository.UserRepository;
+import com.cbo.players.security.ApiKeyValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,7 +20,7 @@ import java.util.HexFormat;
 import java.util.Optional;
 
 @Service
-public class ApiKeyService {
+public class ApiKeyService implements ApiKeyValidator {
 
     private static final String KEY_PREFIX = "cbo_live_";
     private static final int RANDOM_BYTES_LENGTH = 24; // Generates 48 hex chars

@@ -1,6 +1,7 @@
 package com.cbo.players.repository;
 
 import com.cbo.players.model.PortfolioPosition;
+import com.cbo.players.model.UserRole;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -26,4 +27,7 @@ public interface PortfolioPositionRepository extends JpaRepository<PortfolioPosi
 
     @Query("SELECT COALESCE(SUM(p.tokensQuantity), 0) FROM PortfolioPosition p WHERE p.player.id = :playerId")
     Integer sumTokensByPlayerId(@Param("playerId") Long playerId);
+
+    @Query("SELECT COALESCE(SUM(p.tokensQuantity), 0) FROM PortfolioPosition p WHERE p.user.role <> :excludedRole")
+    Long sumTokensExcludingUserRole(@Param("excludedRole") UserRole excludedRole);
 }

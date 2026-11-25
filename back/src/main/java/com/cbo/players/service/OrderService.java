@@ -6,6 +6,8 @@ import com.cbo.players.exception.ApiException;
 import com.cbo.players.exception.ErrorCode;
 import com.cbo.players.model.*;
 import com.cbo.players.repository.*;
+import io.micrometer.core.instrument.MeterRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -17,22 +19,36 @@ import java.math.RoundingMode;
 @Service
 public class OrderService {
 
+    public static final String METRIC_ORDERS_EXECUTED = "cbo.orders.executed";
+
     private final UserRepository userRepository;
     private final PlayerRepository playerRepository;
     private final PlayerQuoteRepository playerQuoteRepository;
     private final PortfolioPositionRepository portfolioPositionRepository;
     private final TransactionRepository transactionRepository;
+    private final MeterRegistry meterRegistry;
 
     public OrderService(UserRepository userRepository,
                         PlayerRepository playerRepository,
                         PlayerQuoteRepository playerQuoteRepository,
                         PortfolioPositionRepository portfolioPositionRepository,
                         TransactionRepository transactionRepository) {
+        this(userRepository, playerRepository, playerQuoteRepository, portfolioPositionRepository, transactionRepository, null);
+    }
+
+    @Autowired
+    public OrderService(UserRepository userRepository,
+                        PlayerRepository playerRepository,
+                        PlayerQuoteRepository playerQuoteRepository,
+                        PortfolioPositionRepository portfolioPositionRepository,
+                        TransactionRepository transactionRepository,
+                        @Autowired(required = false) MeterRegistry meterRegistry) {
         this.userRepository = userRepository;
         this.playerRepository = playerRepository;
         this.playerQuoteRepository = playerQuoteRepository;
         this.portfolioPositionRepository = portfolioPositionRepository;
         this.transactionRepository = transactionRepository;
+        this.meterRegistry = meterRegistry;
     }
 
     @Transactional(isolation = Isolation.READ_COMMITTED)
@@ -111,6 +127,7 @@ public class OrderService {
                     strategyVersion
             ));
         Transaction savedTx = transactionRepository.save(tx);
+        recordOrderMetric("buy");
 
         String playerName = player.getFirstName() + " " + player.getLastName();
         return new OrderResponseDto(
@@ -189,6 +206,7 @@ public class OrderService {
                     strategyVersion
             ));
         Transaction savedTx = transactionRepository.save(tx);
+        recordOrderMetric("sell");
 
         String playerName = player.getFirstName() + " " + player.getLastName();
         return new OrderResponseDto(
@@ -211,6 +229,12 @@ public class OrderService {
     private void validateOrderParameters(Integer quantity) {
         if (quantity == null || quantity <= 0) {
             throw new ApiException("La cantidad de tokens debe ser mayor a 0", HttpStatus.BAD_REQUEST, ErrorCode.INVALID_AMOUNT);
+        }
+    }
+
+    private void recordOrderMetric(String orderType) {
+        if (meterRegistry != null) {
+            meterRegistry.counter(METRIC_ORDERS_EXECUTED, "type", orderType).increment();
         }
     }
 

@@ -1,10 +1,16 @@
 package com.cbo.players.service;
 
 import com.cbo.players.adapter.dto.*;
+import com.cbo.players.config.RedisCacheConfig;
 import com.cbo.players.dto.response.StoredPlayerStatsDto;
 import com.cbo.players.exception.*;
 import com.cbo.players.model.*;
 import com.cbo.players.repository.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +21,24 @@ import java.util.List;
 
 @Service
 public class CatalogPersistenceService {
+    private static final Logger log = LoggerFactory.getLogger(CatalogPersistenceService.class);
+
     private final PlayerRepository players;
     private final PlayerStatisticsRepository statistics;
+    private final CacheManager cacheManager;
+
     public CatalogPersistenceService(PlayerRepository players, PlayerStatisticsRepository statistics) {
-        this.players = players; this.statistics = statistics;
+        this(players, statistics, null);
+    }
+
+    @Autowired
+    public CatalogPersistenceService(
+            PlayerRepository players,
+            PlayerStatisticsRepository statistics,
+            @Autowired(required = false) CacheManager cacheManager) {
+        this.players = players;
+        this.statistics = statistics;
+        this.cacheManager = cacheManager;
     }
     public record ImportResult(int created, int updated) {}
     public record LinkedPlayer(Long playerId, Long whoscoredId) {}
@@ -52,6 +72,7 @@ public class CatalogPersistenceService {
             players.save(player);
         }
         players.flush();
+        evictCatalogAndRankingCaches();
         return new ImportResult(created, updated);
     }
 
@@ -80,6 +101,7 @@ public class CatalogPersistenceService {
         PlayerStatistics stored = statistics.findById(player.getId()).orElseGet(() -> new PlayerStatistics(player));
         stored.update(link.whoscoredId(), stats);
         statistics.saveAndFlush(stored);
+        evictCatalogAndRankingCaches();
         return true;
     }
 
@@ -109,5 +131,24 @@ public class CatalogPersistenceService {
         }
         return StoredPlayerStatsDto.from(statistics.findById(playerId).orElseThrow(() ->
                 new ResourceNotFoundException("Sin estadisticas guardadas", ErrorCode.PLAYER_STATISTICS_NOT_FOUND)));
+    }
+
+    public void evictCatalogAndRankingCaches() {
+        if (cacheManager == null) {
+            return;
+        }
+        clearCacheSafely(RedisCacheConfig.CACHE_CATALOG);
+        clearCacheSafely(RedisCacheConfig.CACHE_RANKING);
+    }
+
+    private void clearCacheSafely(String cacheName) {
+        try {
+            Cache cache = cacheManager.getCache(cacheName);
+            if (cache != null) {
+                cache.clear();
+            }
+        } catch (RuntimeException ex) {
+            log.warn("No se pudo invalidar la caché [{}] tras persistir catálogo: {}", cacheName, ex.getMessage());
+        }
     }
 }

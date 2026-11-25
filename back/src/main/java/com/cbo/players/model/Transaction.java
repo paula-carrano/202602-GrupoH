@@ -10,7 +10,8 @@ import java.time.ZoneOffset;
 @Entity
 @Table(name = "transactions", indexes = {
         @Index(name = "idx_transactions_actor_user_id", columnList = "actor_user_id"),
-        @Index(name = "idx_transactions_timestamp", columnList = "timestamp")
+        @Index(name = "idx_transactions_timestamp", columnList = "timestamp"),
+        @Index(name = "idx_transactions_operation_type", columnList = "operation_type")
 })
 public class Transaction {
 

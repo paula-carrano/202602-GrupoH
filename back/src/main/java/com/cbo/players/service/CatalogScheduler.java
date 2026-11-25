@@ -10,11 +10,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 @Component
 @ConditionalOnProperty(name = "app.catalog-sync.enabled", havingValue = "true")
 public class CatalogScheduler {
 
     private static final Logger log = LoggerFactory.getLogger(CatalogScheduler.class);
+    private static final Duration SYNC_WAIT_TIMEOUT = Duration.ofMinutes(5);
 
     private final CatalogSyncService sync;
     private final QuoteCalculationService quoteCalculationService;
@@ -34,6 +37,10 @@ public class CatalogScheduler {
     public void synchronize() {
         try {
             sync.start(CatalogSyncRun.Origin.SCHEDULED);
+            boolean completed = sync.awaitCompletion(SYNC_WAIT_TIMEOUT);
+            if (!completed) {
+                log.warn("La sincronización programada del catálogo superó el tiempo de espera antes del recálculo.");
+            }
         } catch (ApiException error) {
             if (error.getErrorCode() != ErrorCode.CATALOG_SYNC_BUSY) {
                 throw error;

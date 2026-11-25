@@ -170,12 +170,7 @@ public class AdvancedMetricsService {
                     0L, ZERO_CREDITS, ZERO_CREDITS, ZERO_CREDITS);
         }
 
-        Map<Long, BigDecimal> latestByPlayer = new HashMap<>();
-        for (PlayerQuote quote : playerQuoteRepository.findLatestQuotesForActivePlayers()) {
-            if (quote != null && quote.getPlayer() != null && quote.getPlayer().getId() != null && quote.getPrice() != null) {
-                latestByPlayer.putIfAbsent(quote.getPlayer().getId(), quote.getPrice());
-            }
-        }
+        Map<Long, BigDecimal> latestByPlayer = loadLatestPricesByPlayer();
 
         BigDecimal sum = BigDecimal.ZERO;
         BigDecimal min = null;
@@ -202,6 +197,19 @@ public class AdvancedMetricsService {
                 min != null ? min.setScale(4, RoundingMode.HALF_UP) : ZERO_CREDITS,
                 max != null ? max.setScale(4, RoundingMode.HALF_UP) : ZERO_CREDITS
         );
+    }
+
+    private Map<Long, BigDecimal> loadLatestPricesByPlayer() {
+        Map<Long, BigDecimal> prices = new HashMap<>();
+        for (PlayerQuote quote : playerQuoteRepository.findLatestQuotesForActivePlayers()) {
+            if (quote != null
+                    && quote.getPlayer() != null
+                    && quote.getPlayer().getId() != null
+                    && quote.getPrice() != null) {
+                prices.putIfAbsent(quote.getPlayer().getId(), quote.getPrice());
+            }
+        }
+        return prices;
     }
 
     private AlertMetricsDto buildAlertMetrics() {

@@ -56,10 +56,10 @@ class ObservabilityAndMetricsE2ETest extends AbstractE2ETest {
 
     private String regularUserToken;
     private String superuserToken;
-    private ValuationStrategy balancedStrategy;
     private ValuationStrategy offensiveStrategy;
 
     @BeforeEach
+    @SuppressWarnings("java:S7467") // Java 17 does not support unnamed catch variables.
     void setUp() {
         cleanupDatabase();
 
@@ -73,7 +73,7 @@ class ObservabilityAndMetricsE2ETest extends AbstractE2ETest {
         regularUserToken = jwtTokenProvider.generateToken(regularUser.getUsername(), regularUser.getId(), "ROLE_USER");
         superuserToken = jwtTokenProvider.generateToken(superUser.getUsername(), superUser.getId(), "ROLE_SUPERUSER");
 
-        balancedStrategy = valuationStrategyRepository.findByCode("BALANCED")
+        valuationStrategyRepository.findByCode("BALANCED")
                 .orElseGet(() -> valuationStrategyRepository.save(new ValuationStrategy(
                         "BALANCED", "Rendimiento Global Equilibrado", "desc", 1, true,
                         BigDecimal.ONE, new ValuationWeights(1.0, 0.8, 0.01, 0.1, 0.2, 1.5, -0.5))));

@@ -32,6 +32,8 @@ public class WebServiceAuditAspect {
         this.sanitizer = sanitizer;
     }
 
+    // Audit the failure while preserving the original exception for HTTP error handling.
+    @SuppressWarnings("java:S2139")
     @Around("within(@org.springframework.web.bind.annotation.RestController *) && within(com.cbo.players.controller..*) && execution(public * *(..))")
     public Object auditWebServiceCall(ProceedingJoinPoint joinPoint) throws Throwable {
         Instant timestamp = Instant.now();

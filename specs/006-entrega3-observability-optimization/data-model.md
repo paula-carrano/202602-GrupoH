@@ -1,27 +1,27 @@
 # Data Model & Observability Schemas: Entrega 3
 
 **Feature**: `006-entrega3-observability-optimization`  
-**Date**: 2026-11-24  
+**Date**: 2026-11-24 *(Updated: 2026-11-25)*  
 **Spec**: [spec.md](./spec.md)
 
 ---
 
 ## 1. Optimizaciones de Esquema e Índices (PostgreSQL / JPA)
 
-No se crean nuevas tablas en base de datos; se optimizan índices existentes para acelerar las consultas de ranking y métricas avanzadas:
+No se crean nuevas tablas en base de datos; se optimizan índices existentes para acelerar las consultas de ranking, catálogo y métricas avanzadas:
 
 | Tabla / Entidad | Índice | Columnas | Propósito |
 | :--- | :--- | :--- | :--- |
 | `player_quotes` (`PlayerQuote`) | `idx_player_quotes_player_timestamp` *(nuevo)* | `player_id, timestamp` | Eliminar N+1 y full-table scans al obtener la última cotización por jugador y al calcular estadísticas de cotización. |
-| `players` (`Player`) | `idx_players_active` *(nuevo)* | `active` | Filtrado directo de jugadores activos en `findByActiveTrue()` para ranking y métricas. |
-| `transactions` (`Transaction`) | `idx_transactions_operation_type` *(nuevo)* | `operation_type` | Acelerar agregaciones por tipo de operación (`COMPRA`, `VENTA`, `RECARGA`) en `GET /api/metrics/advanced`. |
+| `players` (`Player`) | `idx_players_active` *(nuevo)* | `active` | Filtrado directo de jugadores activos en `findAllByActiveTrue()` para ranking, catálogo y métricas. |
+| `transactions` (`Transaction`) | `idx_transactions_operation_type` *(nuevo)* | `operation_type` | Acelerar agregaciones por tipo de operación (`COMPRA`, `VENTA`, `RECARGA`, `CAMBIO_ESTRATEGIA`) en `GET /metrics/advanced`. |
 
 ---
 
-## 2. DTOs de Respuesta — Métricas Avanzadas (`GET /api/metrics/advanced`)
+## 2. DTOs de Respuesta — Métricas Avanzadas (`GET /metrics/advanced`)
 
 ### `AdvancedMetricsResponseDto`
-Objeto raíz retornado por `GET /api/metrics/advanced`:
+Objeto raíz retornado por `GET /metrics/advanced` *(con `generatedAt` en el nivel raíz, alineado con `spec.md` y `contracts/`)*:
 
 | Campo | Tipo | Descripción |
 | :--- | :--- | :--- |
@@ -29,7 +29,7 @@ Objeto raíz retornado por `GET /api/metrics/advanced`:
 | `valuation` | `ValuationMetricsDto` | Estado de la estrategia activa y distribución de cotizaciones vigentes. |
 | `alerts` | `AlertMetricsDto` | Estado agregado del motor de alertas de precio. |
 | `performance` | `PerformanceMetricsDto` | Telemetría en tiempo real de caché de ranking y latencia. |
-| `generatedAt` | `Instant` (ISO-8601 UTC) | Marca temporal de generación del reporte. |
+| `generatedAt` | `Instant` (ISO-8601 UTC) | Marca temporal de generación del reporte (nivel raíz). |
 
 ### `MarketMetricsDto`
 | Campo | Tipo | Regla / Validación |
@@ -76,7 +76,7 @@ Objeto raíz retornado por `GET /api/metrics/advanced`:
 | `rankingCacheHits` | `long` | Total acumulado de aciertos de caché en consultas de ranking. |
 | `rankingCacheMisses` | `long` | Total acumulado de fallos de caché en consultas de ranking. |
 | `rankingCacheHitRatioPercent` | `double` | `(hits / (hits + misses)) * 100`, redondeado a 2 decimales (`0.0` si `hits + misses == 0`). |
-| `avgRankingLatencyMs` | `double` | Latencia promedio en milisegundos de `GET /api/players/ranking` (`0.0` si aún no hubo consultas). |
+| `avgRankingLatencyMs` | `double` | Latencia promedio en milisegundos de `GET /players/ranking` (`0.0` si aún no hubo consultas). |
 
 ---
 
@@ -87,9 +87,9 @@ Cada invocación a un método público de un `@RestController` de negocio emite 
 | Campo | Tipo / Formato | Descripción |
 | :--- | :--- | :--- |
 | `timestamp` | ISO-8601 UTC (`2026-11-24T21:30:00.123Z`) | Instante de inicio/registro de la invocación. |
-| `correlationId` | UUID v4 / Header `X-Correlation-ID` | Identificador único de trazabilidad de la petición. |
+| `correlationId` | UUID v4 / Header `X-Correlation-ID` | Identificador único de trazabilidad de la petición (propagado vía MDC). |
 | `user` | `String` | Email/username del `Authentication` activo en `SecurityContextHolder`, o `anonymous` si no hay usuario autenticado. |
-| `operation` | `String` | Método HTTP + URI + `ControllerSimpleName.methodName` (ej. `POST /api/orders/buy \| OrderController.buyTokens`). |
+| `operation` | `String` | Método HTTP + URI + `ControllerSimpleName.methodName` (ej. `POST /orders/buy \| OrderController.buyTokens`). |
 | `parameters` | `String` (sanitizado) | Mapa legible `paramName=value` con campos sensibles reemplazados por `[REDACTED]` y valores largos truncados a 500 caracteres. |
 | `executionTimeMs` | `long` | Tiempo total de ejecución del método en milisegundos (`System.nanoTime()` convertido a ms). |
 | `outcome` | `SUCCESS` \| `ERROR` | Resultado de la ejecución (si lanza excepción, incluye nombre simple de la excepción o código de error sin stack trace). |
@@ -100,12 +100,13 @@ Cada invocación a un método público de un `@RestController` de negocio emite 
 
 ---
 
-## 4. Claves de Caché Redis y Política de Invalidación
+## 4. Claves de Caché Redis, Protección contra Cache Stampede y Política de Invalidación
 
-| Cache Name | Key | TTL por defecto | Disparadores de Invalidación |
-| :--- | :--- | :--- | :--- |
-| `players::ranking` | `'active_ranking'` | 1 hora (configurable) | `QuoteCalculationService.recalculateAllQuotes()`, `ValuationStrategyService.activateStrategy(...)`, sincronización de catálogo que altere jugadores activos. |
-| `players::catalog` | `'all_players'` / `playerId` | 15 minutos (configurable) | `QuoteCalculationService.recalculateAllQuotes()`, `CatalogPersistenceService` al actualizar catálogo. |
+| Cache Name | Key Pattern | TTL por defecto | Protección Stampede | Disparadores de Invalidación |
+| :--- | :--- | :--- | :--- | :--- |
+| `players::ranking` | `active_ranking:<strategyCode>:v<version>` | 1 hora (configurable) | Bloqueo sincronizado por clave (`ConcurrentHashMap` / `sync`) en recarga de *cache miss* | `QuoteCalculationService.recalculateAllQuotes()`, `ValuationStrategyService.activateStrategy(...)`, finalización de sincronización en `CatalogPersistenceService`/`CatalogSyncService`. |
+| `players::catalog` | `'all_players'` / `'player:' + playerId` | 15 minutos (configurable) | Carga segura con fallback a PostgreSQL | `QuoteCalculationService.recalculateAllQuotes()`, `CatalogPersistenceService.importSquad()`, `CatalogPersistenceService.saveStatistics()`. |
+| `players::external` | `'teams:' + league` / `'squad:' + teamId` / `'stats:' + whoscoredId` | 30 minutos (configurable) | Fallback a caché/datos locales ante fallo del proveedor | Expiración por TTL y actualización en sincronizaciones exitosas del scheduler. |
 
 ---
 

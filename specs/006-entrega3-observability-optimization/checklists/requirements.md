@@ -31,6 +31,6 @@
 
 ## Notes
 
-- Todos los ítems del checklist pasaron en la primera validación.
-- Los 6 requerimientos CORE (Test de arquitectura, Redis para caché, Auditoría AOP con Logback/Log4j y Correlation ID, Tag y Release Notes en GitHub, Prometheus y Spring Boot Actuator) y los 2 requerimientos FUNCIONALES (Optimización del ranking para alta frecuencia y Endpoint de métricas avanzadas `GET /metrics/advanced`) están cubiertos en 6 User Stories priorizadas (P1/P2) y 12 requerimientos funcionales (`FR-001` a `FR-012`).
-- La especificación está lista para pasar a `/speckit-clarify` (opcional, si se desean ajustar supuestos) o directamente a `/speckit-plan`.
+- Todos los ítems del checklist siguen aprobados tras la clarificación y las correcciones post-análisis (2026-11-25).
+- Los 6 requerimientos CORE (Test de arquitectura, Redis para caché, Auditoría AOP con Logback/Log4j y Correlation ID, Tag y Release Notes en GitHub, Prometheus y Spring Boot Actuator), los 2 requerimientos FUNCIONALES (Optimización del ranking para alta frecuencia y Endpoint de métricas avanzadas `GET /metrics/advanced` con vista básica aislada en frontend sin alterar archivos actuales salvo lo indispensable) y la verificación del scheduler de scraping sobre base de datos están cubiertos en 6 User Stories priorizadas (P1/P2) y 13 requerimientos funcionales (`FR-001` a `FR-013`).
+- La especificación se encuentra en estado `Ready for Implementation` y lista para ejecutar `/speckit-implement`.

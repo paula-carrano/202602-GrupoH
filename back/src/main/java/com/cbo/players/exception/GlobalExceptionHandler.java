@@ -1,5 +1,6 @@
 package com.cbo.players.exception;
 
+import com.cbo.players.audit.CorrelationIdFilter;
 import com.cbo.players.dto.response.ViolationDto;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -17,7 +18,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import java.net.URI;
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -32,7 +32,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ProblemDetail> handleApiException(ApiException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Excepción de negocio [{}]: {} - ErrorCode: {}", correlationId, ex.getMessage(), ex.getErrorCode());
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(ex.getStatus(), ex.getMessage());
@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ProblemDetail> handleValidationException(MethodArgumentNotValidException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Error de validación [{}] en {}", correlationId, request.getRequestURI());
 
         List<ViolationDto> violations = ex.getBindingResult().getFieldErrors().stream()
@@ -61,7 +61,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ProblemDetail> handleTypeMismatchException(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Parámetro con formato inválido [{}]: {}", correlationId, ex.getMessage());
 
         String paramName = ex.getName();
@@ -75,7 +75,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ProblemDetail> handleNotReadableException(HttpMessageNotReadableException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Cuerpo de solicitud malformado [{}]: {}", correlationId, ex.getMessage());
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ProblemDetail> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Argumento inválido [{}]: {}", correlationId, ex.getMessage());
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
@@ -100,7 +100,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ProblemDetail> handleAccessDeniedException(AccessDeniedException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Acceso denegado [{}]: {}", correlationId, ex.getMessage());
 
         String detail = request.getRequestURI().startsWith("/api/admin/strategies")
@@ -118,7 +118,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ProblemDetail> handleAuthenticationException(AuthenticationException ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.warn("Falla de autenticación [{}]: {}", correlationId, ex.getMessage());
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(
@@ -132,7 +132,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ProblemDetail> handleGenericException(Exception ex, HttpServletRequest request) {
-        String correlationId = UUID.randomUUID().toString();
+        String correlationId = CorrelationIdFilter.currentOrGenerate();
         log.error("Error interno del servidor no controlado [{}]", correlationId, ex);
 
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(

@@ -7,6 +7,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
@@ -25,24 +29,35 @@ import java.util.function.Function;
 import static com.cbo.players.adapter.ScrapingException.Kind.*;
 
 public final class ScrapingRestAdapter implements ScrapingPort {
+    public static final String CACHE_EXTERNAL = "players::external";
+    private static final Logger log = LoggerFactory.getLogger(ScrapingRestAdapter.class);
     private static final Set<String> COMPETITIONS = Set.of("PL", "BL1", "PD", "SA", "FL1");
     private final RestClient client;
     private final ObjectMapper mapper;
     private final String apiKey;
+    private final CacheManager cacheManager;
 
     public ScrapingRestAdapter(RestClient client, ObjectMapper mapper, String apiKey) {
+        this(client, mapper, apiKey, null);
+    }
+
+    public ScrapingRestAdapter(RestClient client, ObjectMapper mapper, String apiKey, CacheManager cacheManager) {
         this.client = client;
         this.mapper = mapper.copy()
                 .disable(DeserializationFeature.ACCEPT_FLOAT_AS_INT)
                 .disable(MapperFeature.ALLOW_COERCION_OF_SCALARS)
                 .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
         this.apiKey = apiKey;
+        this.cacheManager = cacheManager;
     }
 
     @Override
     public PlayerStatsDto getPlayerStats(long whoscoredId) {
         requirePositive(whoscoredId);
-        return get(uri -> uri.path("/players/{id}/stats").build(whoscoredId), new TypeReference<>() {});
+        return getWithExternalCacheFallback(
+                "stats:" + whoscoredId,
+                () -> get(uri -> uri.path("/players/{id}/stats").build(whoscoredId), new TypeReference<>() {}),
+                PlayerStatsDto.class);
     }
 
     @Override
@@ -96,22 +111,84 @@ public final class ScrapingRestAdapter implements ScrapingPort {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public List<com.cbo.players.adapter.dto.CatalogTeamDto> getCompetitionTeams(String competitionCode) {
         String code = competitionCode == null ? "" : competitionCode.toUpperCase(Locale.ROOT);
         if (!COMPETITIONS.contains(code)) throw new IllegalArgumentException("Unsupported competition code");
-        List<com.cbo.players.adapter.dto.CatalogTeamDto> teams = get(
-                uri -> uri.path("/competitions/{code}/teams").build(code), new TypeReference<>() {});
-        if (teams.stream().anyMatch(java.util.Objects::isNull)) throw invalidResponse();
-        return List.copyOf(teams);
+        return getWithExternalCacheFallback(
+                "teams:" + code,
+                () -> {
+                    List<com.cbo.players.adapter.dto.CatalogTeamDto> teams = get(
+                            uri -> uri.path("/competitions/{code}/teams").build(code), new TypeReference<>() {});
+                    if (teams.stream().anyMatch(java.util.Objects::isNull)) throw invalidResponse();
+                    return List.copyOf(teams);
+                },
+                List.class);
     }
 
     @Override
     public com.cbo.players.adapter.dto.TeamSquadDto getTeamSquad(long footballDataTeamId) {
         requirePositive(footballDataTeamId);
-        com.cbo.players.adapter.dto.TeamSquadDto squad = get(
-                uri -> uri.path("/teams/{id}/squad").build(footballDataTeamId), new TypeReference<>() {});
-        if (squad.team().id() != footballDataTeamId) throw invalidResponse();
-        return squad;
+        return getWithExternalCacheFallback(
+                "squad:" + footballDataTeamId,
+                () -> {
+                    com.cbo.players.adapter.dto.TeamSquadDto squad = get(
+                            uri -> uri.path("/teams/{id}/squad").build(footballDataTeamId), new TypeReference<>() {});
+                    if (squad.team().id() != footballDataTeamId) throw invalidResponse();
+                    return squad;
+                },
+                com.cbo.players.adapter.dto.TeamSquadDto.class);
+    }
+
+    private <T> T getWithExternalCacheFallback(String cacheKey, java.util.function.Supplier<T> supplier, Class<T> type) {
+        try {
+            T fresh = supplier.get();
+            writeExternalCache(cacheKey, fresh);
+            return fresh;
+        } catch (ScrapingException ex) {
+            if (isFallbackEligible(ex)) {
+                T cached = readExternalCache(cacheKey, type);
+                if (cached != null) {
+                    log.warn("Proveedor externo no disponible ({}). Sirviendo respuesta desde caché Redis [{}].",
+                            ex.getKind(), cacheKey);
+                    return cached;
+                }
+            }
+            throw ex;
+        }
+    }
+
+    private static boolean isFallbackEligible(ScrapingException ex) {
+        return ex.getKind() == TIMEOUT
+                || ex.getKind() == CONNECTION
+                || (ex.getKind() == REMOTE_HTTP && ex.getRemoteStatus() != null && ex.getRemoteStatus() >= 500);
+    }
+
+    private <T> T readExternalCache(String cacheKey, Class<T> type) {
+        if (cacheManager == null) {
+            return null;
+        }
+        try {
+            Cache cache = cacheManager.getCache(CACHE_EXTERNAL);
+            return cache != null ? cache.get(cacheKey, type) : null;
+        } catch (RuntimeException ex) {
+            log.warn("Error leyendo caché externa [{}]: {}", cacheKey, ex.getMessage());
+            return null;
+        }
+    }
+
+    private void writeExternalCache(String cacheKey, Object value) {
+        if (cacheManager == null || value == null) {
+            return;
+        }
+        try {
+            Cache cache = cacheManager.getCache(CACHE_EXTERNAL);
+            if (cache != null) {
+                cache.put(cacheKey, value);
+            }
+        } catch (RuntimeException ex) {
+            log.warn("Error escribiendo caché externa [{}]: {}", cacheKey, ex.getMessage());
+        }
     }
 
     private <T> T get(Function<UriBuilder, URI> uri, TypeReference<T> type) {

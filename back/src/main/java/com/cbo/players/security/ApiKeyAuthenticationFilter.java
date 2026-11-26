@@ -1,7 +1,6 @@
 package com.cbo.players.security;
 
 import com.cbo.players.model.ApiKey;
-import com.cbo.players.service.ApiKeyService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,10 +21,10 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String HEADER_API_KEY = "X-API-Key";
 
-    private final ApiKeyService apiKeyService;
+    private final ApiKeyValidator apiKeyValidator;
 
-    public ApiKeyAuthenticationFilter(ApiKeyService apiKeyService) {
-        this.apiKeyService = apiKeyService;
+    public ApiKeyAuthenticationFilter(ApiKeyValidator apiKeyValidator) {
+        this.apiKeyValidator = apiKeyValidator;
     }
 
     @Override
@@ -37,7 +36,7 @@ public class ApiKeyAuthenticationFilter extends OncePerRequestFilter {
         String apiKeyHeader = request.getHeader(HEADER_API_KEY);
 
         if (StringUtils.hasText(apiKeyHeader) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            Optional<ApiKey> apiKeyOpt = apiKeyService.validateApiKey(apiKeyHeader);
+            Optional<ApiKey> apiKeyOpt = apiKeyValidator.validateApiKey(apiKeyHeader);
 
             if (apiKeyOpt.isPresent()) {
                 ApiKey apiKey = apiKeyOpt.get();

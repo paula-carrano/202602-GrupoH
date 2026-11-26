@@ -12,6 +12,7 @@ import com.cbo.players.repository.PlayerQuoteRepository;
 import com.cbo.players.repository.PlayerRepository;
 import com.cbo.players.repository.PlayerStatisticsRepository;
 import com.cbo.players.service.formula.ValuationFormula;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,8 @@ import java.util.List;
 @Service
 public class QuoteCalculationService {
 
+    public static final String METRIC_QUOTES_RECALCULATIONS = "cbo.quotes.recalculations";
+
     private static final Logger log = LoggerFactory.getLogger(QuoteCalculationService.class);
 
     private final ValuationStrategyService valuationStrategyService;
@@ -42,6 +45,7 @@ public class QuoteCalculationService {
     private final PlayerQuoteRepository playerQuoteRepository;
     private final ApplicationEventPublisher eventPublisher;
     private final CacheManager cacheManager;
+    private final MeterRegistry meterRegistry;
 
     public QuoteCalculationService(
             ValuationStrategyService valuationStrategyService,
@@ -50,7 +54,21 @@ public class QuoteCalculationService {
             PlayerStatisticsRepository playerStatisticsRepository,
             PlayerQuoteRepository playerQuoteRepository,
             ApplicationEventPublisher eventPublisher,
-            @Autowired(required = false) CacheManager cacheManager) {
+            CacheManager cacheManager) {
+        this(valuationStrategyService, formulas, playerRepository, playerStatisticsRepository,
+                playerQuoteRepository, eventPublisher, cacheManager, null);
+    }
+
+    @Autowired
+    public QuoteCalculationService(
+            ValuationStrategyService valuationStrategyService,
+            List<ValuationFormula> formulas,
+            PlayerRepository playerRepository,
+            PlayerStatisticsRepository playerStatisticsRepository,
+            PlayerQuoteRepository playerQuoteRepository,
+            ApplicationEventPublisher eventPublisher,
+            @Autowired(required = false) CacheManager cacheManager,
+            @Autowired(required = false) MeterRegistry meterRegistry) {
         this.valuationStrategyService = valuationStrategyService;
         this.formulas = formulas;
         this.playerRepository = playerRepository;
@@ -58,6 +76,7 @@ public class QuoteCalculationService {
         this.playerQuoteRepository = playerQuoteRepository;
         this.eventPublisher = eventPublisher;
         this.cacheManager = cacheManager;
+        this.meterRegistry = meterRegistry;
     }
 
     @Transactional
@@ -109,6 +128,10 @@ public class QuoteCalculationService {
 
         // Invalidar caché Redis
         evictCaches();
+
+        if (meterRegistry != null) {
+            meterRegistry.counter(METRIC_QUOTES_RECALCULATIONS, "strategy", activeStrategy.getCode()).increment();
+        }
 
         long duration = System.currentTimeMillis() - startTime;
         log.info("Recálculo global completado: {} jugadores procesados con estrategia [{}] v{} en {} ms",

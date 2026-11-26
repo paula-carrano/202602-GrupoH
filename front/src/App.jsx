@@ -15,6 +15,7 @@ import {
     ErrorPage,
     AlertsPage,
 } from "./pages/index";
+import { AdvancedMetricsPage } from "./pages/AdvancedMetricsPage";
 import { clearSession, getSession, subscribeSession } from "./services/session";
 
 export const App = () => {
@@ -107,6 +108,7 @@ export const App = () => {
                 />
                 <Route path="/ranking" element={<ConnectedRanking />} />
                 <Route path="/alerts" element={<AlertsPage />} />
+                <Route path="/metrics/advanced" element={<AdvancedMetricsPage />} />
             </Route>
             <Route path="/error" element={<ErrorPage />} />
             <Route path="*" element={<ErrorPage notFound />} />

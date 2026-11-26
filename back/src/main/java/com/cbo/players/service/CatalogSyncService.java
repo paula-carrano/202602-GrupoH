@@ -7,10 +7,16 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import java.time.Duration;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 @org.springframework.context.annotation.DependsOn("initializeCatalogSchema")
@@ -21,6 +27,8 @@ public class CatalogSyncService {
     private final CatalogRunService runs;
     private final Executor executor;
     private final AtomicBoolean running = new AtomicBoolean();
+    private final AtomicReference<CompletableFuture<Void>> activeRunFuture =
+            new AtomicReference<>(CompletableFuture.completedFuture(null));
 
     public CatalogSyncService(ScrapingPort scraper, CatalogPersistenceService catalog, CatalogRunService runs,
             @Qualifier("catalogSyncExecutor") Executor executor) {
@@ -41,20 +49,39 @@ public class CatalogSyncService {
                     ErrorCode.CATALOG_SYNC_BUSY);
         }
         Long id = null;
+        CompletableFuture<Void> runFuture = new CompletableFuture<>();
         try {
             id = runs.create(origin);
+            activeRunFuture.set(runFuture);
             Long runId = id;
-            executor.execute(() -> execute(runId));
+            executor.execute(() -> execute(runId, runFuture));
             return id;
         } catch (RuntimeException error) {
             running.set(false);
+            runFuture.complete(null);
             if (id != null)
                 runs.finish(id, true);
             throw error;
         }
     }
 
-    private void execute(Long id) {
+    public boolean awaitCompletion(Duration timeout) {
+        CompletableFuture<Void> current = activeRunFuture.get();
+        if (current == null || current.isDone()) {
+            return true;
+        }
+        try {
+            current.get(Math.max(1L, timeout.toMillis()), TimeUnit.MILLISECONDS);
+            return true;
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (TimeoutException | ExecutionException ex) {
+            return false;
+        }
+    }
+
+    private void execute(Long id, CompletableFuture<Void> runFuture) {
         boolean interrupted = false;
         try {
             importCatalog(id);
@@ -65,9 +92,11 @@ public class CatalogSyncService {
             runs.error(id, "RUN: INTERNAL_ERROR");
         } finally {
             try {
+                catalog.evictCatalogAndRankingCaches();
                 runs.finish(id, interrupted || Thread.currentThread().isInterrupted());
             } finally {
                 running.set(false);
+                runFuture.complete(null);
             }
         }
     }

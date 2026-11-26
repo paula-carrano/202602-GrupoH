@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-@SuppressWarnings("java:S6812")
+@SuppressWarnings("java:S5673")
 @Component
 public class CustomUserDetailsService implements UserDetailsService {
 

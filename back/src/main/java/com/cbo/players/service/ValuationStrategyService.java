@@ -151,8 +151,12 @@ public class ValuationStrategyService {
         transactionRepository.save(tx);
         evictRankingCache();
 
-        log.info("Estrategia [{}] (ID {}) activada por usuario {}", sanitizeForLog(target.getCode()), target.getId(),
-                sanitizeForLog(String.valueOf(actorUserId)));
+        if (log.isInfoEnabled()) {
+            log.info("Estrategia [{}] (ID {}) activada por usuario {}",
+                    sanitizeForLog(target.getCode()),
+                    target.getId(),
+                    sanitizeForLog(String.valueOf(actorUserId)));
+        }
         return target;
     }
 
